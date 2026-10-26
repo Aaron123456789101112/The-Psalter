@@ -1025,6 +1025,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     for (const rate of [sr, 48000, 44100]) {
       try { const r = await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) { a = r.config; break; } } catch (e) {}
     }
+    if (a && a.codec.startsWith('mp4a')) a = { ...a, aac: { format: 'aac' } };
     if (!a && window.__clipTestOpus) {
       try { const r = await AudioEncoder.isConfigSupported({ codec: 'opus', sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) a = r.config; } catch (e) {}
     }
@@ -1045,7 +1046,22 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     let fail = null;
     const ve = new VideoEncoder({ output: (ch, m) => muxer.addVideoChunk(ch, m), error: e => { fail = e; } });
     ve.configure({ ...cfg.v, bitrate: 4000000, framerate: 30 });
-    const ae = new AudioEncoder({ output: (ch, m) => muxer.addAudioChunk(ch, m), error: e => { fail = e; } });
+    const isAac = cfg.a.codec.startsWith('mp4a'), RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+    let audioN = 0, metaSent = false;
+    const ascFor = () => { const fi = Math.max(0, RATES.indexOf(sr)); return new Uint8Array([(2 << 3) | (fi >> 1), ((fi & 1) << 7) | (2 << 3)]); };   // AAC-LC, stereo
+    const ae = new AudioEncoder({ output: (ch, m) => {
+      let data = new Uint8Array(ch.byteLength); ch.copyTo(data);
+      if (isAac && data.length > 7 && data[0] === 0xFF && (data[1] & 0xF6) === 0xF0) data = data.subarray((data[1] & 1) ? 7 : 9);   // ADTS header off
+      let meta;
+      if (!metaSent) {
+        const dc = (m && m.decoderConfig) || {}, desc = dc.description, ok = desc && desc.byteLength >= 2;
+        meta = { decoderConfig: { codec: cfg.a.codec, sampleRate: sr, numberOfChannels: 2, ...dc, description: isAac ? (ok ? desc : ascFor()) : desc } };
+        if (!isAac && !desc) meta = undefined;
+        metaSent = true;
+      }
+      audioN++;
+      muxer.addAudioChunkRaw(data, ch.type, ch.timestamp, ch.duration || Math.round(1024 / sr * 1e6), meta);
+    }, error: e => { fail = e; } });
     ae.configure(cfg.a);
     const L = pcm.getChannelData(0), R = pcm.numberOfChannels > 1 ? pcm.getChannelData(1) : pcm.getChannelData(0), N = pcm.length, B = 4096;
     for (let i = 0; i < N; i += B) {
@@ -1064,8 +1080,23 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       if (n % 6 === 0) { $('cm-bar').value = n / F; $('cm-time').textContent = fmt(n / 30) + ' of ' + fmt(dur); await new Promise(r => setTimeout(r, 0)); }
     }
     await ve.flush(); await ae.flush(); if (fail) throw fail;
+    if (!audioN) throw new Error('no audio chunks');
     muxer.finalize();
     return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+  }
+
+  // Does the finished video really carry the sound? Decode it back and look.
+  async function hasSound(blob) {
+    if (window.__clipTestSilent) return false;
+    let ctx = null;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC();
+      const buf = await Promise.race([ctx.decodeAudioData(await blob.arrayBuffer()), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 20000))]);
+      const d = buf.getChannelData(0); let pk = 0;
+      for (let i = 0; i < d.length; i += 37) { const v = Math.abs(d[i]); if (v > pk) pk = v; }
+      return pk > 0.003;
+    } catch (e) { console.log('[clip sound check]', e); return null; }
+    finally { try { ctx && ctx.close(); } catch (e) {} }
   }
 
   async function run(record) {
@@ -1094,6 +1125,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
           catch (e) { console.log('[clip fast]', e); blob = undefined; }
           stopFn = null;
           if (blob === null) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; return; }
+          if (blob) { $('cm-status').textContent = 'Checking the sound\u2026'; const ok = await hasSound(blob); if (ok !== true) { console.log('[clip fast] silent, recording instead'); blob = undefined; } }
           if (blob) {
             window.__clipPath = 'fast';
             lastBlob = blob; lastExt = 'mp4';
@@ -1143,6 +1175,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
         const blob = await new Promise(ok => { rec.onstop = () => ok(new Blob(chunks, { type: (mime || 'video/webm').split(';')[0] })); rec.stop(); });
         if (stopped) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; }
         else {
+          if (await hasSound(blob) === false) { $('cm-status').textContent = 'That video came out without sound, so it wasn\u2019t kept. Close the clip maker, then try again. If it happens again, tell Aaron.'; return; }
           lastBlob = blob; lastExt = (mime || 'video/webm').includes('mp4') ? 'mp4' : 'webm';
           const v = $('cm-video'); if (v.src) URL.revokeObjectURL(v.src); v.src = URL.createObjectURL(blob);
           $('cm-status').textContent = 'Your video is ready (' + fmt(dur) + ', ' + (blob.size / 1048576).toFixed(1) + ' MB).';
