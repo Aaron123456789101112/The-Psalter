@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="Psalter">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-512.png">
+<title>The Psalter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bellefair&family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column like a scroll — the Hebrew name as the masthead, the player, then the psalms in order. */
+:root {
+  --bg: #e6e8e2;        /* pale limestone, faintly sage */
+  --surface: #f2f3ef;
+  --fg: #1c231f;        /* olive-black ink */
+  --muted: #5a645d;
+  --line: #c8cdc5;
+  --accent: #82540f;    /* lamp bronze */
+  --accent-ink: #f7f1e4;
+  --display: "Bellefair", "Times New Roman", serif;
+  --body: "Alegreya", Georgia, serif;
+  --ui: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121714; --surface: #1a211c; --fg: #e5e3d8; --muted: #9aa49c; --line: #2b352e;
+    --accent: #d7a447; --accent-ink: #1a1408; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121714; --surface: #1a211c; --fg: #e5e3d8; --muted: #9aa49c; --line: #2b352e;
+  --accent: #d7a447; --accent-ink: #1a1408; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 32px; }
+
+header { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.hebrew { font-family: var(--display); font-size: clamp(56px, 14vw, 88px); line-height: 1; direction: rtl; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 6px 0 0; letter-spacing: 0.02em; text-wrap: balance; }
+.sub { font-family: var(--ui); color: var(--muted); font-size: 14px; letter-spacing: 0.04em; }
+
+/* player */
+.player { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.now { display: flex; align-items: center; gap: 16px; }
+.now-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.now-label { font-family: var(--ui); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.now-title { font-family: var(--display); font-size: 26px; line-height: 1.15; }
+.now-line { font-style: italic; color: var(--muted); overflow-wrap: anywhere; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.play {
+  flex: none; width: 64px; height: 64px; border-radius: 50%; border: none;
+  background: var(--accent); color: var(--accent-ink); display: grid; place-items: center;
+}
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play:active { transform: scale(0.96); }
+
+.seek { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.seek input { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.skip { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; display: grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; fill: var(--fg); }
+.mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; font-family: var(--ui); font-size: 14px; }
+.mode button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; color: var(--muted); }
+.mode button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.status { font-family: var(--ui); font-size: 14px; color: var(--accent); min-height: 1.2em; margin: 0; }
+
+/* list */
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+ol { list-style: none; margin: 0; padding: 0; }
+.track {
+  width: 100%; text-align: left; border: none; background: transparent; padding: 14px 4px;
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.track:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.num { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.num span { font-family: var(--display); font-size: 15px; color: var(--muted); direction: rtl; }
+.mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.t-line { font-style: italic; overflow-wrap: anywhere; }
+.t-mood { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+.dur { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.track.current .num b, .track.current .t-line { color: var(--accent); }
+
+/* humming indicator on the playing row */
+.hum { display: none; gap: 2px; align-items: flex-end; height: 14px; }
+.hum i { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
+.track.current.playing .hum { display: inline-flex; }
+.track.current.playing .hum i { animation: hum 1.6s ease-in-out infinite; }
+.hum i:nth-child(2) { animation-delay: .25s !important; }
+.hum i:nth-child(3) { animation-delay: .5s !important; }
+@keyframes hum { 0%,100% { height: 4px } 50% { height: 13px } }
+@media (prefers-reduced-motion: reduce) { .track.current.playing .hum i { animation: none; height: 10px; } }
+
+/* suggestions */
+.suggest { display: flex; flex-direction: column; gap: 14px; }
+.suggest h2 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 0; }
+.suggest .lede { margin: -6px 0 0; color: var(--muted); }
+.s-form { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.s-form[hidden] { display: none; }
+.s-form label { font-family: var(--ui); font-size: 15px; font-weight: 500; display: flex; flex-direction: column; gap: 6px; }
+.s-form input, .s-form textarea {
+  font: inherit; font-family: var(--body); font-size: 18px; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+.s-form input { max-width: 320px; }
+.s-form textarea { min-height: 76px; resize: vertical; }
+.s-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.s-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.send { border: none; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-family: var(--ui); font-size: 16px; font-weight: 500; padding: 12px 22px; }
+.send { text-decoration: none; display: inline-block; }
+.send:disabled { opacity: .55; cursor: default; }
+.send.alt { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.s-row[hidden] { display: none; }
+.s-msg { font-family: var(--ui); font-size: 15px; color: var(--accent); margin: 0; }
+.s-note { font-family: var(--ui); font-size: 15px; color: var(--muted); margin: 0; }
+.s-list { list-style: none; margin: 0; padding: 0; }
+.s-item { border-bottom: 1px solid var(--line); padding: 12px 4px; display: grid; grid-template-columns: 56px 1fr; gap: 14px; }
+.s-item .num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; }
+.s-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-text { overflow-wrap: anywhere; font-style: italic; }
+.s-meta { font-family: var(--ui); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.chip { font-family: var(--ui); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+.chip.next { border-color: var(--accent); color: var(--accent); }
+.chip.made { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.s-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.s-actions button, .linkish { font-family: var(--ui); font-size: 14px; border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; }
+
+footer { font-family: var(--ui); font-size: 13px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
+footer p { margin: 0; max-width: 62ch; }
+
+@media (max-width: 440px) {
+  .wrap { padding-block: 24px 40px; gap: 24px; }
+  .track { grid-template-columns: 44px 1fr auto; gap: 10px; }
+  .now-title { font-size: 22px; }
+}
+
+/* Three tabs: The Psalter (this page), Revelation and Judges (each its own page, in a frame, keeping its own design).
+   The tab bar takes on the colours of whichever collection is showing. */
+html.rev {
+  --bg: #e9e4de; --surface: #f3efea; --fg: #221a17; --muted: #6a5d57; --line: #d3c9c1; --accent: #8e2316; --accent-ink: #fbefe9;
+}
+html.judges {
+  --bg: #efe6d8; --surface: #f6efe4; --fg: #261b12; --muted: #6e5d4c; --line: #d9cbb6; --accent: #a8501a; --accent-ink: #fff4e6;
+}
+@media (prefers-color-scheme: dark) {
+  html.rev:not([data-theme="light"]) {
+    --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
+  }
+  html.judges:not([data-theme="light"]) {
+    --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
+  }
+}
+html.rev[data-theme="dark"] {
+  --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
+}
+html.judges[data-theme="dark"] {
+  --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
+}
+body { margin: 0; }
+.tabs {
+  position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  padding: 12px 0 10px; background: var(--bg); border-bottom: 1px solid var(--line);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+}
+.tab {
+  font-family: var(--ui); font-size: 15px; font-weight: 500; letter-spacing: 0.02em;
+  min-height: 40px; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+@media (max-width: 400px) { .tab { padding: 8px 12px; font-size: 14px; } }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cframe { display: none; position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--bg); }
+html.rev #revframe, html.judges #judgesframe { display: block; }
+html.rev .wrap, html.judges .wrap { display: none; }
+html.rev body, html.judges body { overflow: hidden; }
+
+/* Make a clip: opens the clip maker in the top page */
+.clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
+  min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.clipbtn svg { width: 18px; height: 18px; fill: currentColor; }
+.clipbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* The clip maker: a full-screen sheet above every tab, in the colours of whichever collection is showing. */
+.cm { position: fixed; inset: 0; z-index: 30; background: var(--bg); color: var(--fg); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+html.cm-open, html.cm-open body { overflow: hidden; }
+.cm-in { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.cm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cm-head h2 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0; text-wrap: balance; }
+.cm-x { font-family: var(--ui); font-size: 16px; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.cm-lede { margin: -8px 0 0; color: var(--muted); }
+.cm-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--ui); font-size: 15px; font-weight: 500; }
+.cm-field select { font-family: var(--body); font-size: 18px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; width: 100%; min-width: 0; min-height: 48px; }
+.cm-field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cm-len { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: -8px 0 0; font-variant-numeric: tabular-nums; }
+.cm-shape { display: flex; gap: 8px; flex-wrap: wrap; }
+.cm-shape button { flex: 1 1 140px; font-family: var(--ui); font-size: 15px; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: transparent; color: var(--fg); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cm-shape button small { color: var(--muted); font-size: 13px; }
+.cm-shape button[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: inset 0 0 0 1px var(--accent); }
+.cm-stage { display: flex; justify-content: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+#cm-canvas { width: 100%; max-width: 340px; height: auto; border-radius: 6px; display: block; }
+#cm-canvas.tall { max-width: 210px; }
+.cm-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.cm-btn { font-family: var(--ui); font-size: 17px; font-weight: 500; min-height: 50px; padding: 12px 22px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--fg); }
+.cm-btn.go { border: none; background: var(--accent); color: var(--accent-ink); }
+.cm-btn:disabled, .cm-field select:disabled, .cm-shape button:disabled { opacity: .5; cursor: default; }
+.cm-btn:focus-visible, .cm-x:focus-visible, .cm-shape button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cm-prog { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cm-prog progress { flex: 1; min-width: 0; height: 8px; accent-color: var(--accent); }
+.cm-status { font-family: var(--ui); font-size: 16px; color: var(--accent); margin: 0; min-height: 1.3em; }
+.cm-result { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.cm-result video { width: 100%; max-width: 340px; max-height: 60vh; border-radius: 8px; background: #000; align-self: center; }
+.cm-saved { font-family: var(--ui); font-size: 15px; margin: 0; }
+.cm-help { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+</style>
+
+<nav class="tabs" role="tablist" aria-label="Collections">
+  <button class="tab" role="tab" id="tab-psalter" aria-selected="true">The Psalter</button>
+  <button class="tab" role="tab" id="tab-rev" aria-selected="false">Revelation</button>
+  <button class="tab" role="tab" id="tab-judges" aria-selected="false">Judges</button>
+</nav>
+<iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
+<iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
+
+
+<section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
+  <div class="cm-in">
+    <div class="cm-head"><h2 id="cm-h">Make a clip</h2><button class="cm-x" id="cm-close" type="button">Close</button></div>
+    <p class="cm-lede">Choose a reading and the verses you want. Your phone turns them into a short video with the words on screen, ready for Facebook.</p>
+    <label class="cm-field" for="cm-reading">Reading<select id="cm-reading"></select></label>
+    <label class="cm-field" for="cm-from">Start at<select id="cm-from"></select></label>
+    <label class="cm-field" for="cm-to">End at<select id="cm-to"></select></label>
+    <p class="cm-len" id="cm-len"></p>
+    <div class="cm-shape" role="group" aria-label="Video shape">
+      <button id="cm-square" type="button" aria-pressed="true">Square<small>for a Facebook post</small></button>
+      <button id="cm-tall" type="button" aria-pressed="false">Tall<small>for Reels and Stories</small></button>
+    </div>
+    <div class="cm-stage"><canvas id="cm-canvas" width="1080" height="1080" aria-label="How the video will look"></canvas></div>
+    <div class="cm-acts">
+      <button class="cm-btn" id="cm-listen" type="button">Listen first</button>
+      <button class="cm-btn go" id="cm-make" type="button">Make the video</button>
+      <button class="cm-btn" id="cm-stop" type="button" hidden>Stop</button>
+    </div>
+    <div class="cm-prog" id="cm-progress" hidden><progress id="cm-bar" max="1" value="0"></progress><span id="cm-time">0:00</span></div>
+    <p class="cm-status" id="cm-status" role="status"></p>
+    <div class="cm-result" id="cm-result" hidden>
+      <video id="cm-video" controls playsinline></video>
+      <div class="cm-acts"><button class="cm-btn go" id="cm-save" type="button">Save video</button><button class="cm-btn" id="cm-again" type="button">Make another</button></div>
+      <p class="cm-saved" id="cm-saved" role="status"></p>
+      <p class="cm-help">On an iPhone, Save video usually opens the Share menu: choose Save Video (it goes to Photos) or Facebook. If it saves to Downloads instead, open the Files app, tap Downloads, tap the video, tap the Share button, and choose Save Video or Facebook. Then in Facebook, start a post (or a Reel for a tall video), tap Photo/Video, and pick it.</p>
+    </div>
+  </div>
+</section>
+<div class="wrap">
+  <header>
+    <div class="hebrew" lang="he">תהלים</div>
+    <h1>The Psalter</h1>
+    <div class="sub">Read by Psalm Reader II over a humming choir</div>
+  </header>
+
+  <section class="player" aria-label="Player">
+    <div class="now">
+      <button class="play" id="play" aria-label="Play">
+        <svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="now-text">
+        <span class="now-label" id="now-label">Ready</span>
+        <span class="now-title" id="now-title">Psalm 23</span>
+        <span class="now-line" id="now-line">The Lord is my shepherd</span>
+      </div>
+    </div>
+    <div class="seek">
+      <span id="t-cur">0:00</span>
+      <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Position in this psalm">
+      <span id="t-dur">1:38</span>
+    </div>
+    <div class="controls">
+      <div class="skip">
+        <button class="icon-btn" id="prev" aria-label="Previous psalm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+        <button class="icon-btn" id="next" aria-label="Next psalm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+      </div>
+      <div class="mode" role="group" aria-label="Play order">
+        <button id="m-order" aria-pressed="true">In order</button>
+        <button id="m-shuffle" aria-pressed="false">Shuffle</button>
+      </div>
+    </div>
+    <button class="clipbtn" id="clipbtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Make a clip to share</button>
+    <p class="status" id="status" role="status"></p>
+  </section>
+
+  <section aria-label="Psalms">
+    <div class="list-head"><span>Psalms</span><span id="total"></span></div>
+    <ol id="list"></ol>
+  </section>
+
+  <section class="suggest" aria-labelledby="s-h">
+    <h2 id="s-h">Suggest a psalm</h2>
+    <p class="lede">Is there a psalm — or another Bible passage — you'd like to hear read? Ask for it here.</p>
+    <form class="s-form" id="s-form">
+      <label>Psalm number, or another passage
+        <input id="s-num" type="text" autocomplete="off" maxlength="80" placeholder="e.g. 90, or Isaiah 40">
+      </label>
+      <label><span>Why this one? <span class="s-note">(optional)</span></span>
+        <textarea id="s-text" maxlength="400" placeholder="A favourite verse, or what it means to you"></textarea>
+      </label>
+      <div class="s-row" id="s-save-row" hidden>
+        <button class="send" id="s-send" type="submit">Send suggestion</button>
+      </div>
+      <div class="s-row" id="s-msg-row">
+        <a class="send" id="s-sms" href="sms:" target="_top">Text it to Aaron</a>
+        <a class="send alt" id="s-mail" href="mailto:" target="_top">Email it to Aaron</a>
+      </div>
+      <p class="s-msg" id="s-msg" role="status"></p>
+    </form>
+    <p class="s-note" id="s-off" hidden></p>
+    <ol class="s-list" id="s-list"></ol>
+  </section>
+
+  <footer>
+    <p>Text: Berean Standard Bible (public domain). Voice: Psalm Reader II, designed in ElevenLabs.</p>
+    <p>Choir and strings: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified. Drum and gong: Versilian Community Sample Library (CC0).</p>
+  </footer>
+</div>
+
+<script>
+const TRACKS = [
+  { n: "1", he: "א׳", title: "Psalm 1", line: "Blessed is the man", mood: "Wisdom · the two ways", file: "audio/psalm-001.mp3", dur: 91 },
+  { n: "2", he: "ב׳", title: "Psalm 2", line: "Why do the nations rage", mood: "The Lord's King · \"You are My Son\"", file: "audio/psalm-002.mp3", dur: 136 },
+  { n: "3", he: "ג׳", title: "Psalm 3", line: "O Lord, how my foes have increased", mood: "A shield around me · three Selahs", file: "audio/psalm-003.mp3", dur: 102 },
+  { n: "4", he: "ד׳", title: "Psalm 4", line: "Answer me when I call", mood: "An evening prayer · sleep in peace", file: "audio/psalm-004.mp3", dur: 114 },
+  { n: "5", he: "ה׳", title: "Psalm 5", line: "Give ear to my words, O Lord", mood: "A morning prayer · the shield of His favor", file: "audio/psalm-005.mp3", dur: 161 },
+  { n: "6", he: "ו׳", title: "Psalm 6", line: "O Lord, do not rebuke me in Your anger", mood: "Lament turning to assurance", file: "audio/psalm-006.mp3", dur: 129 },
+  { n: "7", he: "ז׳", title: "Psalm 7", line: "O Lord my God, I take refuge in You", mood: "Refuge · the righteous Judge", file: "audio/psalm-007.mp3", dur: 187 },
+  { n: "8", he: "ח׳", title: "Psalm 8", line: "O Lord, our Lord, how majestic is Your name", mood: "Majesty under the night sky", file: "audio/psalm-008.mp3", dur: 115 },
+  { n: "19", he: "י״ט", title: "Psalm 19", line: "The heavens declare the glory of God", mood: "The heavens, the Law, the prayer", file: "audio/psalm-019.mp3", dur: 184 },
+  { n: "23", he: "כ״ג", title: "Psalm 23", line: "The Lord is my shepherd", mood: "Trust · bright and gentle", file: "audio/psalm-023.mp3", dur: 98 },
+  { n: "27", he: "כ״ז", title: "Psalm 27", line: "The Lord is my light and my salvation", mood: "Light, then longing · Wait for the Lord", file: "audio/psalm-027.mp3", dur: 200 },
+  { n: "34", he: "ל״ד", title: "Psalm 34", line: "I will bless the Lord at all times", mood: "Thanksgiving · Taste and see", file: "audio/psalm-034.mp3", dur: 226 },
+  { n: "42–43", he: "מ״ב–מ״ג", title: "Psalms 42–43", line: "As the deer pants for streams of water", mood: "Lament turning to hope", file: "audio/psalm-042-043.mp3", dur: 266 },
+  { n: "46", he: "מ״ו", title: "Psalm 46", line: "God is our refuge and strength", mood: "Strength in the storm · three Selahs", file: "audio/psalm-046.mp3", dur: 139 },
+  { n: "51", he: "נ״א", title: "Psalm 51", line: "Have mercy on me, O God", mood: "Confession turning to restoration", file: "audio/psalm-051.mp3", dur: 214 },
+  { n: "77", he: "ע״ז", title: "Psalm 77", line: "I cried out to God", mood: "Lament · Hijaz", file: "audio/psalm-077.mp3", dur: 217 },
+  { n: "91", he: "צ״א", title: "Psalm 91", line: "He who dwells in the shelter of the Most High", mood: "Shelter · God speaks at the close", file: "audio/psalm-091.mp3", dur: 177 },
+  { n: "100", he: "ק׳", title: "Psalm 100", line: "Make a joyful noise to the Lord", mood: "Praise", file: "audio/psalm-100.mp3", dur: 84 },
+  { n: "103", he: "ק״ג", title: "Psalm 103", line: "Bless the Lord, O my soul", mood: "Blessing · compassion and praise", file: "audio/psalm-103.mp3", dur: 227 },
+  { n: "121", he: "קכ״א", title: "Psalm 121", line: "I lift up my eyes to the hills", mood: "Trust on the road · Song of Ascents", file: "audio/psalm-121.mp3", dur: 97 },
+  { n: "139", he: "קל״ט", title: "Psalm 139", line: "O Lord, You have searched me and known me", mood: "Awe · shadowed and bright", file: "audio/psalm-139.mp3", dur: 242 },
+];
+
+/* Playback: each psalm is fetched (allowed for files published with the page) and played through the
+   Web Audio API, so nothing depends on the browser streaming media from the page's host. */
+const $ = id => document.getElementById(id);
+let ctx = null, out = null;
+const bytes = new Map();      // compressed mp3 bytes, kept for every psalm fetched
+const decoded = new Map();    // decoded audio, only the current and next psalm
+let shuffle = false, order = TRACKS.map((_, i) => i), pos = 0;
+let buf = null, bufIdx = -1, src = null, playing = false, loading = false, offset = 0, startedAt = 0, token = 0, seeking = false;
+try { shuffle = localStorage.getItem("psalter-shuffle") === "1"; } catch (e) {}
+
+const fmt = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const cur = () => order[pos];
+const durOf = i => (engine === "media" && elIdx === i && isFinite(el.duration) && el.duration > 0) ? el.duration
+  : (bufIdx === i && buf) ? buf.duration : TRACKS[i].dur;
+/* Two engines. "media" is a plain <audio> element: it keeps playing when the phone locks and shows lock-screen
+   controls. "webaudio" is the fallback for viewers that block page audio (the Claude app); phones pause it on lock. */
+let engine = "media";
+const el = new Audio(); el.preload = "auto"; let elIdx = -1;
+// probe once: if this view refuses media files, use Web Audio from the start. The probe lets go of the file
+// as soon as it knows, or the moment Play is pressed, so it never holds up the real player.
+let probe = new Audio();
+function endProbe() { if (probe) { const p = probe; probe = null; p.removeAttribute("src"); p.load(); } }
+probe.preload = "metadata"; probe.muted = true;
+probe.addEventListener("error", () => { if (probe && elIdx === -1) engine = "webaudio"; endProbe(); }, { once: true });
+probe.addEventListener("loadedmetadata", endProbe, { once: true });
+probe.src = TRACKS[0].file;
+const position = () => engine === "media"
+  ? (elIdx === cur() && (playing || loading) ? el.currentTime : offset)
+  : (playing ? Math.min(ctx.currentTime - startedAt, durOf(cur())) : offset);
+
+function ensureCtx() {        // must run inside the click, so the browser lets sound start
+  if (engine !== "webaudio") return;   // an idle AudioContext would put iPhones on the silent-switch audio path
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC(); out = ctx.createGain(); out.connect(ctx.destination);
+  }
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
+}
+
+async function fetchBytes(i, onProgress) {
+  if (bytes.has(i)) return bytes.get(i);
+  const res = await fetch(TRACKS[i].file);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const total = +res.headers.get("content-length") || 0;
+  let data;
+  if (res.body && total && onProgress) {
+    const reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress(got / total); }
+    data = new Uint8Array(got); let o = 0; for (const p of parts) { data.set(p, o); o += p.length; }
+    data = data.buffer;
+  } else data = await res.arrayBuffer();
+  bytes.set(i, data); return data;
+}
+async function decode(i, onProgress) {
+  if (decoded.has(i)) return decoded.get(i);
+  const raw = await fetchBytes(i, onProgress);
+  const ab = await new Promise((ok, bad) => ctx.decodeAudioData(raw.slice(0), ok, bad));
+  decoded.set(i, ab);
+  const keep = new Set([cur(), order[(pos + 1) % order.length]]);
+  for (const k of [...decoded.keys()]) if (!keep.has(k)) decoded.delete(k);
+  return ab;
+}
+function prefetchNext() {
+  const n = order[(pos + 1) % order.length];
+  if (!bytes.has(n)) fetchBytes(n).catch(() => {});
+}
+
+function stopSource() { if (src) { src.onended = null; try { src.stop(); } catch (e) {} src.disconnect(); src = null; } }
+function startSource() {
+  stopSource();
+  src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+  const me = src;
+  src.onended = () => { if (me === src && playing) { playing = false; src = null; next(true); } };
+  if (offset >= buf.duration) offset = 0;
+  src.start(0, offset); startedAt = ctx.currentTime - offset; playing = true;
+}
+
+async function startMedia() {
+  endProbe();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (elIdx !== i) { el.src = TRACKS[i].file; elIdx = i; }
+  if (Math.abs(el.currentTime - offset) > 0.25) { try { el.currentTime = offset; } catch (e) {} }
+  loading = true; paint();
+  try { await el.play(); }
+  catch (e) {
+    if (my !== token) return;
+    loading = false;
+    if (e && e.name === "NotAllowedError") { $("status").textContent = "Press play to start."; paint(); return; }
+    if (e && e.name === "AbortError") { paint(); return; }
+    engine = "webaudio"; elIdx = -1; el.removeAttribute("src"); el.load();   // this view blocks media files
+    return start();
+  }
+  if (my !== token) { el.pause(); return; }
+  loading = false; playing = true; paint(); prefetchNextMedia();
+}
+const warmed = new Set();
+function prefetchNextMedia() {   // warm the browser cache so the next psalm starts quickly
+  const n = order[(pos + 1) % order.length];
+  if (!warmed.has(n)) { warmed.add(n); fetch(TRACKS[n].file).then(r => r.arrayBuffer()).catch(() => warmed.delete(n)); }
+}
+el.addEventListener("ended", () => { if (engine === "media" && playing) { playing = false; offset = 0; next(true); } });
+el.addEventListener("waiting", () => { if (engine === "media" && playing) $("now-label").textContent = "Loading"; });
+el.addEventListener("playing", () => { if (engine === "media" && playing) paint(); });
+el.addEventListener("loadedmetadata", () => { if (engine === "media") tick(); });
+
+async function start() {
+  if (engine === "media") return startMedia();
+  ensureCtx();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (bufIdx !== i || !buf) {
+    loading = true; paint();
+    try {
+      const ab = await decode(i, p => { if (my === token) $("status").textContent = "Loading " + TRACKS[i].title + "… " + Math.round(p * 100) + "%"; });
+      if (my !== token) return;
+      buf = ab; bufIdx = i;
+    } catch (e) {
+      if (my !== token) return;
+      loading = false; $("status").textContent = "Couldn't load " + TRACKS[i].title + ". Check your connection and press play again."; paint(); return;
+    }
+    loading = false; $("status").textContent = "";
+  }
+  if (ctx.state !== "running") { try { await ctx.resume(); } catch (e) {} }
+  if (my !== token) return;
+  startSource(); paint(); prefetchNext();
+}
+function pause() {
+  token++;
+  if (engine === "media") { if (elIdx === cur() && (playing || loading)) offset = el.currentTime; el.pause(); loading = false; playing = false; paint(); return; }
+  loading = false; if (playing) { offset = position(); playing = false; stopSource(); } paint();
+}
+function goTo(newPos) { pause(); pos = newPos; offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+
+function buildOrder(keepFirst) {
+  const idx = TRACKS.map((_, i) => i);
+  if (!shuffle) { order = idx; pos = keepFirst == null ? 0 : keepFirst; return; }
+  const rest = idx.filter(i => i !== keepFirst);
+  for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+  order = keepFirst == null ? rest : [keepFirst, ...rest]; pos = 0;
+}
+
+function renderList() {
+  const list = $("list"); list.innerHTML = "";
+  TRACKS.forEach((t, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "track"; b.id = "track-" + i;
+    b.setAttribute("aria-label", "Play " + t.title);
+    b.innerHTML = `<span class="num"><b>${t.n}</b><span lang="he">${t.he}</span></span>
+      <span class="mid"><span class="t-line">${t.line}</span><span class="t-mood">${t.mood}</span></span>
+      <span class="dur"><span class="hum" aria-hidden="true"><i></i><i></i><i></i></span>${fmt(t.dur)}</span>`;
+    b.addEventListener("click", () => playTrack(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const total = TRACKS.reduce((a, t) => a + t.dur, 0);
+  $("total").textContent = TRACKS.length + " readings · " + Math.round(total / 60) + " min";
+}
+
+function paint() {
+  const t = TRACKS[cur()];
+  $("now-title").textContent = t.title;
+  $("now-line").textContent = t.line;
+  $("now-label").textContent = loading ? "Loading" : playing ? "Playing" : (offset > 0 ? "Paused" : (shuffle ? "Ready · shuffled" : "Ready"));
+  $("t-dur").textContent = fmt(durOf(cur()));
+  const showPause = playing || loading;
+  $("play").setAttribute("aria-label", showPause ? "Pause" : "Play");
+  $("play-icon").innerHTML = showPause ? '<path d="M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+  TRACKS.forEach((_, i) => {
+    const el = $("track-" + i);
+    el.classList.toggle("current", i === cur());
+    el.classList.toggle("playing", i === cur() && playing);
+    if (i === cur()) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+  });
+  $("m-order").setAttribute("aria-pressed", String(!shuffle));
+  $("m-shuffle").setAttribute("aria-pressed", String(shuffle));
+  try {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: "Psalm Reader II", album: "The Psalter" });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    }
+  } catch (e) {}
+  tick();
+}
+function tick() {
+  if (seeking) return;
+  const d = durOf(cur()), p = position();
+  $("seek").value = d ? (p / d) * 100 : 0;
+  $("t-cur").textContent = fmt(p);
+}
+setInterval(() => { if (playing) tick(); }, 250);
+
+function playTrack(i) {
+  ensureCtx();
+  if (shuffle) { pause(); buildOrder(i); offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+  else goTo(i);
+}
+function next(auto) {
+  if (auto) ensureCtx();
+  if (pos + 1 >= order.length) {
+    if (auto) { pos = 0; if (shuffle) buildOrder(); offset = 0; buf = null; bufIdx = -1; paint(); $("now-label").textContent = "Finished"; return; }
+    if (shuffle) { buildOrder(); goTo(0); } else goTo(0);
+  } else goTo(pos + 1);
+}
+function prev() {
+  ensureCtx();
+  if (position() > 4) { const was = playing; pause(); offset = 0; if (was) start(); else paint(); return; }
+  goTo(Math.max(0, pos - 1));
+}
+
+$("play").addEventListener("click", () => { if (playing || loading) pause(); else start(); });
+$("next").addEventListener("click", () => { ensureCtx(); next(false); });
+$("prev").addEventListener("click", prev);
+$("m-order").addEventListener("click", () => setShuffle(false));
+$("m-shuffle").addEventListener("click", () => setShuffle(true));
+function setShuffle(on) {
+  if (shuffle === on) return;
+  shuffle = on; const keep = cur();
+  try { localStorage.setItem("psalter-shuffle", on ? "1" : "0"); } catch (e) {}
+  buildOrder(keep); paint(); if (playing) prefetchNext();
+}
+
+const seek = $("seek");
+seek.addEventListener("input", () => { seeking = true; $("t-cur").textContent = fmt(seek.value / 100 * durOf(cur())); });
+seek.addEventListener("change", () => {
+  seeking = false;
+  offset = seek.value / 100 * durOf(cur());
+  if (engine === "media") { if (elIdx === cur()) { try { el.currentTime = offset; } catch (e) {} } paint(); }
+  else if (playing) { ensureCtx(); startSource(); } else paint();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement)) {
+    e.preventDefault(); if (playing || loading) pause(); else start();
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ctx && playing && ctx.state !== "running") ctx.resume().catch(() => {}); });
+
+try {
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", () => start());
+    navigator.mediaSession.setActionHandler("pause", pause);
+    navigator.mediaSession.setActionHandler("nexttrack", () => next(false));
+    navigator.mediaSession.setActionHandler("previoustrack", prev);
+    navigator.mediaSession.setActionHandler("seekto", d => { offset = d.seekTime || 0; if (engine === "media" && elIdx === cur()) el.currentTime = offset; else if (playing) startSource(); tick(); });
+  }
+} catch (e) {}
+
+function openClip(f) {
+  try {
+    if (!window.ClipMaker) throw new Error("not loaded");
+    window.ClipMaker.open(f);
+  } catch (e) {
+    $("status").textContent = "The clip maker couldn\u2019t start on this phone (" + (e && e.message || e) + "). Close the page, open it again, and tap Make a clip once more.";
+  }
+}
+$("clipbtn").addEventListener("click", () => openClip("" + TRACKS[cur()].file));
+/* the Revelation and Judges tabs ask for the clip maker by message as well, in case they can't reach this page directly */
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (!d || d.type !== "psalter-clip" || typeof d.file !== "string") return;
+  if (![...document.querySelectorAll("iframe")].some(f => f.contentWindow === e.source)) return;
+  openClip(d.file);
+});
+renderList();
+buildOrder(shuffle ? undefined : 0);
+paint();
+
+/* Suggestions: kept in the page's shared store so everyone the Psalter is shared with sees the same list.
+   Each row: { psalm: number|null, passage: string (when not a psalm), note: string, by: viewer id, at: ISO time, status: "asked" | "next" } */
+const madeSet = new Set();
+TRACKS.forEach(t => { const [a, b] = t.n.split("–").map(Number); for (let k = a; k <= (b || a); k++) madeSet.add(k); });
+const trackOf = n => TRACKS.findIndex(t => { const [a, b] = t.n.split("–").map(Number); return n >= a && n <= (b || a); });
+
+/* Without an account (or without write access) the form composes a text or email on the visitor's own
+   phone instead; they choose Aaron as the recipient, so no contact details live on the page. */
+/* What was asked for: "90" or "Psalm 90" is a psalm (n); anything else ("Isaiah 40") is another passage (label). */
+function parseAsk(raw) {
+  const t = String(raw || "").trim().replace(/\s+/g, " ").slice(0, 80);
+  const m = t.match(/^(?:ps(?:alms?)?\.?\s*)?(\d{1,3})$/i);
+  if (m) return { n: +m[1], label: "Psalm " + (+m[1]) };
+  return { n: null, label: t };
+}
+function readForm() {
+  const a = parseAsk($("s-num").value), note = $("s-text").value.trim().slice(0, 400), msg = $("s-msg");
+  if (!a.label) { msg.textContent = "Please type a psalm number, or the passage you'd like."; $("s-num").focus(); return null; }
+  if (a.n !== null && !(a.n >= 1 && a.n <= 150)) { msg.textContent = "Psalms run from 1 to 150."; $("s-num").focus(); return null; }
+  if (a.n !== null && madeSet.has(a.n)) { msg.textContent = a.label + " is already in the Psalter, near the top."; return null; }
+  return { ...a, note };
+}
+/* The code tells the weekly helper this message came from the Psalter page; it only acts on messages carrying it. */
+const PSALTER_CODE = "PSALTER-GPSM7S";
+function composeText(f) { return "Psalm suggestion for the Psalter: " + f.label + (f.note ? ". " + f.note : "."); }
+function refreshLinks() {
+  const f = { ...parseAsk($("s-num").value), note: $("s-text").value.trim().slice(0, 400) };
+  $("s-sms").href = "sms:?&body=" + encodeURIComponent(composeText(f));
+  $("s-mail").href = "mailto:?subject=" + encodeURIComponent("Psalm suggestion: " + f.label) + "&body=" + encodeURIComponent(composeText(f));
+}
+for (const id of ["s-num", "s-text"]) $(id).addEventListener("input", () => { refreshLinks(); $("s-msg").textContent = ""; });
+for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
+  $(id).addEventListener("click", e => {
+    if (!readForm()) { e.preventDefault(); return; }
+    refreshLinks(); $("s-msg").textContent = "Opening your " + where + " — choose Aaron, then send.";
+  });
+}
+
+(async () => {
+  const off = $("s-off"), form = $("s-form"), list = $("s-list");
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]); } catch (e) {}
+  if (!db) return;   // signed out or opened outside claude.ai: the text/email buttons stay
+  const [me, owner, canWrite] = await Promise.all([user ? user.id() : null, user ? user.isOwner() : false, user ? user.can("data.write") : null]);
+  let writable = canWrite !== false;
+  const setForm = () => { $("s-save-row").hidden = !writable; $("s-msg-row").hidden = writable; };
+  setForm();
+  const col = db.collection("suggestions");
+  let rows = [];
+
+  async function render() {
+    const ids = [...new Set(rows.map(r => r.d.by).filter(Boolean))];
+    const ps = (user && ids.length) ? await user.profiles(ids) : {};
+    list.innerHTML = "";
+    const sorted = rows.slice().sort((x, y) => {
+      const rank = r => madeSet.has(r.d.psalm) ? 2 : r.d.status === "next" ? 0 : 1;
+      return rank(x) - rank(y) || String(y.d.at).localeCompare(String(x.d.at));
+    });
+    for (const r of sorted) {
+      const d = r.d, made = madeSet.has(d.psalm);
+      const li = document.createElement("li"); li.className = "s-item";
+      const num = document.createElement("span"); num.className = "num";
+      const b = document.createElement("b"); b.textContent = d.psalm || "✦"; num.appendChild(b);
+      const body = document.createElement("div"); body.className = "s-body";
+      if (!d.psalm && d.passage) { const pt = document.createElement("span"); pt.textContent = d.passage; body.appendChild(pt); }
+      if (d.note) { const t = document.createElement("span"); t.className = "s-text"; t.textContent = d.note; body.appendChild(t); }
+      const meta = document.createElement("div"); meta.className = "s-meta";
+      const chip = document.createElement("span");
+      chip.className = "chip" + (made ? " made" : d.status === "next" ? " next" : "");
+      chip.textContent = made ? "Made" : d.status === "next" ? "Coming next" : "Asked for";
+      const who = document.createElement("span");
+      const p = ps[d.by];
+      who.textContent = (d.by && d.by === me) ? "You asked" : ((p && p.name) || "Someone") + " asked";
+      meta.append(chip, who); body.appendChild(meta);
+      const acts = document.createElement("div"); acts.className = "s-actions";
+      if (made) {
+        const play = document.createElement("button"); play.textContent = "Play it";
+        play.addEventListener("click", () => { const i = trackOf(d.psalm); if (i >= 0) { playTrack(i); window.scrollTo({ top: 0, behavior: "smooth" }); } });
+        acts.appendChild(play);
+      }
+      if (owner && !made) {
+        const nx = document.createElement("button");
+        nx.textContent = d.status === "next" ? "Unmark" : "Mark coming next";
+        nx.addEventListener("click", async () => { nx.disabled = true; try { await col.doc(r.id).update({ status: d.status === "next" ? "asked" : "next" }); } catch (e) { nx.disabled = false; } });
+        acts.appendChild(nx);
+      }
+      if (owner || (d.by && d.by === me && writable)) {
+        const rm = document.createElement("button"); rm.textContent = "Remove";
+        rm.addEventListener("click", async () => { rm.disabled = true; try { await col.doc(r.id).delete(); } catch (e) { rm.disabled = false; } });
+        acts.appendChild(rm);
+      }
+      if (acts.childNodes.length) body.appendChild(acts);
+      li.append(num, body); list.appendChild(li);
+    }
+    if (!rows.length && writable) { off.hidden = false; off.textContent = "No suggestions yet."; }
+    else if (writable) off.hidden = true;
+  }
+
+  col.onSnapshot(snap => { rows = snap.docs.filter(s => s.exists).map(s => ({ id: s.id, d: s.data() })); render(); },
+                 () => { off.hidden = false; off.textContent = "Suggestions couldn't load right now. Try reopening the page."; });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!writable) return;
+    const f = readForm(); if (!f) return;
+    const { n, label, note } = f, msg = $("s-msg");
+    $("s-send").disabled = true; msg.textContent = "Sending…";
+    try {
+      await col.add({ psalm: n, passage: n === null ? label : "", note, by: me || "", at: new Date().toISOString(), status: "asked" });
+      $("s-num").value = ""; $("s-text").value = ""; msg.textContent = "Thank you — " + label + " is on the list.";
+    } catch (err) {
+      if (err && err.code === "invalid_argument") { writable = false; setForm(); msg.textContent = ""; }
+      else if (err && err.code === "quota_exceeded") msg.textContent = "The suggestion list is full right now.";
+      else msg.textContent = "That didn't send. Please try again in a moment.";
+    } finally { $("s-send").disabled = false; }
+  });
+})();
+</script>
+
+<script>
+/* Tabs. Revelation and Judges are their own pages (revelation/ and judges/, same artifact), each shown in a frame below
+   the tab bar, so each keeps its own look and player. Switching pauses whichever player you leave. The choice is
+   remembered per viewer. */
+(() => {
+  const root = document.documentElement, bar = document.querySelector(".tabs");
+  const TABS = {
+    psalter: { btn: "tab-psalter", hash: "#psalter" },
+    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/index.html" },
+    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/index.html" },
+  };
+  const ORDER = ["psalter", "rev", "judges"];
+  let cur = null;
+  const fr = k => TABS[k].frame && document.getElementById(TABS[k].frame);
+  const fit = () => { const h = bar.getBoundingClientRect().height;
+    for (const k of ORDER) { const f = fr(k); if (f) { f.style.top = h + "px"; f.style.height = "calc(100dvh - " + h + "px)"; } } };
+  function pauseTab(k) {
+    if (k === "psalter") { try { if (typeof playing !== "undefined" && (playing || loading)) pause(); } catch (e) {} return; }
+    try { const w = fr(k).contentWindow; if (w && typeof w.pause === "function") w.pause(); } catch (e) {}
+  }
+  function show(which, remember = true) {
+    if (!TABS[which]) which = "psalter";
+    for (const k of ORDER) if (k !== which) pauseTab(k);
+    const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
+    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges");
+    for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
+    cur = which; fit();
+    if (remember) { try { localStorage.setItem("tab", which); } catch (e) {} }
+    try { history.replaceState(null, "", TABS[which].hash); } catch (e) {}
+  }
+  for (const k of ORDER) {
+    document.getElementById(TABS[k].btn).addEventListener("click", () => show(k));
+    const f = fr(k);
+    if (f) f.addEventListener("load", () => {
+      try { const t = root.getAttribute("data-theme"); if (t) f.contentDocument.documentElement.setAttribute("data-theme", t); } catch (e) {}
+    });
+  }
+  bar.addEventListener("keydown", e => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const i = (ORDER.indexOf(cur) + (e.key === "ArrowRight" ? 1 : ORDER.length - 1)) % ORDER.length;
+    show(ORDER[i]); document.getElementById(TABS[ORDER[i]].btn).focus();
+  });
+  // while another collection is showing, this page's own keyboard shortcuts must not drive the hidden Psalter player
+  document.addEventListener("keydown", e => { if (cur !== "psalter" && !bar.contains(e.target)) e.stopImmediatePropagation(); }, true);
+  addEventListener("resize", fit);
+  let start = "psalter";
+  try { start = localStorage.getItem("tab") || start; } catch (e) {}
+  for (const k of ORDER) if (location.hash === TABS[k].hash) start = k;
+  show(start, false);
+})();
+</script>
+<script>/* mp4-muxer 5.2.2, MIT licence, (c) Vanilagy: builds the MP4 for the clip maker */
+"use strict";var Mp4Muxer=(()=>{var e=Object.defineProperty,t=Object.getOwnPropertyDescriptor,i=Object.getOwnPropertyNames,s=Object.prototype.hasOwnProperty,a=(e,t,i)=>{if(!t.has(e))throw TypeError("Cannot "+i)},r=(e,t,i)=>(a(e,t,"read from private field"),i?i.call(e):t.get(e)),n=(e,t,i)=>{if(t.has(e))throw TypeError("Cannot add the same private member more than once");t instanceof WeakSet?t.add(e):t.set(e,i)},o=(e,t,i,s)=>(a(e,t,"write to private field"),s?s.call(e,i):t.set(e,i),i),h=(e,t,i)=>(a(e,t,"access private method"),i),l={};((t,i)=>{for(var s in i)e(t,s,{get:i[s],enumerable:!0})})(l,{ArrayBufferTarget:()=>Me,FileSystemWritableFileStreamTarget:()=>Oe,Muxer:()=>Rt,StreamTarget:()=>We});var d,f,u,m,p,c,w,g,b=new Uint8Array(8),y=new DataView(b.buffer),k=e=>[(e%256+256)%256],T=e=>(y.setUint16(0,e,!1),[b[0],b[1]]),C=e=>(y.setUint32(0,e,!1),[b[1],b[2],b[3]]),v=e=>(y.setUint32(0,e,!1),[b[0],b[1],b[2],b[3]]),S=e=>(y.setUint32(0,Math.floor(e/2**32),!1),y.setUint32(4,e,!1),[b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]]),x=e=>(y.setInt16(0,256*e,!1),[b[0],b[1]]),z=e=>(y.setInt32(0,65536*e,!1),[b[0],b[1],b[2],b[3]]),E=e=>(y.setInt32(0,2**30*e,!1),[b[0],b[1],b[2],b[3]]),A=(e,t=!1)=>{let i=Array(e.length).fill(null).map(((t,i)=>e.charCodeAt(i)));return t&&i.push(0),i},M=e=>e&&e[e.length-1],W=e=>{let t;for(let i of e)(!t||i.presentationTimestamp>t.presentationTimestamp)&&(t=i);return t},O=(e,t,i=!0)=>{let s=e*t;return i?Math.round(s):s},B=e=>{let t=e*(Math.PI/180),i=Math.cos(t),s=Math.sin(t);return[i,s,0,-s,i,0,0,0,1]},U=B(0),D=e=>[z(e[0]),z(e[1]),E(e[2]),z(e[3]),z(e[4]),E(e[5]),z(e[6]),z(e[7]),E(e[8])],j=e=>e?"object"!=typeof e?e:Array.isArray(e)?e.map(j):Object.fromEntries(Object.entries(e).map((([e,t])=>[e,j(t)]))):e,R=e=>e>=0&&e<2**32,I=(e,t,i)=>({type:e,contents:t&&new Uint8Array(t.flat(10)),children:i}),N=(e,t,i,s,a)=>I(e,[k(t),C(i),s??[]],a),V=e=>({type:"mdat",largeSize:e}),F=(e,t,i=!1)=>I("moov",null,[L(t,e),...e.map((e=>$(e,t))),i?me(e):null]),L=(e,t)=>{let i=O(Math.max(0,...t.filter((e=>e.samples.length>0)).map((e=>{const t=W(e.samples);return t.presentationTimestamp+t.duration}))),Bt),s=Math.max(...t.map((e=>e.id)))+1,a=!R(e)||!R(i),r=a?S:v;return N("mvhd",+a,0,[r(e),r(e),v(Bt),r(i),z(1),x(1),Array(10).fill(0),D(U),Array(24).fill(0),v(s)])},$=(e,t)=>I("trak",null,[P(e,t),H(e,t)]),P=(e,t)=>{let i,s=W(e.samples),a=O(s?s.presentationTimestamp+s.duration:0,Bt),r=!R(t)||!R(a),n=r?S:v;return i="video"===e.info.type?"number"==typeof e.info.rotation?B(e.info.rotation):e.info.rotation:U,N("tkhd",+r,3,[n(t),n(t),v(e.id),v(0),n(a),Array(8).fill(0),T(0),T(0),x("audio"===e.info.type?1:0),T(0),D(i),z("video"===e.info.type?e.info.width:0),z("video"===e.info.type?e.info.height:0)])},H=(e,t)=>I("mdia",null,[_(e,t),q("video"===e.info.type?"vide":"soun"),G(e)]),_=(e,t)=>{let i=W(e.samples),s=O(i?i.presentationTimestamp+i.duration:0,e.timescale),a=!R(t)||!R(s),r=a?S:v;return N("mdhd",+a,0,[r(t),r(t),v(e.timescale),r(s),T(21956),T(0)])},q=e=>N("hdlr",0,0,[A("mhlr"),A(e),v(0),v(0),v(0),A("mp4-muxer-hdlr",!0)]),G=e=>I("minf",null,["video"===e.info.type?J():K(),Q(),Z(e)]),J=()=>N("vmhd",0,1,[T(0),T(0),T(0),T(0)]),K=()=>N("smhd",0,0,[T(0),T(0)]),Q=()=>I("dinf",null,[X()]),X=()=>N("dref",0,0,[v(1)],[Y()]),Y=()=>N("url ",0,1),Z=e=>{const t=e.compositionTimeOffsetTable.length>1||e.compositionTimeOffsetTable.some((e=>0!==e.sampleCompositionTimeOffset));return I("stbl",null,[ee(e),oe(e),he(e),le(e),de(e),fe(e),t?ue(e):null])},ee=e=>N("stsd",0,0,[v(1)],["video"===e.info.type?te(Se[e.info.codec],e):ne(ze[e.info.codec],e)]),te=(e,t)=>{return I(e,[Array(6).fill(0),T(1),T(0),T(0),Array(12).fill(0),T(t.info.width),T(t.info.height),v(4718592),v(4718592),v(0),T(1),Array(32).fill(0),T(24),(i=65535,y.setInt16(0,i,!1),[b[0],b[1]])],[xe[t.info.codec](t),t.info.decoderConfig.colorSpace?re(t):null]);var i},ie={bt709:1,bt470bg:5,smpte170m:6},se={bt709:1,smpte170m:6,"iec61966-2-1":13},ae={rgb:0,bt709:1,bt470bg:5,smpte170m:6},re=e=>I("colr",[A("nclx"),T(ie[e.info.decoderConfig.colorSpace.primaries]),T(se[e.info.decoderConfig.colorSpace.transfer]),T(ae[e.info.decoderConfig.colorSpace.matrix]),k((e.info.decoderConfig.colorSpace.fullRange?1:0)<<7)]),ne=(e,t)=>I(e,[Array(6).fill(0),T(1),T(0),T(0),v(0),T(t.info.numberOfChannels),T(16),T(0),T(0),z(t.info.sampleRate)],[Ee[t.info.codec](t)]),oe=e=>N("stts",0,0,[v(e.timeToSampleTable.length),e.timeToSampleTable.map((e=>[v(e.sampleCount),v(e.sampleDelta)]))]),he=e=>{if(e.samples.every((e=>"key"===e.type)))return null;let t=[...e.samples.entries()].filter((([,e])=>"key"===e.type));return N("stss",0,0,[v(t.length),t.map((([e])=>v(e+1)))])},le=e=>N("stsc",0,0,[v(e.compactlyCodedChunkTable.length),e.compactlyCodedChunkTable.map((e=>[v(e.firstChunk),v(e.samplesPerChunk),v(1)]))]),de=e=>N("stsz",0,0,[v(0),v(e.samples.length),e.samples.map((e=>v(e.size)))]),fe=e=>e.finalizedChunks.length>0&&M(e.finalizedChunks).offset>=2**32?N("co64",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map((e=>S(e.offset)))]):N("stco",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map((e=>v(e.offset)))]),ue=e=>N("ctts",0,0,[v(e.compositionTimeOffsetTable.length),e.compositionTimeOffsetTable.map((e=>[v(e.sampleCount),v(e.sampleCompositionTimeOffset)]))]),me=e=>I("mvex",null,e.map(pe)),pe=e=>N("trex",0,0,[v(e.id),v(1),v(0),v(0),v(0)]),ce=(e,t)=>I("moof",null,[we(e),...t.map(be)]),we=e=>N("mfhd",0,0,[v(e)]),ge=e=>{let t=0,i=0,s="delta"===e.type;return i|=+s,t|=s?1:2,t<<24|i<<16},be=e=>I("traf",null,[ye(e),ke(e),Te(e)]),ye=e=>{let t=0;t|=8,t|=16,t|=32,t|=131072;let i=e.currentChunk.samples[1]??e.currentChunk.samples[0],s={duration:i.timescaleUnitsToNextSample,size:i.size,flags:ge(i)};return N("tfhd",0,131128,[v(e.id),v(s.duration),v(s.size),v(s.flags)])},ke=e=>N("tfdt",1,0,[S(O(e.currentChunk.startTimestamp,e.timescale))]),Te=e=>{let t=e.currentChunk.samples.map((e=>e.timescaleUnitsToNextSample)),i=e.currentChunk.samples.map((e=>e.size)),s=e.currentChunk.samples.map(ge),a=e.currentChunk.samples.map((t=>O(t.presentationTimestamp-t.decodeTimestamp,e.timescale))),r=new Set(t),n=new Set(i),o=new Set(s),h=new Set(a),l=2===o.size&&s[0]!==s[1],d=r.size>1,f=n.size>1,u=!l&&o.size>1,m=h.size>1||[...h].some((e=>0!==e)),p=0;return p|=1,p|=4*+l,p|=256*+d,p|=512*+f,p|=1024*+u,p|=2048*+m,N("trun",1,p,[v(e.currentChunk.samples.length),v(e.currentChunk.offset-e.currentChunk.moofOffset||0),l?v(s[0]):[],e.currentChunk.samples.map(((e,r)=>{return[d?v(t[r]):[],f?v(i[r]):[],u?v(s[r]):[],m?(n=a[r],y.setInt32(0,n,!1),[b[0],b[1],b[2],b[3]]):[]];var n}))])},Ce=(e,t)=>N("tfra",1,0,[v(e.id),v(63),v(e.finalizedChunks.length),e.finalizedChunks.map((i=>[S(O(i.startTimestamp,e.timescale)),S(i.moofOffset),v(t+1),v(1),v(1)]))]),ve=()=>N("mfro",0,0,[v(0)]),Se={avc:"avc1",hevc:"hvc1",vp9:"vp09",av1:"av01"},xe={avc:e=>e.info.decoderConfig&&I("avcC",[...new Uint8Array(e.info.decoderConfig.description)]),hevc:e=>e.info.decoderConfig&&I("hvcC",[...new Uint8Array(e.info.decoderConfig.description)]),vp9:e=>{if(!e.info.decoderConfig)return null;let t=e.info.decoderConfig;if(!t.colorSpace)throw new Error("'colorSpace' is required in the decoder config for VP9.");let i=t.codec.split("."),s=Number(i[1]),a=Number(i[2]),r=0+(Number(i[3])<<4)+Number(t.colorSpace.fullRange);return N("vpcC",1,0,[k(s),k(a),k(r),k(2),k(2),k(2),T(0)])},av1:()=>I("av1C",[129,0,0,0])},ze={aac:"mp4a",opus:"Opus"},Ee={aac:e=>{let t=new Uint8Array(e.info.decoderConfig.description);return N("esds",0,0,[v(58753152),k(32+t.byteLength),T(1),k(0),v(75530368),k(18+t.byteLength),k(64),k(21),C(0),v(130071),v(130071),v(92307584),k(t.byteLength),...t,v(109084800),k(1),k(2)])},opus:e=>{let t=3840,i=0;const s=e.info.decoderConfig?.description;if(s){if(s.byteLength<18)throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");const e=ArrayBuffer.isView(s)?new DataView(s.buffer,s.byteOffset,s.byteLength):new DataView(s);t=e.getUint16(10,!0),i=e.getInt16(14,!0)}return I("dOps",[k(0),k(e.info.numberOfChannels),T(t),v(e.info.sampleRate),x(i),k(0)])}},Ae=(Symbol("isTarget"),class{}),Me=class extends Ae{constructor(){super(...arguments),this.buffer=null}},We=class extends Ae{constructor(e){if(super(),this.options=e,"object"!=typeof e)throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");if(e.onData){if("function"!=typeof e.onData)throw new TypeError("options.onData, when provided, must be a function.");if(e.onData.length<2)throw new TypeError("options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs.")}if(void 0!==e.chunked&&"boolean"!=typeof e.chunked)throw new TypeError("options.chunked, when provided, must be a boolean.");if(void 0!==e.chunkSize&&(!Number.isInteger(e.chunkSize)||e.chunkSize<1024))throw new TypeError("options.chunkSize, when provided, must be an integer and not smaller than 1024.")}},Oe=class extends Ae{constructor(e,t){if(super(),this.stream=e,this.options=t,!(e instanceof FileSystemWritableFileStream))throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");if(void 0!==t&&"object"!=typeof t)throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");if(t&&void 0!==t.chunkSize&&(!Number.isInteger(t.chunkSize)||t.chunkSize<=0))throw new TypeError("options.chunkSize, when provided, must be a positive integer")}},Be=class{constructor(){this.pos=0,n(this,d,new Uint8Array(8)),n(this,f,new DataView(r(this,d).buffer)),this.offsets=new WeakMap}seek(e){this.pos=e}writeU32(e){r(this,f).setUint32(0,e,!1),this.write(r(this,d).subarray(0,4))}writeU64(e){r(this,f).setUint32(0,Math.floor(e/2**32),!1),r(this,f).setUint32(4,e,!1),this.write(r(this,d).subarray(0,8))}writeAscii(e){for(let t=0;t<e.length;t++)r(this,f).setUint8(t%8,e.charCodeAt(t)),t%8==7&&this.write(r(this,d));e.length%8!=0&&this.write(r(this,d).subarray(0,e.length%8))}writeBox(e){if(this.offsets.set(e,this.pos),e.contents&&!e.children)this.writeBoxHeader(e,e.size??e.contents.byteLength+8),this.write(e.contents);else{let t=this.pos;if(this.writeBoxHeader(e,0),e.contents&&this.write(e.contents),e.children)for(let t of e.children)t&&this.writeBox(t);let i=this.pos,s=e.size??i-t;this.seek(t),this.writeBoxHeader(e,s),this.seek(i)}}writeBoxHeader(e,t){this.writeU32(e.largeSize?1:t),this.writeAscii(e.type),e.largeSize&&this.writeU64(t)}measureBoxHeader(e){return 8+(e.largeSize?8:0)}patchBox(e){let t=this.pos;this.seek(this.offsets.get(e)),this.writeBox(e),this.seek(t)}measureBox(e){if(e.contents&&!e.children){return this.measureBoxHeader(e)+e.contents.byteLength}{let t=this.measureBoxHeader(e);if(e.contents&&(t+=e.contents.byteLength),e.children)for(let i of e.children)i&&(t+=this.measureBox(i));return t}}};d=new WeakMap,f=new WeakMap;var Ue=class extends Be{constructor(e){super(),n(this,w),n(this,u,void 0),n(this,m,new ArrayBuffer(65536)),n(this,p,new Uint8Array(r(this,m))),n(this,c,0),o(this,u,e)}write(e){h(this,w,g).call(this,this.pos+e.byteLength),r(this,p).set(e,this.pos),this.pos+=e.byteLength,o(this,c,Math.max(r(this,c),this.pos))}finalize(){h(this,w,g).call(this,this.pos),r(this,u).buffer=r(this,m).slice(0,Math.max(r(this,c),this.pos))}};u=new WeakMap,m=new WeakMap,p=new WeakMap,c=new WeakMap,w=new WeakSet,g=function(e){let t=r(this,m).byteLength;for(;t<e;)t*=2;if(t===r(this,m).byteLength)return;let i=new ArrayBuffer(t),s=new Uint8Array(i);s.set(r(this,p),0),o(this,m,i),o(this,p,s)};var De,je,Re,Ie,Ne,Ve,Fe,Le,$e,Pe,He,_e,qe,Ge=class extends Be{constructor(e){super(),n(this,Ve),n(this,Le),n(this,Pe),n(this,_e),n(this,De,void 0),n(this,je,[]),n(this,Re,void 0),n(this,Ie,void 0),n(this,Ne,[]),o(this,De,e),o(this,Re,e.options?.chunked??!1),o(this,Ie,e.options?.chunkSize??16777216)}write(e){r(this,je).push({data:e.slice(),start:this.pos}),this.pos+=e.byteLength}flush(){if(0===r(this,je).length)return;let e=[],t=[...r(this,je)].sort(((e,t)=>e.start-t.start));e.push({start:t[0].start,size:t[0].data.byteLength});for(let i=1;i<t.length;i++){let s=e[e.length-1],a=t[i];a.start<=s.start+s.size?s.size=Math.max(s.size,a.start+a.data.byteLength-s.start):e.push({start:a.start,size:a.data.byteLength})}for(let t of e){t.data=new Uint8Array(t.size);for(let e of r(this,je))t.start<=e.start&&e.start<t.start+t.size&&t.data.set(e.data,e.start-t.start);r(this,Re)?(h(this,Ve,Fe).call(this,t.data,t.start),h(this,_e,qe).call(this)):r(this,De).options.onData?.(t.data,t.start)}r(this,je).length=0}finalize(){r(this,Re)&&h(this,_e,qe).call(this,!0)}};De=new WeakMap,je=new WeakMap,Re=new WeakMap,Ie=new WeakMap,Ne=new WeakMap,Ve=new WeakSet,Fe=function(e,t){let i=r(this,Ne).findIndex((e=>e.start<=t&&t<e.start+r(this,Ie)));-1===i&&(i=h(this,Pe,He).call(this,t));let s=r(this,Ne)[i],a=t-s.start,n=e.subarray(0,Math.min(r(this,Ie)-a,e.byteLength));s.data.set(n,a);let o={start:a,end:a+n.byteLength};if(h(this,Le,$e).call(this,s,o),0===s.written[0].start&&s.written[0].end===r(this,Ie)&&(s.shouldFlush=!0),r(this,Ne).length>2){for(let e=0;e<r(this,Ne).length-1;e++)r(this,Ne)[e].shouldFlush=!0;h(this,_e,qe).call(this)}n.byteLength<e.byteLength&&h(this,Ve,Fe).call(this,e.subarray(n.byteLength),t+n.byteLength)},Le=new WeakSet,$e=function(e,t){let i=0,s=e.written.length-1,a=-1;for(;i<=s;){let r=Math.floor(i+(s-i+1)/2);e.written[r].start<=t.start?(i=r+1,a=r):s=r-1}for(e.written.splice(a+1,0,t),(-1===a||e.written[a].end<t.start)&&a++;a<e.written.length-1&&e.written[a].end>=e.written[a+1].start;)e.written[a].end=Math.max(e.written[a].end,e.written[a+1].end),e.written.splice(a+1,1)},Pe=new WeakSet,He=function(e){let t={start:Math.floor(e/r(this,Ie))*r(this,Ie),data:new Uint8Array(r(this,Ie)),written:[],shouldFlush:!1};return r(this,Ne).push(t),r(this,Ne).sort(((e,t)=>e.start-t.start)),r(this,Ne).indexOf(t)},_e=new WeakSet,qe=function(e=!1){for(let t=0;t<r(this,Ne).length;t++){let i=r(this,Ne)[t];if(i.shouldFlush||e){for(let e of i.written)r(this,De).options.onData?.(i.data.subarray(e.start,e.end),i.start+e.start);r(this,Ne).splice(t--,1)}}};var Je,Ke,Qe,Xe,Ye,Ze,et,tt,it,st,at,rt,nt,ot,ht,lt,dt,ft,ut,mt,pt,ct,wt,gt,bt,yt,kt,Tt,Ct,vt,St,xt,zt,Et,At,Mt,Wt,Ot=class extends Ge{constructor(e){super(new We({onData:(t,i)=>e.stream.write({type:"write",data:t,position:i}),chunked:!0,chunkSize:e.options?.chunkSize}))}},Bt=1e3,Ut=["avc","hevc","vp9","av1"],Dt=["aac","opus"],jt=["strict","offset","cross-track-offset"],Rt=class{constructor(e){if(n(this,nt),n(this,ht),n(this,dt),n(this,ut),n(this,pt),n(this,wt),n(this,bt),n(this,kt),n(this,Ct),n(this,St),n(this,zt),n(this,At),n(this,Je,void 0),n(this,Ke,void 0),n(this,Qe,void 0),n(this,Xe,void 0),n(this,Ye,null),n(this,Ze,null),n(this,et,Math.floor(Date.now()/1e3)+2082844800),n(this,tt,[]),n(this,it,1),n(this,st,[]),n(this,at,[]),n(this,rt,!1),h(this,nt,ot).call(this,e),e.video=j(e.video),e.audio=j(e.audio),e.fastStart=j(e.fastStart),this.target=e.target,o(this,Je,{firstTimestampBehavior:"strict",...e}),e.target instanceof Me)o(this,Ke,new Ue(e.target));else if(e.target instanceof We)o(this,Ke,new Ge(e.target));else{if(!(e.target instanceof Oe))throw new Error(`Invalid target: ${e.target}`);o(this,Ke,new Ot(e.target))}h(this,ut,mt).call(this),h(this,ht,lt).call(this)}addVideoChunk(e,t,i,s){if(!(e instanceof EncodedVideoChunk))throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");if(t&&"object"!=typeof t)throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number.");if(void 0!==s&&!Number.isFinite(s))throw new TypeError("addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number.");let a=new Uint8Array(e.byteLength);e.copyTo(a),this.addVideoChunkRaw(a,e.type,i??e.timestamp,e.duration,t,s)}addVideoChunkRaw(e,t,i,s,a,n){if(!(e instanceof Uint8Array))throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");if(void 0!==n&&!Number.isFinite(n))throw new TypeError("addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number.");if(h(this,At,Mt).call(this),!r(this,Je).video)throw new Error("No video track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ye).samples.length===r(this,Je).fastStart.expectedVideoChunks)throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedVideoChunks}).`);let o=h(this,wt,gt).call(this,r(this,Ye),e,t,i,s,a,n);if("fragmented"===r(this,Je).fastStart&&r(this,Ze)){for(;r(this,at).length>0&&r(this,at)[0].decodeTimestamp<=o.decodeTimestamp;){let e=r(this,at).shift();h(this,bt,yt).call(this,r(this,Ze),e)}o.decodeTimestamp<=r(this,Ze).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ye),o):r(this,st).push(o)}else h(this,bt,yt).call(this,r(this,Ye),o)}addAudioChunk(e,t,i){if(!(e instanceof EncodedAudioChunk))throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");if(t&&"object"!=typeof t)throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number.");let s=new Uint8Array(e.byteLength);e.copyTo(s),this.addAudioChunkRaw(s,e.type,i??e.timestamp,e.duration,t)}addAudioChunkRaw(e,t,i,s,a){if(!(e instanceof Uint8Array))throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");if(h(this,At,Mt).call(this),!r(this,Je).audio)throw new Error("No audio track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ze).samples.length===r(this,Je).fastStart.expectedAudioChunks)throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedAudioChunks}).`);let n=h(this,wt,gt).call(this,r(this,Ze),e,t,i,s,a);if("fragmented"===r(this,Je).fastStart&&r(this,Ye)){for(;r(this,st).length>0&&r(this,st)[0].decodeTimestamp<=n.decodeTimestamp;){let e=r(this,st).shift();h(this,bt,yt).call(this,r(this,Ye),e)}n.decodeTimestamp<=r(this,Ye).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ze),n):r(this,at).push(n)}else h(this,bt,yt).call(this,r(this,Ze),n)}finalize(){if(r(this,rt))throw new Error("Cannot finalize a muxer more than once.");if("fragmented"===r(this,Je).fastStart){for(let e of r(this,st))h(this,bt,yt).call(this,r(this,Ye),e);for(let e of r(this,at))h(this,bt,yt).call(this,r(this,Ze),e);h(this,St,xt).call(this,!1)}else r(this,Ye)&&h(this,Ct,vt).call(this,r(this,Ye)),r(this,Ze)&&h(this,Ct,vt).call(this,r(this,Ze));let e=[r(this,Ye),r(this,Ze)].filter(Boolean);if("in-memory"===r(this,Je).fastStart){let t;for(let i=0;i<2;i++){let i=F(e,r(this,et)),s=r(this,Ke).measureBox(i);t=r(this,Ke).measureBox(r(this,Xe));let a=r(this,Ke).pos+s+t;for(let e of r(this,tt)){e.offset=a;for(let{data:i}of e.samples)a+=i.byteLength,t+=i.byteLength}if(a<2**32)break;t>=2**32&&(r(this,Xe).largeSize=!0)}let i=F(e,r(this,et));r(this,Ke).writeBox(i),r(this,Xe).size=t,r(this,Ke).writeBox(r(this,Xe));for(let e of r(this,tt))for(let t of e.samples)r(this,Ke).write(t.data),t.data=null}else if("fragmented"===r(this,Je).fastStart){let t=r(this,Ke).pos,i=(e=>I("mfra",null,[...e.map(Ce),ve()]))(e);r(this,Ke).writeBox(i);let s=r(this,Ke).pos-t;r(this,Ke).seek(r(this,Ke).pos-4),r(this,Ke).writeU32(s)}else{let t=r(this,Ke).offsets.get(r(this,Xe)),i=r(this,Ke).pos-t;r(this,Xe).size=i,r(this,Xe).largeSize=i>=2**32,r(this,Ke).patchBox(r(this,Xe));let s=F(e,r(this,et));if("object"==typeof r(this,Je).fastStart){r(this,Ke).seek(r(this,Qe)),r(this,Ke).writeBox(s);let e=t-r(this,Ke).pos;r(this,Ke).writeBox({type:"free",size:e})}else r(this,Ke).writeBox(s)}h(this,zt,Et).call(this),r(this,Ke).finalize(),o(this,rt,!0)}};return Je=new WeakMap,Ke=new WeakMap,Qe=new WeakMap,Xe=new WeakMap,Ye=new WeakMap,Ze=new WeakMap,et=new WeakMap,tt=new WeakMap,it=new WeakMap,st=new WeakMap,at=new WeakMap,rt=new WeakMap,nt=new WeakSet,ot=function(e){if("object"!=typeof e)throw new TypeError("The muxer requires an options object to be passed to its constructor.");if(!(e.target instanceof Ae))throw new TypeError("The target must be provided and an instance of Target.");if(e.video){if(!Ut.includes(e.video.codec))throw new TypeError(`Unsupported video codec: ${e.video.codec}`);if(!Number.isInteger(e.video.width)||e.video.width<=0)throw new TypeError(`Invalid video width: ${e.video.width}. Must be a positive integer.`);if(!Number.isInteger(e.video.height)||e.video.height<=0)throw new TypeError(`Invalid video height: ${e.video.height}. Must be a positive integer.`);const t=e.video.rotation;if("number"==typeof t&&![0,90,180,270].includes(t))throw new TypeError(`Invalid video rotation: ${t}. Has to be 0, 90, 180 or 270.`);if(Array.isArray(t)&&(9!==t.length||t.some((e=>"number"!=typeof e))))throw new TypeError(`Invalid video transformation matrix: ${t.join()}`);if(void 0!==e.video.frameRate&&(!Number.isInteger(e.video.frameRate)||e.video.frameRate<=0))throw new TypeError(`Invalid video frame rate: ${e.video.frameRate}. Must be a positive integer.`)}if(e.audio){if(!Dt.includes(e.audio.codec))throw new TypeError(`Unsupported audio codec: ${e.audio.codec}`);if(!Number.isInteger(e.audio.numberOfChannels)||e.audio.numberOfChannels<=0)throw new TypeError(`Invalid number of audio channels: ${e.audio.numberOfChannels}. Must be a positive integer.`);if(!Number.isInteger(e.audio.sampleRate)||e.audio.sampleRate<=0)throw new TypeError(`Invalid audio sample rate: ${e.audio.sampleRate}. Must be a positive integer.`)}if(e.firstTimestampBehavior&&!jt.includes(e.firstTimestampBehavior))throw new TypeError(`Invalid first timestamp behavior: ${e.firstTimestampBehavior}`);if("object"==typeof e.fastStart){if(e.video){if(void 0===e.fastStart.expectedVideoChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedVideoChunks'.");if(!Number.isInteger(e.fastStart.expectedVideoChunks)||e.fastStart.expectedVideoChunks<0)throw new TypeError("'expectedVideoChunks' must be a non-negative integer.")}if(e.audio){if(void 0===e.fastStart.expectedAudioChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedAudioChunks'.");if(!Number.isInteger(e.fastStart.expectedAudioChunks)||e.fastStart.expectedAudioChunks<0)throw new TypeError("'expectedAudioChunks' must be a non-negative integer.")}}else if(![!1,"in-memory","fragmented"].includes(e.fastStart))throw new TypeError("'fastStart' option must be false, 'in-memory', 'fragmented' or an object.");if(void 0!==e.minFragmentDuration&&(!Number.isFinite(e.minFragmentDuration)||e.minFragmentDuration<0))throw new TypeError("'minFragmentDuration' must be a non-negative number.")},ht=new WeakSet,lt=function(){var e;if(r(this,Ke).writeBox((e={holdsAvc:"avc"===r(this,Je).video?.codec,fragmented:"fragmented"===r(this,Je).fastStart}).fragmented?I("ftyp",[A("iso5"),v(512),A("iso5"),A("iso6"),A("mp41")]):I("ftyp",[A("isom"),v(512),A("isom"),e.holdsAvc?A("avc1"):[],A("mp41")])),o(this,Qe,r(this,Ke).pos),"in-memory"===r(this,Je).fastStart)o(this,Xe,V(!1));else if("fragmented"===r(this,Je).fastStart);else{if("object"==typeof r(this,Je).fastStart){let e=h(this,dt,ft).call(this);r(this,Ke).seek(r(this,Ke).pos+e)}o(this,Xe,V(!0)),r(this,Ke).writeBox(r(this,Xe))}h(this,zt,Et).call(this)},dt=new WeakSet,ft=function(){if("object"!=typeof r(this,Je).fastStart)return;let e=0,t=[r(this,Je).fastStart.expectedVideoChunks,r(this,Je).fastStart.expectedAudioChunks];for(let i of t)i&&(e+=8*Math.ceil(2/3*i),e+=4*i,e+=12*Math.ceil(2/3*i),e+=4*i,e+=8*i);return e+=4096,e},ut=new WeakSet,mt=function(){if(r(this,Je).video&&o(this,Ye,{id:1,info:{type:"video",codec:r(this,Je).video.codec,width:r(this,Je).video.width,height:r(this,Je).video.height,rotation:r(this,Je).video.rotation??0,decoderConfig:null},timescale:r(this,Je).video.frameRate??57600,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),r(this,Je).audio&&(o(this,Ze,{id:r(this,Je).video?2:1,info:{type:"audio",codec:r(this,Je).audio.codec,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate,decoderConfig:null},timescale:r(this,Je).audio.sampleRate,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),"aac"===r(this,Je).audio.codec)){let e=h(this,pt,ct).call(this,2,r(this,Je).audio.sampleRate,r(this,Je).audio.numberOfChannels);r(this,Ze).info.decoderConfig={codec:r(this,Je).audio.codec,description:e,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate}}},pt=new WeakSet,ct=function(e,t,i){let s=[96e3,88200,64e3,48e3,44100,32e3,24e3,22050,16e3,12e3,11025,8e3,7350].indexOf(t),a=i,r="";r+=e.toString(2).padStart(5,"0"),r+=s.toString(2).padStart(4,"0"),15===s&&(r+=t.toString(2).padStart(24,"0")),r+=a.toString(2).padStart(4,"0");let n=8*Math.ceil(r.length/8);r=r.padEnd(n,"0");let o=new Uint8Array(r.length/8);for(let e=0;e<r.length;e+=8)o[e/8]=parseInt(r.slice(e,e+8),2);return o},wt=new WeakSet,gt=function(e,t,i,s,a,r,n){let o=s/1e6,l=(s-(n??0))/1e6,d=a/1e6,f=h(this,kt,Tt).call(this,o,l,e);return o=f.presentationTimestamp,l=f.decodeTimestamp,r?.decoderConfig&&(null===e.info.decoderConfig?e.info.decoderConfig=r.decoderConfig:Object.assign(e.info.decoderConfig,r.decoderConfig)),{presentationTimestamp:o,decodeTimestamp:l,duration:d,data:t,size:t.byteLength,type:i,timescaleUnitsToNextSample:O(d,e.timescale)}},bt=new WeakSet,yt=function(e,t){"fragmented"!==r(this,Je).fastStart&&e.samples.push(t);const i=O(t.presentationTimestamp-t.decodeTimestamp,e.timescale);if(null!==e.lastTimescaleUnits){let s=O(t.decodeTimestamp,e.timescale,!1),a=Math.round(s-e.lastTimescaleUnits);if(e.lastTimescaleUnits+=a,e.lastSample.timescaleUnitsToNextSample=a,"fragmented"!==r(this,Je).fastStart){let t=M(e.timeToSampleTable);1===t.sampleCount?(t.sampleDelta=a,t.sampleCount++):t.sampleDelta===a?t.sampleCount++:(t.sampleCount--,e.timeToSampleTable.push({sampleCount:2,sampleDelta:a}));const s=M(e.compositionTimeOffsetTable);s.sampleCompositionTimeOffset===i?s.sampleCount++:e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i})}}else e.lastTimescaleUnits=0,"fragmented"!==r(this,Je).fastStart&&(e.timeToSampleTable.push({sampleCount:1,sampleDelta:O(t.duration,e.timescale)}),e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i}));e.lastSample=t;let s=!1;if(e.currentChunk){let i=t.presentationTimestamp-e.currentChunk.startTimestamp;if("fragmented"===r(this,Je).fastStart){let a=r(this,Ye)??r(this,Ze);const n=r(this,Je).minFragmentDuration??1;e===a&&"key"===t.type&&i>=n&&(s=!0,h(this,St,xt).call(this))}else s=i>=.5}else s=!0;s&&(e.currentChunk&&h(this,Ct,vt).call(this,e),e.currentChunk={startTimestamp:t.presentationTimestamp,samples:[]}),e.currentChunk.samples.push(t)},kt=new WeakSet,Tt=function(e,t,i){const s="strict"===r(this,Je).firstTimestampBehavior,a=-1===i.lastDecodeTimestamp;if(s&&a&&0!==t)throw new Error(`The first chunk for your media track must have a timestamp of 0 (received DTS=${t}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.\n\nIf you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.\n`);if("offset"===r(this,Je).firstTimestampBehavior||"cross-track-offset"===r(this,Je).firstTimestampBehavior){let s;void 0===i.firstDecodeTimestamp&&(i.firstDecodeTimestamp=t),s="offset"===r(this,Je).firstTimestampBehavior?i.firstDecodeTimestamp:Math.min(r(this,Ye)?.firstDecodeTimestamp??1/0,r(this,Ze)?.firstDecodeTimestamp??1/0),t-=s,e-=s}if(t<i.lastDecodeTimestamp)throw new Error(`Timestamps must be monotonically increasing (DTS went from ${1e6*i.lastDecodeTimestamp} to ${1e6*t}).`);return i.lastDecodeTimestamp=t,{presentationTimestamp:e,decodeTimestamp:t}},Ct=new WeakSet,vt=function(e){if("fragmented"===r(this,Je).fastStart)throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");if(e.currentChunk)if(e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),0!==e.compactlyCodedChunkTable.length&&M(e.compactlyCodedChunkTable).samplesPerChunk===e.currentChunk.samples.length||e.compactlyCodedChunkTable.push({firstChunk:e.finalizedChunks.length,samplesPerChunk:e.currentChunk.samples.length}),"in-memory"!==r(this,Je).fastStart){e.currentChunk.offset=r(this,Ke).pos;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null;h(this,zt,Et).call(this)}else e.currentChunk.offset=0},St=new WeakSet,xt=function(e=!0){if("fragmented"!==r(this,Je).fastStart)throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");let t=[r(this,Ye),r(this,Ze)].filter((e=>e&&e.currentChunk));if(0===t.length)return;let i=(s=this,a=it,{set _(e){o(s,a,e,n)},get _(){return r(s,a,l)}})._++;var s,a,n,l;if(1===i){let e=F(t,r(this,et),!0);r(this,Ke).writeBox(e)}let d=r(this,Ke).pos,f=ce(i,t);r(this,Ke).writeBox(f);{let e=V(!1),i=0;for(let e of t)for(let t of e.currentChunk.samples)i+=t.size;let s=r(this,Ke).measureBox(e)+i;s>=2**32&&(e.largeSize=!0,s=r(this,Ke).measureBox(e)+i),e.size=s,r(this,Ke).writeBox(e)}for(let e of t){e.currentChunk.offset=r(this,Ke).pos,e.currentChunk.moofOffset=d;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null}let u=r(this,Ke).pos;r(this,Ke).seek(r(this,Ke).offsets.get(f));let m=ce(i,t);r(this,Ke).writeBox(m),r(this,Ke).seek(u);for(let e of t)e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),e.currentChunk=null;e&&h(this,zt,Et).call(this)},zt=new WeakSet,Et=function(){r(this,Ke)instanceof Ge&&r(this,Ke).flush()},At=new WeakSet,Mt=function(){if(r(this,rt))throw new Error("Cannot add new video or audio chunks after the file has been finalized.")},Wt=l,((a,r,n,o)=>{if(r&&"object"==typeof r||"function"==typeof r)for(let h of i(r))s.call(a,h)||h===n||e(a,h,{get:()=>r[h],enumerable:!(o=t(r,h))||o.enumerable});return a})(e({},"__esModule",{value:!0}),Wt)})();"object"==typeof module&&"object"==typeof module.exports&&Object.assign(module.exports,Mp4Muxer);
+</script>
+<script>
+/* the clip maker, built into the page (a separate file did not load on some phones) */
+/* Clip maker for the Psalter page: pick a reading and a span of verses, and the phone makes a short video of it
+   (the recording, the words on screen as they are spoken, a still background) to save and post. Everything runs on
+   the viewer's own device: the audio is the page's own published file, the frames are drawn on a canvas, and the
+   browser's MediaRecorder joins them in real time. clips.json gives each spoken piece's start, end, verse and words.
+   Lives in the top page (the one that can save files); the Revelation and Judges tabs open it with
+   parent.ClipMaker.open(file). */
+(() => {
+  const $ = id => document.getElementById(id);
+  const COL = {
+    psalter: { name: 'THE PSALTER', mark: '\u05ea\u05d4\u05dc\u05d9\u05dd', top: '#18201b', bottom: '#2b382f', glow: '#d7a447', ink: '#f1ecdf', accent: '#e0b25a', soft: '#a9b3a9' },
+    revelation: { name: 'REVELATION', mark: '\u1f08\u03c0\u03bf\u03ba\u03ac\u03bb\u03c5\u03c8\u03b9\u03c2', top: '#120a09', bottom: '#341611', glow: '#e0674a', ink: '#f3e7e1', accent: '#ef8a6c', soft: '#b39f96' },
+    judges: { name: 'JUDGES BY THE FIRE', mark: '\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd', top: '#110a05', bottom: '#38200d', glow: '#f0a04b', ink: '#f6ead6', accent: '#f6b465', soft: '#b8a389' },
+  };
+  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : 'psalter';
+  let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
+  const bytesCache = new Map();
+
+  // ------------------------------------------------------------------ data
+  async function data() {
+    if (!DATA) { const r = await fetch('clip/clips.json'); if (!r.ok) throw new Error('clips ' + r.status); DATA = await r.json(); }
+    return DATA;
+  }
+  function unitsOf(f) {
+    const segs = DATA[f].segs, out = [], idx = new Map();
+    for (const [s, e, v, t] of segs) {
+      if (!idx.has(v)) { idx.set(v, out.length); out.push({ v, s, e, text: t }); }
+      else { const u = out[idx.get(v)]; u.s = Math.min(u.s, s); u.e = Math.max(u.e, e); }
+    }
+    return out;
+  }
+  function unitLabel(f, u) {
+    const t = u.text.length > 46 ? u.text.slice(0, 44).replace(/\s+\S*$/, '') + '\u2026' : u.text;
+    if (u.v === 'title') return 'Opening \u00b7 ' + t;
+    if (DATA[f].unit === 'line') return 'Part ' + u.v + ' \u00b7 ' + t;
+    if (u.v.includes(':')) { const [c, v] = u.v.split(':'); return 'Psalm ' + c + ', verse ' + v + ' \u00b7 ' + t; }
+    return 'Verse ' + u.v + ' \u00b7 ' + t;
+  }
+  function reference(f, a, b) {           // the heading on the video
+    const d = DATA[f], ua = units[a], ub = units[b];
+    if (d.unit === 'line') return d.title.split(' \u00b7 ').pop();
+    const vs = units.slice(a, b + 1).filter(u => u.v !== 'title');
+    if (!vs.length) return d.title;
+    const all = a === 0 && b === units.length - 1;
+    if (f.includes('042-043')) {
+      if (all) return 'Psalms 42\u201343';
+      const [c1, v1] = vs[0].v.split(':'), [c2, v2] = vs[vs.length - 1].v.split(':');
+      if (c1 === c2) return 'Psalm ' + c1 + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+      return 'Psalms ' + c1 + ':' + v1 + '\u2013' + c2 + ':' + v2;
+    }
+    if (all) return d.title;
+    const v1 = vs[0].v, v2 = vs[vs.length - 1].v;
+    return d.title + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+  }
+  function span(a, b) {                    // the clip's time range in the track
+    const segs = DATA[file].segs, s0 = units[a].s, e0 = units[b].e;
+    const nextStart = segs.map(x => x[0]).filter(x => x > e0 + 0.05).sort((x, y) => x - y)[0];
+    const tail = nextStart === undefined ? 2.2 : Math.max(0.5, Math.min(2.2, nextStart - e0 - 0.15));
+    return { t0: Math.max(0, s0 - 0.6), t1: e0 + tail };
+  }
+
+  // ------------------------------------------------------------------ audio: decode only the frames around the clip
+  async function fileBytes(f) {
+    if (!bytesCache.has(f)) {
+      const r = await fetch(f); if (!r.ok) throw new Error('audio ' + r.status);
+      bytesCache.clear(); bytesCache.set(f, await r.arrayBuffer());
+    }
+    return bytesCache.get(f);
+  }
+  const BR = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], SRS = [44100, 48000, 32000];
+  function frames(buf) {                   // byte offset of every MPEG-1 Layer III frame
+    const u = new Uint8Array(buf); let p = 0;
+    if (u[0] === 0x49 && u[1] === 0x44 && u[2] === 0x33) p = 10 + ((u[6] << 21) | (u[7] << 14) | (u[8] << 7) | u[9]);
+    const offs = []; let sr = 44100;
+    while (p + 4 <= u.length) {
+      if (u[p] === 0xff && (u[p + 1] & 0xfe) === 0xfa) {
+        const bi = u[p + 2] >> 4, si = (u[p + 2] >> 2) & 3, pad = (u[p + 2] >> 1) & 1;
+        if (bi > 0 && bi < 15 && si < 3) { sr = SRS[si]; const len = Math.floor(144000 * BR[bi] / sr) + pad; offs.push(p); p += len; continue; }
+      }
+      p++;
+    }
+    return { offs, sr };
+  }
+  async function decodeSpan(ctx, f, t0, t1) {
+    const buf = await fileBytes(f);
+    try {
+      const { offs, sr } = frames(buf);
+      const fd = 1152 / sr, delay = 1105 / sr;            // LAME's encoder delay; frame 0 is its info frame
+      const j0 = Math.max(1, Math.floor((t0 + delay) / fd) + 1 - 4), j1 = Math.min(offs.length - 1, Math.ceil((t1 + delay) / fd) + 1 + 2);
+      if (offs.length < 50 || j1 <= j0) throw new Error('frames');
+      const slice = buf.slice(offs[j0], j1 + 1 < offs.length ? offs[j1 + 1] : buf.byteLength);
+      const ab = await new Promise((ok, bad) => ctx.decodeAudioData(slice, ok, bad));
+      return { ab, at: (j0 - 1) * fd - delay };          // track time of the slice's first sample
+    } catch (e) {
+      const ab = await new Promise((ok, bad) => ctx.decodeAudioData(buf.slice(0), ok, bad));
+      return { ab, at: 0 };
+    }
+  }
+
+  // ------------------------------------------------------------------ drawing
+  function wrap(g, text, maxW) {
+    const words = text.split(/\s+/), lines = []; let line = '';
+    for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line); return lines;
+  }
+  function spaced(s) { return s.split('').join('\u200a'); }
+  function drawFrame(g, W, H, col, ref, segs, t, t0, t1) {
+    const C = COL[col], k = W / 1080;
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, C.top); bg.addColorStop(1, C.bottom);
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const gx = W * (0.5 + 0.08 * Math.sin((t - t0) * 0.11)), gy = H * (0.58 + 0.04 * Math.cos((t - t0) * 0.07));
+    const gl = g.createRadialGradient(gx, gy, 0, gx, gy, W * 0.75);
+    gl.addColorStop(0, C.glow + '30'); gl.addColorStop(1, C.glow + '00'); g.fillStyle = gl; g.fillRect(0, 0, W, H);
+    const tall = H > W, top = tall ? H * 0.13 : H * 0.11;
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillStyle = C.soft; g.font = `700 ${Math.round((tall ? 34 : 28) * k)}px "Alegreya Sans", "Segoe UI", sans-serif`;
+    g.fillText(spaced(C.name), W / 2, top);
+    g.fillStyle = C.accent; g.font = `${Math.round((tall ? 84 : 76) * k)}px Bellefair, "Times New Roman", serif`;
+    g.fillText(ref, W / 2, top + 92 * k);
+    g.strokeStyle = C.accent + '66'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(W / 2 - 60 * k, top + 128 * k); g.lineTo(W / 2 + 60 * k, top + 128 * k); g.stroke();
+    // the words being spoken: the latest piece that has begun, held through short pauses, crossfaded
+    let cur = -1;
+    for (let i = 0; i < segs.length; i++) if (segs[i][0] <= t + 0.12) cur = i;
+    const show = i => {
+      if (i < 0) return 0;
+      const [s, e] = segs[i], next = segs[i + 1] ? segs[i + 1][0] : Infinity;
+      const end = Math.min(next - 0.12, e + 3.0);
+      const a = Math.min(1, (t - (s - 0.12)) / 0.3), b = Math.min(1, (end - t) / 0.35);
+      return Math.max(0, Math.min(a, b));
+    };
+    const area = { x: W * 0.09, w: W * 0.82, cy: tall ? H * 0.52 : H * 0.56, h: tall ? H * 0.5 : H * 0.52 };
+    for (const i of [cur - 1, cur]) {
+      const al = show(i); if (al <= 0.01) continue;
+      let size = (tall ? 74 : 58) * k, lines;
+      for (;;) {
+        g.font = `${Math.round(size)}px Alegreya, Georgia, serif`;
+        lines = wrap(g, segs[i][3], area.w);
+        if (lines.length * size * 1.34 <= area.h || size < 34 * k) break;
+        size *= 0.92;
+      }
+      g.globalAlpha = al; g.fillStyle = C.ink;
+      const lh = size * 1.34, y0 = area.cy - (lines.length - 1) * lh / 2 + size * 0.35;
+      lines.forEach((ln, j) => g.fillText(ln, W / 2, y0 + j * lh));
+      g.globalAlpha = 1;
+    }
+    const by = H - (tall ? 150 : 96) * k, bw = W * 0.6, bx = (W - bw) / 2, p = Math.max(0, Math.min(1, (t - t0) / (t1 - t0)));
+    g.fillStyle = C.soft + '40'; g.fillRect(bx, by, bw, 3 * k); g.fillStyle = C.accent; g.fillRect(bx, by, bw * p, 3 * k);
+    g.fillStyle = C.soft; g.font = `${Math.round(40 * k)}px Bellefair, "Times New Roman", serif`;
+    g.fillText(C.mark, W / 2, by + 62 * k);
+  }
+
+  // ------------------------------------------------------------------ the dialog
+  const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function fillReadings() {
+    const sel = $('cm-reading'); sel.innerHTML = '';
+    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire' };
+    for (const [key, label] of Object.entries(groups)) {
+      const og = document.createElement('optgroup'); og.label = label;
+      for (const f of Object.keys(DATA)) if (colOf(f) === key) { const o = document.createElement('option'); o.value = f; o.textContent = DATA[f].title; og.appendChild(o); }
+      sel.appendChild(og);
+    }
+  }
+  function fillUnits(keepA, keepB) {
+    units = unitsOf(file);
+    for (const id of ['cm-from', 'cm-to']) {
+      const sel = $(id); sel.innerHTML = '';
+      units.forEach((u, i) => { const o = document.createElement('option'); o.value = i; o.textContent = unitLabel(file, u); sel.appendChild(o); });
+    }
+    const first = Math.min(units.length - 1, units[0].v === 'title' ? 1 : 0);
+    const a = keepA != null ? keepA : first;
+    let b = keepB != null ? keepB : a;
+    if (keepB == null) while (b + 1 < units.length && units[b + 1].e - units[a].s < 28) b++;
+    $('cm-from').value = a; $('cm-to').value = b; refresh();
+  }
+  function sel() { const a = +$('cm-from').value, b = Math.max(a, +$('cm-to').value); return { a, b }; }
+  function refresh() {
+    const { a, b } = sel(); $('cm-to').value = b;
+    const { t0, t1 } = span(a, b);
+    $('cm-len').textContent = 'Clip length ' + fmt(t1 - t0) + '';
+    showResult(false); drawStill();
+  }
+  function canvasFor() {
+    const c = $('cm-canvas'), W = 1080, H = shape === 'tall' ? 1920 : 1080;
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    c.classList.toggle('tall', shape === 'tall'); return c;
+  }
+  function segsIn(t0, t1) { return DATA[file].segs.filter(s => s[1] > t0 && s[0] < t1).sort((x, y) => x[0] - y[0]); }
+  function drawStill() {
+    const { a, b } = sel(), { t0, t1 } = span(a, b), c = canvasFor(), segs = segsIn(t0, t1);
+    const t = segs.length ? segs[0][0] + 0.5 : t0;
+    drawFrame(c.getContext('2d'), c.width, c.height, colOf(file), reference(file, a, b), segs, t, t0, t1);
+  }
+  function setBusy(on, label) {
+    busy = on; for (const id of ['cm-reading', 'cm-from', 'cm-to', 'cm-square', 'cm-tall', 'cm-make', 'cm-listen']) $(id).disabled = on;
+    $('cm-stop').hidden = !on; $('cm-progress').hidden = !on; if (label) $('cm-status').textContent = label;
+  }
+  function showResult(on) { $('cm-result').hidden = !on; if (!on) { $('cm-saved').textContent = ''; } }
+
+  // Fast path: build the MP4 directly with the phone's own video and audio encoders (WebCodecs) instead of
+  // recording it while it plays. Same picture (1080 wide, 30 fps, 4 Mbps H.264) and sound (AAC 192 kbps),
+  // usually several times faster than real time, and silent.
+  async function fastConfig(W, H, sr) {
+    if (!(window.VideoEncoder && window.AudioEncoder && window.VideoFrame && window.AudioData && window.OfflineAudioContext && window.Mp4Muxer)) return null;
+    let v = null;
+    for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42E028']) {
+      try { const r = await VideoEncoder.isConfigSupported({ codec, width: W, height: H, bitrate: 4000000, framerate: 30 }); if (r.supported) { v = r.config; break; } } catch (e) {}
+    }
+    if (!v && window.__clipTestOpus) {
+      try { const r = await VideoEncoder.isConfigSupported({ codec: 'vp09.00.40.08', width: W, height: H, bitrate: 4000000, framerate: 30 }); if (r.supported) v = r.config; } catch (e) {}
+    }
+    if (!v) return null;
+    let a = null;
+    for (const rate of [sr, 48000, 44100]) {
+      try { const r = await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) { a = r.config; break; } } catch (e) {}
+    }
+    if (!a && window.__clipTestOpus) {
+      try { const r = await AudioEncoder.isConfigSupported({ codec: 'opus', sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) a = r.config; } catch (e) {}
+    }
+    return a ? { v, a } : null;
+  }
+  async function fastMake(cfg, ab, at, t0, t1, c, col, ref, segs, isStopped) {
+    const dur = t1 - t0, sr = cfg.a.sampleRate, W = c.width, H = c.height, g = c.getContext('2d');
+    // the sound: the clip with its fades, rendered offline (resampled to the encoder's rate if needed)
+    const off = new OfflineAudioContext(2, Math.ceil(dur * sr), sr);
+    const src = off.createBufferSource(); src.buffer = ab; const gn = off.createGain(); src.connect(gn); gn.connect(off.destination);
+    const fin = 0.35, fout = Math.min(1.6, dur * 0.25);
+    gn.gain.setValueAtTime(0, 0); gn.gain.linearRampToValueAtTime(1, fin); gn.gain.setValueAtTime(1, Math.max(fin, dur - fout)); gn.gain.linearRampToValueAtTime(0, dur);
+    src.start(0, Math.max(0, t0 - at), dur);
+    const pcm = await off.startRendering();
+    const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), fastStart: 'in-memory', firstTimestampBehavior: 'offset',
+      video: { codec: cfg.v.codec.startsWith('vp09') ? 'vp9' : 'avc', width: W, height: H, frameRate: 30 },
+      audio: { codec: cfg.a.codec === 'opus' ? 'opus' : 'aac', numberOfChannels: 2, sampleRate: sr } });
+    let fail = null;
+    const ve = new VideoEncoder({ output: (ch, m) => muxer.addVideoChunk(ch, m), error: e => { fail = e; } });
+    ve.configure({ ...cfg.v, bitrate: 4000000, framerate: 30 });
+    const ae = new AudioEncoder({ output: (ch, m) => muxer.addAudioChunk(ch, m), error: e => { fail = e; } });
+    ae.configure(cfg.a);
+    const L = pcm.getChannelData(0), R = pcm.numberOfChannels > 1 ? pcm.getChannelData(1) : pcm.getChannelData(0), N = pcm.length, B = 4096;
+    for (let i = 0; i < N; i += B) {
+      const n = Math.min(B, N - i), buf = new Float32Array(n * 2); buf.set(L.subarray(i, i + n), 0); buf.set(R.subarray(i, i + n), n);
+      const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i / sr * 1e6), data: buf });
+      ae.encode(ad); ad.close();
+    }
+    const F = Math.ceil(dur * 30), us = 1e6 / 30;
+    for (let n = 0; n < F; n++) {
+      if (isStopped()) { try { ve.close(); ae.close(); } catch (e) {} return null; }
+      if (fail) throw fail;
+      drawFrame(g, W, H, col, ref, segs, t0 + n / 30, t0, t1);
+      const fr = new VideoFrame(c, { timestamp: Math.round(n * us), duration: Math.round(us) });
+      ve.encode(fr, { keyFrame: n % 60 === 0 }); fr.close();
+      while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
+      if (n % 6 === 0) { $('cm-bar').value = n / F; $('cm-time').textContent = fmt(n / 30) + ' of ' + fmt(dur); await new Promise(r => setTimeout(r, 0)); }
+    }
+    await ve.flush(); await ae.flush(); if (fail) throw fail;
+    muxer.finalize();
+    return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+  }
+
+  async function run(record) {
+    if (busy) return;
+    const { a, b } = sel(), { t0, t1 } = span(a, b), dur = t1 - t0, col = colOf(file), ref = reference(file, a, b), segs = segsIn(t0, t1);
+    showResult(false);
+    if (record && !window.VideoEncoder && !(window.MediaRecorder && HTMLCanvasElement.prototype.captureStream)) {
+      $('cm-status').textContent = 'This phone can\u2019t make videos in this view. Open the Psalter in Safari or Chrome and try again.'; return;
+    }
+    pauseAll();
+    const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+    try { await ctx.resume(); } catch (e) {}
+    setBusy(true, 'Getting the recording ready\u2026');
+    let wake = null; try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {}
+    try {
+      await Promise.all(['76px Bellefair', '58px Alegreya', '700 26px "Alegreya Sans"'].map(f => document.fonts?.load(f).catch(() => {})));
+      const { ab, at } = await decodeSpan(ctx, file, t0, t1);
+      const c = canvasFor(), g = c.getContext('2d');
+      if (record) {
+        const cfg = await fastConfig(c.width, c.height, ab.sampleRate);
+        if (cfg) {
+          let stopped = false; stopFn = () => { stopped = true; };
+          $('cm-status').textContent = 'Making the video\u2026 Keep this screen open until it finishes.';
+          let blob;
+          try { blob = await fastMake(cfg, ab, at, t0, t1, c, col, ref, segs, () => stopped); }
+          catch (e) { console.log('[clip fast]', e); blob = undefined; }
+          stopFn = null;
+          if (blob === null) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; return; }
+          if (blob) {
+            window.__clipPath = 'fast';
+            lastBlob = blob; lastExt = 'mp4';
+            const v = $('cm-video'); if (v.src) URL.revokeObjectURL(v.src); v.src = URL.createObjectURL(blob);
+            $('cm-status').textContent = 'Your video is ready (' + fmt(dur) + ', ' + (blob.size / 1048576).toFixed(1) + ' MB).';
+            showResult(true); return;
+          }
+          // the fast way failed on this phone: fall through and record it as it plays, silently
+        }
+        window.__clipPath = 'record';
+      }
+      const src = ctx.createBufferSource(); src.buffer = ab;
+      const gain = ctx.createGain(); src.connect(gain);
+      const dest = ctx.createMediaStreamDestination(); gain.connect(dest);
+      if (record) { const hush = ctx.createGain(); hush.gain.value = 0; gain.connect(hush); hush.connect(ctx.destination); }   // making the video: silent
+      else gain.connect(ctx.destination);
+      let rec = null, chunks = [], mime = '';
+      if (record) {
+        const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+        mime = types.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+        const stream = new MediaStream([...c.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: 4000000, audioBitsPerSecond: 192000 });
+        rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+        drawFrame(g, c.width, c.height, col, ref, segs, t0, t0, t1);
+        rec.start(500);
+      }
+      const T0 = ctx.currentTime + (record ? 0.35 : 0.1), fin = 0.35, fout = Math.min(1.6, dur * 0.25);
+      gain.gain.setValueAtTime(0, T0); gain.gain.linearRampToValueAtTime(1, T0 + fin);
+      gain.gain.setValueAtTime(1, T0 + dur - fout); gain.gain.linearRampToValueAtTime(0, T0 + dur);
+      src.start(T0, Math.max(0, t0 - at), dur + 0.05);
+      $('cm-status').textContent = record ? 'Making the video (quietly). Keep this screen open until it finishes.' : 'Playing the clip.';
+      let stopped = false;
+      await new Promise(done => {
+        stopFn = () => { stopped = true; done(); };
+        const step = () => {
+          if (stopped) return;
+          const el = Math.max(0, ctx.currentTime - T0), t = t0 + Math.min(el, dur);
+          drawFrame(g, c.width, c.height, col, ref, segs, t, t0, t1);
+          $('cm-bar').value = Math.min(1, el / dur); $('cm-time').textContent = fmt(el) + ' of ' + fmt(dur);
+          if (el >= dur + 0.25) { done(); return; }
+          requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+      stopFn = null; try { src.stop(); } catch (e) {}
+      if (record) {
+        const blob = await new Promise(ok => { rec.onstop = () => ok(new Blob(chunks, { type: (mime || 'video/webm').split(';')[0] })); rec.stop(); });
+        if (stopped) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; }
+        else {
+          lastBlob = blob; lastExt = (mime || 'video/webm').includes('mp4') ? 'mp4' : 'webm';
+          const v = $('cm-video'); if (v.src) URL.revokeObjectURL(v.src); v.src = URL.createObjectURL(blob);
+          $('cm-status').textContent = 'Your video is ready (' + fmt(dur) + ', ' + (blob.size / 1048576).toFixed(1) + ' MB).';
+          showResult(true);
+        }
+      } else $('cm-status').textContent = stopped ? '' : 'That\u2019s the clip. Press \u201cMake the video\u201d when it sounds right.';
+    } catch (e) {
+      console.log('[clip]', e);
+      $('cm-status').textContent = 'That didn\u2019t work: the recording couldn\u2019t be loaded. Check the connection and try again.';
+    } finally {
+      try { wake && wake.release(); } catch (e) {}
+      try { ctx.close(); } catch (e) {}
+      setBusy(false); drawStill();
+    }
+  }
+  function fileName() {
+    const { a, b } = sel(); return reference(file, a, b).replace(/[:\u2013]/g, m => m === ':' ? '.' : '-').replace(/[^\w .\-]/g, '') + (shape === 'tall' ? ' (tall)' : '') + '.' + lastExt;
+  }
+  async function save() {
+    if (!lastBlob) return;
+    const msg = $('cm-saved'); msg.textContent = '';
+    const name = fileName(), type = lastExt === 'mp4' ? 'video/mp4' : 'video/webm';
+    // 1. The phone's own Share menu (on an iPhone: Save Video, Facebook...). It must come first, straight from the tap.
+    try {
+      const f = new File([lastBlob], name, { type });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f] });
+        msg.textContent = 'Done. If you chose Save Video, the clip is in your Photos. If you chose Facebook, finish your post there.';
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') { msg.textContent = 'Not saved. Press “Save video” again whenever you’re ready.'; return; }
+    }
+    // 2. Saving through Claude (the Claude app, or signed in on claude.ai)
+    let dl = null; try { dl = await window.claude?.use?.('downloads'); } catch (e) {}
+    if (dl) {
+      try {
+        await dl.save({ filename: name, data: lastBlob });
+        msg.textContent = 'Saved. In Safari it goes to your Downloads: open the Files app, tap Downloads, tap the video, tap the Share button, then choose Save Video (to put it in Photos) or Facebook. In the Claude app, Save video opens that Share menu straight away.';
+        return;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'declined') { msg.textContent = 'Not saved. Press “Save video” again whenever you’re ready.'; return; }
+        if (c === 'rate_limited') { msg.textContent = 'Wait a moment, then press “Save video” again.'; return; }
+      }
+    }
+    // 3. A plain download
+    try {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(lastBlob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 60000);
+      msg.textContent = 'Saving to your Downloads. To post it, open the Files app, tap Downloads, tap the video, tap the Share button, and choose Save Video or Facebook.';
+    } catch (e) {
+      msg.textContent = 'Saving didn’t work on this phone. Tell Aaron which clip you wanted and he can send it to you.';
+    }
+  }
+  function pauseAll() {
+    try { if (typeof window.pause === 'function') window.pause(); } catch (e) {}
+    for (const f of document.querySelectorAll('iframe')) { try { const w = f.contentWindow; if (w && typeof w.pause === 'function') w.pause(); } catch (e) {} }
+  }
+  function setShape(s) { shape = s; $('cm-square').setAttribute('aria-pressed', String(s === 'square')); $('cm-tall').setAttribute('aria-pressed', String(s === 'tall')); showResult(false); drawStill(); }
+
+  async function open(f) {
+    const dlg = $('cm'); dlg.hidden = false; document.documentElement.classList.add('cm-open');
+    $('cm-status').textContent = 'Loading\u2026';
+    try { await data(); } catch (e) { $('cm-status').textContent = 'The verse list couldn\u2019t load. Check the connection and try again.'; return; }
+    if (!$('cm-reading').options.length) fillReadings();
+    file = (f && DATA[f]) ? f : (file || Object.keys(DATA)[0]);
+    $('cm-reading').value = file; fillUnits(); $('cm-status').textContent = '';
+    $('cm-close').focus();
+  }
+  function close() { if (stopFn) stopFn(); $('cm').hidden = true; document.documentElement.classList.remove('cm-open'); }
+
+  function wire() {
+    $('cm-reading').addEventListener('change', e => { file = e.target.value; fillUnits(); });
+    $('cm-from').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-to').value = $('cm-from').value; refresh(); });
+    $('cm-to').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-from').value = $('cm-to').value; refresh(); });
+    $('cm-square').addEventListener('click', () => setShape('square'));
+    $('cm-tall').addEventListener('click', () => setShape('tall'));
+    $('cm-listen').addEventListener('click', () => run(false));
+    $('cm-make').addEventListener('click', () => run(true));
+    $('cm-stop').addEventListener('click', () => stopFn && stopFn());
+    $('cm-save').addEventListener('click', save);
+    $('cm-again').addEventListener('click', () => { showResult(false); $('cm-status').textContent = ''; });
+    $('cm-close').addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('cm').hidden && !busy) close(); });
+  }
+  window.ClipMaker = { open, close, _test: { last: () => lastBlob, ext: () => lastExt, data, unitsOf, frames, decodeSpan, span: (f, a, b) => { file = f; units = unitsOf(f); return span(a, b); }, reference: (f, a, b) => { file = f; units = unitsOf(f); return reference(f, a, b); } } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+})();
+</script>

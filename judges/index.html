@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Judges by the Fire</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column — the Hebrew name glowing like an ember as the masthead, the player, then the stories. */
+:root {
+  --bg: #efe6d8;        /* firelit linen */
+  --surface: #f6efe4;
+  --fg: #261b12;        /* charcoal */
+  --muted: #6e5d4c;
+  --line: #d9cbb6;
+  --accent: #a8501a;    /* firelight */
+  --accent-ink: #fff4e6;
+  --display: "IM Fell English", "Times New Roman", serif;
+  --body: "Alegreya", Georgia, serif;
+  --ui: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b;
+    --accent: #f0a04b; --accent-ink: #1d1206; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b;
+  --accent: #f0a04b; --accent-ink: #1d1206; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 32px; }
+
+header { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.hebrew { font-family: var(--display); font-size: clamp(52px, 13vw, 84px); line-height: 1.05; color: var(--accent); direction: rtl; text-shadow: 0 0 28px color-mix(in srgb, var(--accent) 35%, transparent); }
+h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 6px 0 0; letter-spacing: 0.02em; text-wrap: balance; }
+.sub { font-family: var(--ui); color: var(--muted); font-size: 14px; letter-spacing: 0.04em; }
+
+/* player */
+.player { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.now { display: flex; align-items: center; gap: 16px; }
+.now-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.now-label { font-family: var(--ui); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.now-title { font-family: var(--display); font-size: 26px; line-height: 1.15; }
+.now-line { font-style: italic; color: var(--muted); overflow-wrap: anywhere; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.play {
+  flex: none; width: 64px; height: 64px; border-radius: 50%; border: none;
+  background: var(--accent); color: var(--accent-ink); display: grid; place-items: center;
+}
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play:active { transform: scale(0.96); }
+
+.seek { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.seek input { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.skip { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; display: grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; fill: var(--fg); }
+.mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; font-family: var(--ui); font-size: 14px; }
+.mode button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; color: var(--muted); }
+.mode button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.status { font-family: var(--ui); font-size: 14px; color: var(--accent); min-height: 1.2em; margin: 0; }
+
+/* list */
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+ol { list-style: none; margin: 0; padding: 0; }
+.track {
+  width: 100%; text-align: left; border: none; background: transparent; padding: 14px 4px;
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.track:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.num { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.num span { font-family: var(--display); font-size: 15px; color: var(--muted); }
+.mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.t-line { font-style: italic; overflow-wrap: anywhere; }
+.t-mood { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+.dur { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.track.current .num b, .track.current .t-line { color: var(--accent); }
+
+/* humming indicator on the playing row */
+.hum { display: none; gap: 2px; align-items: flex-end; height: 14px; }
+.hum i { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
+.track.current.playing .hum { display: inline-flex; }
+.track.current.playing .hum i { animation: hum 1.6s ease-in-out infinite; }
+.hum i:nth-child(2) { animation-delay: .25s !important; }
+.hum i:nth-child(3) { animation-delay: .5s !important; }
+@keyframes hum { 0%,100% { height: 4px } 50% { height: 13px } }
+@media (prefers-reduced-motion: reduce) { .track.current.playing .hum i { animation: none; height: 10px; } }
+
+footer { font-family: var(--ui); font-size: 13px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
+footer p { margin: 0; max-width: 62ch; }
+
+@media (max-width: 440px) {
+  .wrap { padding-block: 24px 40px; gap: 24px; }
+  .track { grid-template-columns: 44px 1fr auto; gap: 10px; }
+  .now-title { font-size: 22px; }
+}
+
+/* Make a clip: opens the clip maker in the top page */
+.clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
+  min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.clipbtn svg { width: 18px; height: 18px; fill: currentColor; }
+.clipbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hebrew" lang="he">שׁוֹפְטִים</div>
+    <h1>Judges by the Fire</h1>
+    <div class="sub">The stories of our fathers, told by an elder at a shepherd's fire in the hills of Ephraim</div>
+  </header>
+
+  <section class="player" aria-label="Player">
+    <div class="now">
+      <button class="play" id="play" aria-label="Play">
+        <svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="now-text">
+        <span class="now-label" id="now-label">Ready</span>
+        <span class="now-title" id="now-title">Devorah and Yael</span>
+        <span class="now-line" id="now-line">Come, my children, sit close to the fire</span>
+      </div>
+    </div>
+    <div class="seek">
+      <span id="t-cur">0:00</span>
+      <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Position in this story">
+      <span id="t-dur">9:48</span>
+    </div>
+    <div class="controls">
+      <div class="skip">
+        <button class="icon-btn" id="prev" aria-label="Previous story"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+        <button class="icon-btn" id="next" aria-label="Next story"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+      </div>
+      <div class="mode" role="group" aria-label="Play order">
+        <button id="m-order" aria-pressed="true">In order</button>
+        <button id="m-shuffle" aria-pressed="false">Shuffle</button>
+      </div>
+    </div>
+    <button class="clipbtn" id="clipbtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Make a clip to share</button>
+    <p class="status" id="status" role="status"></p>
+  </section>
+
+  <section aria-label="Stories">
+    <div class="list-head"><span>Stories</span><span id="total"></span></div>
+    <ol id="list"></ol>
+  </section>
+
+
+  <footer>
+    <p>Retold from Judges 4–8; everything the characters say, and Devorah's song from Judges 5, is quoted word for word from the Berean Standard Bible (public domain).</p>
+    <p>Voices: the Israelite Elder and everyone in his stories, designed in ElevenLabs. Fire, the flock in the hills and sound effects: ElevenLabs.</p>
+    <p>Lyre (folk harp) and shepherd's pipe (alto recorder): Versilian Community Sample Library (CC0).</p>
+  </footer>
+</div>
+
+<script>
+const TRACKS = [
+  { n: "4", he: "1–24", title: "Devorah and Yael", line: "Come, my children, sit close to the fire", mood: "Judges 4 · nine hundred chariots of iron", file: "audio/judges-04.mp3", dur: 588 },
+  { n: "6–8", he: "6:1–8:35", title: "Gideon", line: "Come, my children, closer to the fire", mood: "Judges 6–8 · three hundred men and a barley loaf", file: "audio/judges-06.mp3", dur: 1030 },
+];
+
+/* Playback: each psalm is fetched (allowed for files published with the page) and played through the
+   Web Audio API, so nothing depends on the browser streaming media from the page's host. */
+const $ = id => document.getElementById(id);
+let ctx = null, out = null;
+const bytes = new Map();      // compressed mp3 bytes, kept for every psalm fetched
+const decoded = new Map();    // decoded audio, only the current and next psalm
+let shuffle = false, order = TRACKS.map((_, i) => i), pos = 0;
+let buf = null, bufIdx = -1, src = null, playing = false, loading = false, offset = 0, startedAt = 0, token = 0, seeking = false;
+try { shuffle = localStorage.getItem("revelation-shuffle") === "1"; } catch (e) {}
+
+const fmt = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const cur = () => order[pos];
+const durOf = i => (engine === "media" && elIdx === i && isFinite(el.duration) && el.duration > 0) ? el.duration
+  : (bufIdx === i && buf) ? buf.duration : TRACKS[i].dur;
+/* Two engines. "media" is a plain <audio> element: it keeps playing when the phone locks and shows lock-screen
+   controls. "webaudio" is the fallback for viewers that block page audio (the Claude app); phones pause it on lock. */
+let engine = "media";
+const el = new Audio(); el.preload = "auto"; let elIdx = -1;
+// probe once: if this view refuses media files, use Web Audio from the start. The probe lets go of the file
+// as soon as it knows, or the moment Play is pressed, so it never holds up the real player.
+let probe = new Audio();
+function endProbe() { if (probe) { const p = probe; probe = null; p.removeAttribute("src"); p.load(); } }
+probe.preload = "metadata"; probe.muted = true;
+probe.addEventListener("error", () => { if (probe && elIdx === -1) engine = "webaudio"; endProbe(); }, { once: true });
+probe.addEventListener("loadedmetadata", endProbe, { once: true });
+probe.src = TRACKS[0].file;
+const position = () => engine === "media"
+  ? (elIdx === cur() && (playing || loading) ? el.currentTime : offset)
+  : (playing ? Math.min(ctx.currentTime - startedAt, durOf(cur())) : offset);
+
+function ensureCtx() {        // must run inside the click, so the browser lets sound start
+  if (engine !== "webaudio") return;   // an idle AudioContext would put iPhones on the silent-switch audio path
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC(); out = ctx.createGain(); out.connect(ctx.destination);
+  }
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
+}
+
+async function fetchBytes(i, onProgress) {
+  if (bytes.has(i)) return bytes.get(i);
+  const res = await fetch(TRACKS[i].file);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const total = +res.headers.get("content-length") || 0;
+  let data;
+  if (res.body && total && onProgress) {
+    const reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress(got / total); }
+    data = new Uint8Array(got); let o = 0; for (const p of parts) { data.set(p, o); o += p.length; }
+    data = data.buffer;
+  } else data = await res.arrayBuffer();
+  bytes.set(i, data); return data;
+}
+async function decode(i, onProgress) {
+  if (decoded.has(i)) return decoded.get(i);
+  const raw = await fetchBytes(i, onProgress);
+  const ab = await new Promise((ok, bad) => ctx.decodeAudioData(raw.slice(0), ok, bad));
+  decoded.set(i, ab);
+  const keep = new Set([cur(), order[(pos + 1) % order.length]]);
+  for (const k of [...decoded.keys()]) if (!keep.has(k)) decoded.delete(k);
+  return ab;
+}
+function prefetchNext() {
+  const n = order[(pos + 1) % order.length];
+  if (!bytes.has(n)) fetchBytes(n).catch(() => {});
+}
+
+function stopSource() { if (src) { src.onended = null; try { src.stop(); } catch (e) {} src.disconnect(); src = null; } }
+function startSource() {
+  stopSource();
+  src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+  const me = src;
+  src.onended = () => { if (me === src && playing) { playing = false; src = null; next(true); } };
+  if (offset >= buf.duration) offset = 0;
+  src.start(0, offset); startedAt = ctx.currentTime - offset; playing = true;
+}
+
+async function startMedia() {
+  endProbe();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (elIdx !== i) { el.src = TRACKS[i].file; elIdx = i; }
+  if (Math.abs(el.currentTime - offset) > 0.25) { try { el.currentTime = offset; } catch (e) {} }
+  loading = true; paint();
+  try { await el.play(); }
+  catch (e) {
+    if (my !== token) return;
+    loading = false;
+    if (e && e.name === "NotAllowedError") { $("status").textContent = "Press play to start."; paint(); return; }
+    if (e && e.name === "AbortError") { paint(); return; }
+    engine = "webaudio"; elIdx = -1; el.removeAttribute("src"); el.load();   // this view blocks media files
+    return start();
+  }
+  if (my !== token) { el.pause(); return; }
+  loading = false; playing = true; paint(); prefetchNextMedia();
+}
+const warmed = new Set();
+function prefetchNextMedia() {   // warm the browser cache so the next psalm starts quickly
+  const n = order[(pos + 1) % order.length];
+  if (!warmed.has(n)) { warmed.add(n); fetch(TRACKS[n].file).then(r => r.arrayBuffer()).catch(() => warmed.delete(n)); }
+}
+el.addEventListener("ended", () => { if (engine === "media" && playing) { playing = false; offset = 0; next(true); } });
+el.addEventListener("waiting", () => { if (engine === "media" && playing) $("now-label").textContent = "Loading"; });
+el.addEventListener("playing", () => { if (engine === "media" && playing) paint(); });
+el.addEventListener("loadedmetadata", () => { if (engine === "media") tick(); });
+
+async function start() {
+  if (engine === "media") return startMedia();
+  ensureCtx();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (bufIdx !== i || !buf) {
+    loading = true; paint();
+    try {
+      const ab = await decode(i, p => { if (my === token) $("status").textContent = "Loading " + TRACKS[i].title + "… " + Math.round(p * 100) + "%"; });
+      if (my !== token) return;
+      buf = ab; bufIdx = i;
+    } catch (e) {
+      if (my !== token) return;
+      loading = false; $("status").textContent = "Couldn't load " + TRACKS[i].title + ". Check your connection and press play again."; paint(); return;
+    }
+    loading = false; $("status").textContent = "";
+  }
+  if (ctx.state !== "running") { try { await ctx.resume(); } catch (e) {} }
+  if (my !== token) return;
+  startSource(); paint(); prefetchNext();
+}
+function pause() {
+  token++;
+  if (engine === "media") { if (elIdx === cur() && (playing || loading)) offset = el.currentTime; el.pause(); loading = false; playing = false; paint(); return; }
+  loading = false; if (playing) { offset = position(); playing = false; stopSource(); } paint();
+}
+function goTo(newPos) { pause(); pos = newPos; offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+
+function buildOrder(keepFirst) {
+  const idx = TRACKS.map((_, i) => i);
+  if (!shuffle) { order = idx; pos = keepFirst == null ? 0 : keepFirst; return; }
+  const rest = idx.filter(i => i !== keepFirst);
+  for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+  order = keepFirst == null ? rest : [keepFirst, ...rest]; pos = 0;
+}
+
+function renderList() {
+  const list = $("list"); list.innerHTML = "";
+  TRACKS.forEach((t, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "track"; b.id = "track-" + i;
+    b.setAttribute("aria-label", "Play " + t.title);
+    b.innerHTML = `<span class="num"><b>${t.n}</b><span lang="he">${t.he}</span></span>
+      <span class="mid"><span class="t-line">${t.line}</span><span class="t-mood">${t.mood}</span></span>
+      <span class="dur"><span class="hum" aria-hidden="true"><i></i><i></i><i></i></span>${fmt(t.dur)}</span>`;
+    b.addEventListener("click", () => playTrack(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const total = TRACKS.reduce((a, t) => a + t.dur, 0);
+  $("total").textContent = TRACKS.length + (TRACKS.length === 1 ? " story · " : " stories · ") + Math.round(total / 60) + " min";
+}
+
+function paint() {
+  const t = TRACKS[cur()];
+  $("now-title").textContent = t.title;
+  $("now-line").textContent = t.line;
+  $("now-label").textContent = loading ? "Loading" : playing ? "Playing" : (offset > 0 ? "Paused" : (shuffle ? "Ready · shuffled" : "Ready"));
+  $("t-dur").textContent = fmt(durOf(cur()));
+  const showPause = playing || loading;
+  $("play").setAttribute("aria-label", showPause ? "Pause" : "Play");
+  $("play-icon").innerHTML = showPause ? '<path d="M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+  TRACKS.forEach((_, i) => {
+    const el = $("track-" + i);
+    el.classList.toggle("current", i === cur());
+    el.classList.toggle("playing", i === cur() && playing);
+    if (i === cur()) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+  });
+  $("m-order").setAttribute("aria-pressed", String(!shuffle));
+  $("m-shuffle").setAttribute("aria-pressed", String(shuffle));
+  try {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: "The Israelite Elder", album: "Judges by the Fire" });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    }
+  } catch (e) {}
+  tick();
+}
+function tick() {
+  if (seeking) return;
+  const d = durOf(cur()), p = position();
+  $("seek").value = d ? (p / d) * 100 : 0;
+  $("t-cur").textContent = fmt(p);
+}
+setInterval(() => { if (playing) tick(); }, 250);
+
+function playTrack(i) {
+  ensureCtx();
+  if (shuffle) { pause(); buildOrder(i); offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+  else goTo(i);
+}
+function next(auto) {
+  if (auto) ensureCtx();
+  if (pos + 1 >= order.length) {
+    if (auto) { pos = 0; if (shuffle) buildOrder(); offset = 0; buf = null; bufIdx = -1; paint(); $("now-label").textContent = "Finished"; return; }
+    if (shuffle) { buildOrder(); goTo(0); } else goTo(0);
+  } else goTo(pos + 1);
+}
+function prev() {
+  ensureCtx();
+  if (position() > 4) { const was = playing; pause(); offset = 0; if (was) start(); else paint(); return; }
+  goTo(Math.max(0, pos - 1));
+}
+
+$("play").addEventListener("click", () => { if (playing || loading) pause(); else start(); });
+$("next").addEventListener("click", () => { ensureCtx(); next(false); });
+$("prev").addEventListener("click", prev);
+$("m-order").addEventListener("click", () => setShuffle(false));
+$("m-shuffle").addEventListener("click", () => setShuffle(true));
+function setShuffle(on) {
+  if (shuffle === on) return;
+  shuffle = on; const keep = cur();
+  try { localStorage.setItem("revelation-shuffle", on ? "1" : "0"); } catch (e) {}
+  buildOrder(keep); paint(); if (playing) prefetchNext();
+}
+
+const seek = $("seek");
+seek.addEventListener("input", () => { seeking = true; $("t-cur").textContent = fmt(seek.value / 100 * durOf(cur())); });
+seek.addEventListener("change", () => {
+  seeking = false;
+  offset = seek.value / 100 * durOf(cur());
+  if (engine === "media") { if (elIdx === cur()) { try { el.currentTime = offset; } catch (e) {} } paint(); }
+  else if (playing) { ensureCtx(); startSource(); } else paint();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement)) {
+    e.preventDefault(); if (playing || loading) pause(); else start();
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ctx && playing && ctx.state !== "running") ctx.resume().catch(() => {}); });
+
+try {
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", () => start());
+    navigator.mediaSession.setActionHandler("pause", pause);
+    navigator.mediaSession.setActionHandler("nexttrack", () => next(false));
+    navigator.mediaSession.setActionHandler("previoustrack", prev);
+    navigator.mediaSession.setActionHandler("seekto", d => { offset = d.seekTime || 0; if (engine === "media" && elIdx === cur()) el.currentTime = offset; else if (playing) startSource(); tick(); });
+  }
+} catch (e) {}
+
+$("clipbtn").addEventListener("click", () => {
+  const f = "judges/" + TRACKS[cur()].file;
+  try { parent.ClipMaker.open(f); return; } catch (e) {}
+  try { if (parent !== window) { parent.postMessage({ type: "psalter-clip", file: f }, "*"); return; } } catch (e) {}
+  $("status").textContent = "Open this from the Psalter page to make a clip.";
+});
+renderList();
+buildOrder(shuffle ? undefined : 0);
+paint();
+
+</script>
