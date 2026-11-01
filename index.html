@@ -154,6 +154,9 @@ footer p { margin: 0; max-width: 62ch; }
 html.rev {
   --bg: #e9e4de; --surface: #f3efea; --fg: #221a17; --muted: #6a5d57; --line: #d3c9c1; --accent: #8e2316; --accent-ink: #fbefe9;
 }
+html.prayers {
+  --bg: #e4e6ec; --surface: #eff0f4; --fg: #1a1d2a; --muted: #5b6072; --line: #c9cdd8; --accent: #3b4f8f; --accent-ink: #f1f3fa;
+}
 html.judges {
   --bg: #efe6d8; --surface: #f6efe4; --fg: #261b12; --muted: #6e5d4c; --line: #d9cbb6; --accent: #a8501a; --accent-ink: #fff4e6;
 }
@@ -161,12 +164,18 @@ html.judges {
   html.rev:not([data-theme="light"]) {
     --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
   }
+  html.prayers:not([data-theme="light"]) {
+    --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
+  }
   html.judges:not([data-theme="light"]) {
     --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
   }
 }
 html.rev[data-theme="dark"] {
   --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
+}
+html.prayers[data-theme="dark"] {
+  --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
 }
 html.judges[data-theme="dark"] {
   --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
@@ -187,9 +196,9 @@ body { margin: 0; }
 .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cframe { display: none; position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--bg); }
-html.rev #revframe, html.judges #judgesframe { display: block; }
-html.rev .wrap, html.judges .wrap { display: none; }
-html.rev body, html.judges body { overflow: hidden; }
+html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe { display: block; }
+html.rev .wrap, html.judges .wrap, html.prayers .wrap { display: none; }
+html.rev body, html.judges body, html.prayers body { overflow: hidden; }
 
 /* Make a clip: opens the clip maker in the top page */
 .clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
@@ -239,9 +248,11 @@ html.cm-open, html.cm-open body { overflow: hidden; }
   <button class="tab" role="tab" id="tab-psalter" aria-selected="true">The Psalter</button>
   <button class="tab" role="tab" id="tab-rev" aria-selected="false">Revelation</button>
   <button class="tab" role="tab" id="tab-judges" aria-selected="false">Judges</button>
+  <button class="tab" role="tab" id="tab-prayers" aria-selected="false">Prayers</button>
 </nav>
 <iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
 <iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
+<iframe id="prayersframe" class="cframe" title="Prayers" loading="lazy"></iframe>
 
 
 <section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
@@ -366,7 +377,6 @@ const TRACKS = [
   { n: "103", he: "ק״ג", title: "Psalm 103", line: "Bless the Lord, O my soul", mood: "Blessing · compassion and praise", file: "audio/psalm-103.mp3", dur: 227 },
   { n: "121", he: "קכ״א", title: "Psalm 121", line: "I lift up my eyes to the hills", mood: "Trust on the road · Song of Ascents", file: "audio/psalm-121.mp3", dur: 97 },
   { n: "139", he: "קל״ט", title: "Psalm 139", line: "O Lord, You have searched me and known me", mood: "Awe · shadowed and bright", file: "audio/psalm-139.mp3", dur: 242 },
-  { n: "Mt", he: "אבינו", title: "The Lord's Prayer", line: "Our Father in heaven", mood: "Matthew 6:9–13 · the prayer Jesus taught", file: "audio/lords-prayer.mp3", dur: 76 },
 ];
 
 /* Playback: each psalm is fetched (allowed for files published with the page) and played through the
@@ -766,8 +776,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     psalter: { btn: "tab-psalter", hash: "#psalter" },
     rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/index.html" },
     judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/index.html" },
+    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/index.html" },
   };
-  const ORDER = ["psalter", "rev", "judges"];
+  const ORDER = ["psalter", "rev", "judges", "prayers"];
   let cur = null;
   const fr = k => TABS[k].frame && document.getElementById(TABS[k].frame);
   const fit = () => { const h = bar.getBoundingClientRect().height;
@@ -780,7 +791,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     if (!TABS[which]) which = "psalter";
     for (const k of ORDER) if (k !== which) pauseTab(k);
     const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
-    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges");
+    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers");
     for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
     cur = which; fit();
     if (remember) { try { localStorage.setItem("tab", which); } catch (e) {} }
@@ -824,8 +835,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     psalter: { name: 'THE PSALTER', mark: '\u05ea\u05d4\u05dc\u05d9\u05dd', top: '#18201b', bottom: '#2b382f', glow: '#d7a447', ink: '#f1ecdf', accent: '#e0b25a', soft: '#a9b3a9' },
     revelation: { name: 'REVELATION', mark: '\u1f08\u03c0\u03bf\u03ba\u03ac\u03bb\u03c5\u03c8\u03b9\u03c2', top: '#120a09', bottom: '#341611', glow: '#e0674a', ink: '#f3e7e1', accent: '#ef8a6c', soft: '#b39f96' },
     judges: { name: 'JUDGES BY THE FIRE', mark: '\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd', top: '#110a05', bottom: '#38200d', glow: '#f0a04b', ink: '#f6ead6', accent: '#f6b465', soft: '#b8a389' },
+    prayers: { name: 'PRAYERS', mark: '\u05ea\u05e4\u05d9\u05dc\u05d5\u05ea', top: '#0e1120', bottom: '#232b4a', glow: '#9fb2ec', ink: '#eef0f8', accent: '#b9c7f2', soft: '#a3a9bd' },
   };
-  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : 'psalter';
+  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : 'psalter';
   let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
   const bytesCache = new Map();
 
@@ -966,7 +978,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   function fillReadings() {
     const sel = $('cm-reading'); sel.innerHTML = '';
-    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire' };
+    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers' };
     for (const [key, label] of Object.entries(groups)) {
       const og = document.createElement('optgroup'); og.label = label;
       for (const f of Object.keys(DATA)) if (colOf(f) === key) { const o = document.createElement('option'); o.value = f; o.textContent = DATA[f].title; og.appendChild(o); }
