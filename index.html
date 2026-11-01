@@ -366,6 +366,7 @@ const TRACKS = [
   { n: "103", he: "ק״ג", title: "Psalm 103", line: "Bless the Lord, O my soul", mood: "Blessing · compassion and praise", file: "audio/psalm-103.mp3", dur: 227 },
   { n: "121", he: "קכ״א", title: "Psalm 121", line: "I lift up my eyes to the hills", mood: "Trust on the road · Song of Ascents", file: "audio/psalm-121.mp3", dur: 97 },
   { n: "139", he: "קל״ט", title: "Psalm 139", line: "O Lord, You have searched me and known me", mood: "Awe · shadowed and bright", file: "audio/psalm-139.mp3", dur: 242 },
+  { n: "Mt", he: "אבינו", title: "The Lord's Prayer", line: "Our Father in heaven", mood: "Matthew 6:9–13 · the prayer Jesus taught", file: "audio/lords-prayer.mp3", dur: 76 },
 ];
 
 /* Playback: each psalm is fetched (allowed for files published with the page) and played through the
@@ -860,9 +861,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       if (c1 === c2) return 'Psalm ' + c1 + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
       return 'Psalms ' + c1 + ':' + v1 + '\u2013' + c2 + ':' + v2;
     }
-    if (all) return d.title;
     const v1 = vs[0].v, v2 = vs[vs.length - 1].v;
-    return d.title + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+    if (all && !d.ref) return d.title;
+    return (d.ref || d.title) + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);   // d.ref: a passage outside the Psalms ("Matthew 6")
   }
   function span(a, b) {                    // the clip's time range in the track
     const segs = DATA[file].segs, s0 = units[a].s, e0 = units[b].e;
