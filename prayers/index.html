@@ -163,7 +163,7 @@ footer p { margin: 0; max-width: 62ch; }
 
 
   <footer>
-    <p>Text: Berean Standard Bible (public domain). Voices: High Priest, Hannah, Psalm Reader II, Mary, John of Patmos and Son of Man, designed in ElevenLabs.</p>
+    <p>Text: Berean Standard Bible (public domain). Voices: High Priest, Hannah, Daniel, Psalm Reader II, Mary, John of Patmos, Son of Man and Apostle Paul, designed in ElevenLabs.</p>
     <p>Choir and strings: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified.</p>
   </footer>
 </div>
@@ -172,11 +172,17 @@ footer p { margin: 0; max-width: 62ch; }
 const TRACKS = [
   { n: "Nu", he: "ch. 6", title: "The Priestly Blessing", line: "May the Lord bless you and keep you", mood: "Numbers 6:24–26 · read by the High Priest", file: "audio/priestly-blessing.mp3", voice: "High Priest", dur: 50 },
   { n: "1 Sa", he: "ch. 2", title: "Hannah's Prayer", line: "My heart rejoices in the Lord", mood: "1 Samuel 2:1–10 · a mother’s song of joy", file: "audio/hannah.mp3", voice: "Hannah", dur: 172 },
+  { n: "Dn", he: "ch. 9", title: "Daniel's Prayer", line: "O Lord, the great and awesome God", mood: "Daniel 9:4–19 · a prayer of confession", file: "audio/daniel-9.mp3", voice: "Daniel", dur: 265 },
+  { n: "Jon", he: "ch. 2", title: "Jonah's Prayer", line: "In my distress I called to the Lord", mood: "Jonah 2:1–9 · from inside the fish", file: "audio/jonah-2.mp3", voice: "Daniel", dur: 121 },
+  { n: "Hab", he: "ch. 3", title: "Habakkuk's Prayer", line: "Though the fig tree does not bud", mood: "Habakkuk 3:17–19 · yet I will exult", file: "audio/habakkuk-3.mp3", voice: "Daniel", dur: 62 },
   { n: "Mt", he: "ch. 6", title: "The Lord's Prayer", line: "Our Father in heaven", mood: "Matthew 6:9–13 · the prayer Jesus taught", file: "audio/lords-prayer.mp3", voice: "Psalm Reader II", dur: 76 },
   { n: "Lk", he: "ch. 1", title: "Mary's Song", line: "My soul magnifies the Lord", mood: "Luke 1:46–55 · the Magnificat", file: "audio/mary.mp3", voice: "Mary", dur: 112 },
   { n: "Lk", he: "ch. 1", title: "Zechariah's Song", line: "Blessed be the Lord, the God of Israel", mood: "Luke 1:68–79 · read by the High Priest", file: "audio/zechariah.mp3", voice: "High Priest", dur: 104 },
   { n: "Lk", he: "ch. 2", title: "Simeon's Song", line: "Sovereign Lord, as You have promised", mood: "Luke 2:29–32 · read by the High Priest", file: "audio/simeon.mp3", voice: "High Priest", dur: 51 },
   { n: "Jn", he: "ch. 17", title: "The Prayer of Jesus", line: "Father, the hour has come", mood: "John 17:1–26 · Jesus prays for His disciples", file: "audio/john-17.mp3", voice: "Son of Man", dur: 352 },
+  { n: "Eph", he: "ch. 3", title: "Paul's Prayer for the Ephesians", line: "For this reason I bow my knees before the Father", mood: "Ephesians 3:14–21 · read by the Apostle Paul", file: "audio/ephesians-3.mp3", voice: "Apostle Paul", dur: 93 },
+  { n: "Php", he: "ch. 1", title: "Paul's Prayer for the Philippians", line: "And this is my prayer", mood: "Philippians 1:9–11 · read by the Apostle Paul", file: "audio/philippians-1.mp3", voice: "Apostle Paul", dur: 54 },
+  { n: "Jude", he: "v. 24", title: "The Doxology of Jude", line: "Now to Him who is able to keep you from stumbling", mood: "Jude 24–25 · a closing blessing", file: "audio/jude.mp3", voice: "Apostle Paul", dur: 55 },
 ];
 
 /* Playback: each psalm is fetched (allowed for files published with the page) and played through the
