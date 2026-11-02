@@ -157,6 +157,9 @@ html.rev {
 html.prayers {
   --bg: #e4e6ec; --surface: #eff0f4; --fg: #1a1d2a; --muted: #5b6072; --line: #c9cdd8; --accent: #3b4f8f; --accent-ink: #f1f3fa;
 }
+html.matthew {
+  --bg: #e6e8dc; --surface: #f0f1e8; --fg: #1c2016; --muted: #5c6352; --line: #cdd1bf; --accent: #56692a; --accent-ink: #f4f6ea;
+}
 html.judges {
   --bg: #efe6d8; --surface: #f6efe4; --fg: #261b12; --muted: #6e5d4c; --line: #d9cbb6; --accent: #a8501a; --accent-ink: #fff4e6;
 }
@@ -167,6 +170,9 @@ html.judges {
   html.prayers:not([data-theme="light"]) {
     --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
   }
+  html.matthew:not([data-theme="light"]) {
+    --bg: #0d100a; --surface: #161b11; --fg: #e6e9da; --muted: #9da38c; --line: #283020; --accent: #c3cf86; --accent-ink: #12160a;
+  }
   html.judges:not([data-theme="light"]) {
     --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
   }
@@ -176,6 +182,9 @@ html.rev[data-theme="dark"] {
 }
 html.prayers[data-theme="dark"] {
   --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
+}
+html.matthew[data-theme="dark"] {
+  --bg: #0d100a; --surface: #161b11; --fg: #e6e9da; --muted: #9da38c; --line: #283020; --accent: #c3cf86; --accent-ink: #12160a;
 }
 html.judges[data-theme="dark"] {
   --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
@@ -196,9 +205,9 @@ body { margin: 0; }
 .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cframe { display: none; position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--bg); }
-html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe { display: block; }
-html.rev .wrap, html.judges .wrap, html.prayers .wrap { display: none; }
-html.rev body, html.judges body, html.prayers body { overflow: hidden; }
+html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe, html.matthew #matthewframe { display: block; }
+html.rev .wrap, html.judges .wrap, html.prayers .wrap, html.matthew .wrap { display: none; }
+html.rev body, html.judges body, html.prayers body, html.matthew body { overflow: hidden; }
 
 /* Make a clip: opens the clip maker in the top page */
 .clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
@@ -249,10 +258,12 @@ html.cm-open, html.cm-open body { overflow: hidden; }
   <button class="tab" role="tab" id="tab-rev" aria-selected="false">Revelation</button>
   <button class="tab" role="tab" id="tab-judges" aria-selected="false">Judges</button>
   <button class="tab" role="tab" id="tab-prayers" aria-selected="false">Prayers</button>
+  <button class="tab" role="tab" id="tab-matthew" aria-selected="false">Matthew</button>
 </nav>
 <iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
 <iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
 <iframe id="prayersframe" class="cframe" title="Prayers" loading="lazy"></iframe>
+<iframe id="matthewframe" class="cframe" title="Matthew" loading="lazy"></iframe>
 
 
 <section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
@@ -777,8 +788,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/index.html" },
     judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/index.html" },
     prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/index.html" },
+    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/index.html" },
   };
-  const ORDER = ["psalter", "rev", "judges", "prayers"];
+  const ORDER = ["psalter", "rev", "judges", "prayers", "matthew"];
   let cur = null;
   const fr = k => TABS[k].frame && document.getElementById(TABS[k].frame);
   const fit = () => { const h = bar.getBoundingClientRect().height;
@@ -791,7 +803,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     if (!TABS[which]) which = "psalter";
     for (const k of ORDER) if (k !== which) pauseTab(k);
     const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
-    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers");
+    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers"); root.classList.toggle("matthew", which === "matthew");
     for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
     cur = which; fit();
     if (remember) { try { localStorage.setItem("tab", which); } catch (e) {} }
@@ -835,9 +847,10 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     psalter: { name: 'THE PSALTER', mark: '\u05ea\u05d4\u05dc\u05d9\u05dd', top: '#18201b', bottom: '#2b382f', glow: '#d7a447', ink: '#f1ecdf', accent: '#e0b25a', soft: '#a9b3a9' },
     revelation: { name: 'REVELATION', mark: '\u1f08\u03c0\u03bf\u03ba\u03ac\u03bb\u03c5\u03c8\u03b9\u03c2', top: '#120a09', bottom: '#341611', glow: '#e0674a', ink: '#f3e7e1', accent: '#ef8a6c', soft: '#b39f96' },
     judges: { name: 'JUDGES BY THE FIRE', mark: '\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd', top: '#110a05', bottom: '#38200d', glow: '#f0a04b', ink: '#f6ead6', accent: '#f6b465', soft: '#b8a389' },
+    matthew: { name: 'THE SERMON ON THE MOUNT', mark: '\u05de\u05ea\u05d9', top: '#0e120b', bottom: '#2a331c', glow: '#c3cf86', ink: '#eef0e2', accent: '#d2dc98', soft: '#a7ad97' },
     prayers: { name: 'PRAYERS', mark: '\u05ea\u05e4\u05d9\u05dc\u05d5\u05ea', top: '#0e1120', bottom: '#232b4a', glow: '#9fb2ec', ink: '#eef0f8', accent: '#b9c7f2', soft: '#a3a9bd' },
   };
-  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : 'psalter';
+  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : f.startsWith('matthew/') ? 'matthew' : 'psalter';
   let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
   const bytesCache = new Map();
 
@@ -858,7 +871,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     const t = u.text.length > 46 ? u.text.slice(0, 44).replace(/\s+\S*$/, '') + '\u2026' : u.text;
     if (u.v === 'title') return 'Opening \u00b7 ' + t;
     if (DATA[f].unit === 'line') return 'Part ' + u.v + ' \u00b7 ' + t;
-    if (u.v.includes(':')) { const [c, v] = u.v.split(':'); return 'Psalm ' + c + ', verse ' + v + ' \u00b7 ' + t; }
+    if (u.v.includes(':')) { const [c, v] = u.v.split(':'); return (f.startsWith('matthew/') ? 'Matthew ' + c + ':' + v : 'Psalm ' + c + ', verse ' + v) + ' \u00b7 ' + t; }
     return 'Verse ' + u.v + ' \u00b7 ' + t;
   }
   function reference(f, a, b) {           // the heading on the video
@@ -867,6 +880,11 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     const vs = units.slice(a, b + 1).filter(u => u.v !== 'title');
     if (!vs.length) return d.title;
     const all = a === 0 && b === units.length - 1;
+    if (f.startsWith('matthew/')) {                     // labels are chapter:verse and can cross chapters
+      const [c1, v1] = vs[0].v.split(':'), [c2, v2] = vs[vs.length - 1].v.split(':');
+      if (c1 === c2) return 'Matthew ' + c1 + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+      return 'Matthew ' + c1 + ':' + v1 + '\u2013' + c2 + ':' + v2;
+    }
     if (f.includes('042-043')) {
       if (all) return 'Psalms 42\u201343';
       const [c1, v1] = vs[0].v.split(':'), [c2, v2] = vs[vs.length - 1].v.split(':');
@@ -978,7 +996,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   function fillReadings() {
     const sel = $('cm-reading'); sel.innerHTML = '';
-    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers' };
+    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers', matthew: 'Matthew' };
     for (const [key, label] of Object.entries(groups)) {
       const og = document.createElement('optgroup'); og.label = label;
       for (const f of Object.keys(DATA)) if (colOf(f) === key) { const o = document.createElement('option'); o.value = f; o.textContent = DATA[f].title; og.appendChild(o); }
