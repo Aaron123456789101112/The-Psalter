@@ -163,15 +163,18 @@ footer p { margin: 0; max-width: 62ch; }
 
 
   <footer>
-    <p>Text: Berean Standard Bible (public domain). Voices: Psalm Reader II and High Priest, designed in ElevenLabs.</p>
+    <p>Text: Berean Standard Bible (public domain). Voices: High Priest, Psalm Reader II, John of Patmos and Son of Man, designed in ElevenLabs.</p>
     <p>Choir and strings: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified.</p>
   </footer>
 </div>
 
 <script>
 const TRACKS = [
-  { n: "Nu", he: "ch. 6", title: "The Priestly Blessing", line: "May the Lord bless you and keep you", mood: "Numbers 6:24–26 · read by the High Priest", file: "audio/priestly-blessing.mp3", dur: 51 },
-  { n: "Mt", he: "ch. 6", title: "The Lord's Prayer", line: "Our Father in heaven", mood: "Matthew 6:9–13 · the prayer Jesus taught", file: "audio/lords-prayer.mp3", dur: 76 },
+  { n: "Nu", he: "ch. 6", title: "The Priestly Blessing", line: "May the Lord bless you and keep you", mood: "Numbers 6:24–26 · read by the High Priest", file: "audio/priestly-blessing.mp3", voice: "High Priest", dur: 51 },
+  { n: "Mt", he: "ch. 6", title: "The Lord's Prayer", line: "Our Father in heaven", mood: "Matthew 6:9–13 · the prayer Jesus taught", file: "audio/lords-prayer.mp3", voice: "Psalm Reader II", dur: 76 },
+  { n: "Lk", he: "ch. 1", title: "Zechariah's Song", line: "Blessed be the Lord, the God of Israel", mood: "Luke 1:68–79 · read by the High Priest", file: "audio/zechariah.mp3", voice: "High Priest", dur: 122 },
+  { n: "Lk", he: "ch. 2", title: "Simeon's Song", line: "Sovereign Lord, as You have promised", mood: "Luke 2:29–32 · read by the High Priest", file: "audio/simeon.mp3", voice: "High Priest", dur: 55 },
+  { n: "Jn", he: "ch. 17", title: "The Prayer of Jesus", line: "Father, the hour has come", mood: "John 17:1–26 · Jesus prays for His disciples", file: "audio/john-17.mp3", voice: "Son of Man", dur: 352 },
 ];
 
 /* Playback: each psalm is fetched (allowed for files published with the page) and played through the
@@ -352,7 +355,7 @@ function paint() {
   $("m-shuffle").setAttribute("aria-pressed", String(shuffle));
   try {
     if ("mediaSession" in navigator) {
-      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.file.includes("priestly") ? "High Priest" : "Psalm Reader II", album: "Prayers" });
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.voice || "Psalm Reader II", album: "Prayers" });
       navigator.mediaSession.playbackState = playing ? "playing" : "paused";
     }
   } catch (e) {}
