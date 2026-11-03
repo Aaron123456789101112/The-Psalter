@@ -1052,6 +1052,10 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   }
   function showResult(on) { $('cm-result').hidden = !on; if (!on) { $('cm-saved').textContent = ''; } }
 
+  // Picture bitrate: 4 Mbps for short clips; long ones are capped so the whole file stays near 40 MB. A full chapter at
+  // 4 Mbps came to about 120 MB, which Facebook's iPhone share sheet takes and then silently never posts. The picture is
+  // mostly still text, so it stays sharp at the lower rate.
+  function vbr(dur) { return Math.round(Math.max(1000000, Math.min(4000000, 40 * 8e6 / Math.max(1, dur) - 192000))); }
   // Fast path: build the MP4 directly with the phone's own video and audio encoders (WebCodecs) instead of
   // recording it while it plays. Same picture (1080 wide, 30 fps, 4 Mbps H.264) and sound (AAC 192 kbps),
   // usually several times faster than real time, and silent.
@@ -1089,7 +1093,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       audio: { codec: cfg.a.codec === 'opus' ? 'opus' : 'aac', numberOfChannels: 2, sampleRate: sr } });
     let fail = null;
     const ve = new VideoEncoder({ output: (ch, m) => muxer.addVideoChunk(ch, m), error: e => { fail = e; } });
-    ve.configure({ ...cfg.v, bitrate: 4000000, framerate: 30 });
+    ve.configure({ ...cfg.v, bitrate: vbr(dur), framerate: 30 });
     const isAac = cfg.a.codec.startsWith('mp4a'), RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
     let audioN = 0, metaSent = false;
     const ascFor = () => { const fi = Math.max(0, RATES.indexOf(sr)); return new Uint8Array([(2 << 3) | (fi >> 1), ((fi & 1) << 7) | (2 << 3)]); };   // AAC-LC, stereo
@@ -1191,7 +1195,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
         const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
         mime = types.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
         const stream = new MediaStream([...c.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
-        rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: 4000000, audioBitsPerSecond: 192000 });
+        rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: vbr(dur), audioBitsPerSecond: 192000 });
         rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
         drawFrame(g, c.width, c.height, col, ref, segs, t0, t0, t1);
         rec.start(500);
@@ -1247,7 +1251,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       const f = new File([lastBlob], name, { type });
       if (navigator.canShare && navigator.canShare({ files: [f] })) {
         await navigator.share({ files: [f] });
-        msg.textContent = 'Done. If you chose Save Video, the clip is in your Photos. If you chose Facebook, finish your post there.';
+        msg.textContent = 'Done. If you chose Save Video, the clip is in your Photos. If you chose Facebook, finish your post there. If Facebook doesn\u2019t post it, choose Save Video instead, then open the Facebook app and post it from your Photos.';
         return;
       }
     } catch (e) {
