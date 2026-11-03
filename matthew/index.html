@@ -92,6 +92,12 @@ ol { list-style: none; margin: 0; padding: 0; }
 .t-mood { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
 .dur { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
 .track.current .num b, .track.current .t-line { color: var(--accent); }
+/* a run of readings that belong together (the Sermon on the Mount) */
+.group-head { padding: 18px 4px 8px 14px; border-left: 3px solid var(--accent); border-bottom: 1px solid var(--line); }
+.group-head .g-title { font-family: var(--display); font-size: 20px; line-height: 1.2; }
+.group-head .g-sub { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+li.in-group { border-left: 3px solid var(--accent); }
+li.in-group .track { padding-left: 11px; }
 
 /* humming indicator on the playing row */
 .hum { display: none; gap: 2px; align-items: flex-end; height: 14px; }
@@ -174,17 +180,19 @@ const TRACKS = [
   { n: "2", he: "ch. 2", title: "The Magi and the Flight to Egypt", line: "Where is the One who has been born King of the Jews?", mood: "Matthew 2:1–23 · the star, Herod, Rachel weeping, Nazareth", file: "audio/matthew-2.mp3", voice: "Matthew", dur: 247 },
   { n: "3", he: "ch. 3", title: "John the Baptist and the Baptism of Jesus", line: "This is My beloved Son, in whom I am well pleased", mood: "Matthew 3:1–17 · repent, the Jordan, the heavens opened", file: "audio/matthew-3.mp3", voice: "Matthew", dur: 180 },
   { n: "4", he: "ch. 4", title: "The Temptation and the First Disciples", line: "Away from Me, Satan!", mood: "Matthew 4:1–22 · the wilderness, a great light, fishers of men", file: "audio/matthew-4.mp3", voice: "Matthew", dur: 209 },
-  { n: "5", he: "ch. 5", title: "The Sermon on the Mount, Part 1", line: "Blessed are the poor in spirit", mood: "Matthew 4:23–5:48 · the Beatitudes, salt and light, love your enemies", file: "audio/sermon-on-the-mount-1.mp3", voice: "Jesus", dur: 456 },
-  { n: "6", he: "ch. 6", title: "The Sermon on the Mount, Part 2", line: "Our Father in heaven", mood: "Matthew 6:1–34 · the Lord’s Prayer, do not worry", file: "audio/sermon-on-the-mount-2.mp3", voice: "Jesus", dur: 322 },
-  { n: "7", he: "ch. 7", title: "The Sermon on the Mount, Part 3", line: "Ask, and it will be given to you", mood: "Matthew 7:1–8:1 · the narrow gate, the wise and foolish builders", file: "audio/sermon-on-the-mount-3.mp3", voice: "Jesus", dur: 268 },
-  { n: "8", he: "ch. 8", title: "The Leper, the Storm and the Gadarenes", line: "Even the winds and the sea obey Him!", mood: "Matthew 8:2–34 · the centurion, the storm stilled, the herd of pigs", file: "audio/matthew-8.mp3", voice: "Matthew", dur: 313 },
+  { n: "5", he: "ch. 5", title: "The Sermon on the Mount, Part 1", line: "Blessed are the poor in spirit", mood: "Matthew 4:23–5:48 · the Beatitudes, salt and light, love your enemies", file: "audio/sermon-on-the-mount-1.mp3", voice: "Jesus", group: "The Sermon on the Mount", dur: 456 },
+  { n: "6", he: "ch. 6", title: "The Sermon on the Mount, Part 2", line: "Our Father in heaven", mood: "Matthew 6:1–34 · the Lord’s Prayer, do not worry", file: "audio/sermon-on-the-mount-2.mp3", voice: "Jesus", group: "The Sermon on the Mount", dur: 322 },
+  { n: "7", he: "ch. 7", title: "The Sermon on the Mount, Part 3", line: "Ask, and it will be given to you", mood: "Matthew 7:1–8:1 · the narrow gate, the wise and foolish builders", file: "audio/sermon-on-the-mount-3.mp3", voice: "Jesus", group: "The Sermon on the Mount", dur: 269 },
+  { n: "8", he: "ch. 8", title: "The Leper, the Storm and the Gadarenes", line: "Even the winds and the sea obey Him!", mood: "Matthew 8:2–34 · the centurion, the storm stilled, the herd of pigs", file: "audio/matthew-8.mp3", voice: "Matthew", dur: 314 },
   { n: "9", he: "ch. 9", title: "Matthew Called and the Girl Restored", line: "Take courage, daughter; your faith has healed you", mood: "Matthew 9:1–38 · the paralytic, the tax booth, the girl who rose, the blind men", file: "audio/matthew-9.mp3", voice: "Matthew", dur: 358 },
   { n: "10", he: "ch. 10", title: "The Twelve Sent Out", line: "I am sending you out like sheep among wolves", mood: "Matthew 10:1–42 · the twelve apostles, not peace but a sword", file: "audio/matthew-10.mp3", voice: "Jesus", dur: 354 },
-  { n: "11", he: "ch. 11", title: "Come to Me, All You Who Are Weary", line: "Come to Me, all you who are weary and burdened", mood: "Matthew 11:1–30 · John’s question from prison, the woes, rest for your souls", file: "audio/matthew-11.mp3", voice: "Jesus", dur: 268 },
+  { n: "11", he: "ch. 11", title: "Come to Me, All You Who Are Weary", line: "Come to Me, all you who are weary and burdened", mood: "Matthew 11:1–30 · John’s question from prison, the woes, rest for your souls", file: "audio/matthew-11.mp3", voice: "Jesus", dur: 269 },
   { n: "12", he: "ch. 12", title: "Lord of the Sabbath", line: "Here are My mother and My brothers", mood: "Matthew 12:1–50 · the grainfields, the withered hand, the sign of Jonah", file: "audio/matthew-12.mp3", voice: "Matthew", dur: 419 },
   { n: "13", he: "ch. 13", title: "The Parables of the Kingdom", line: "He who has ears, let him hear", mood: "Matthew 13:1–58 · the sower, the weeds, the mustard seed, the pearl, rejected at Nazareth", file: "audio/matthew-13.mp3", voice: "Jesus", dur: 492 },
   { n: "14", he: "ch. 14", title: "Five Thousand Fed and Walking on the Water", line: "Take courage! It is I. Do not be afraid", mood: "Matthew 14:1–36 · John beheaded, five loaves and two fish, Peter on the water", file: "audio/matthew-14.mp3", voice: "Matthew", dur: 314 },
-  { n: "15", he: "ch. 15", title: "The Faith of the Canaanite Woman", line: "O woman, your faith is great!", mood: "Matthew 15:1–39 · clean and unclean, the crumbs from the table, four thousand fed", file: "audio/matthew-15.mp3", voice: "Matthew", dur: 306 },
+  { n: "15", he: "ch. 15", title: "The Faith of the Canaanite Woman", line: "O woman, your faith is great!", mood: "Matthew 15:1–39 · clean and unclean, the crumbs from the table, four thousand fed", file: "audio/matthew-15.mp3", voice: "Matthew", dur: 305 },
+  { n: "16", he: "ch. 16", title: "Who Do You Say I Am?", line: "You are the Christ, the Son of the living God", mood: "Matthew 16:1–28 · the sign of Jonah, the leaven, Peter’s confession, take up your cross", file: "audio/matthew-16.mp3", voice: "Matthew", dur: 259 },
+  { n: "17", he: "ch. 17", title: "The Transfiguration", line: "This is My beloved Son. Listen to Him!", mood: "Matthew 17:1–27 · the mountain, the boy healed, faith like a mustard seed, the coin in the fish", file: "audio/matthew-17.mp3", voice: "Matthew", dur: 263 },
   { n: "26", he: "ch. 26", title: "The Anointing at Bethany", line: "She poured it on His head", mood: "Matthew 26:1–16 · the plot, the alabaster jar, thirty pieces of silver", file: "audio/anointing-at-bethany.mp3", voice: "Matthew", dur: 152 },
   { n: "26", he: "ch. 26", title: "The Last Supper", line: "Take and eat; this is My body", mood: "Matthew 26:17–35 · the betrayer foretold, the bread and the cup, Peter’s boast", file: "audio/the-last-supper.mp3", voice: "Matthew", dur: 226 },
   { n: "26", he: "ch. 26", title: "Gethsemane", line: "Not as I will, but as You will", mood: "Matthew 26:36–56 · the prayer in the garden, the kiss, the arrest", file: "audio/gethsemane.mp3", voice: "Matthew", dur: 236 },
@@ -336,7 +344,14 @@ function buildOrder(keepFirst) {
 function renderList() {
   const list = $("list"); list.innerHTML = "";
   TRACKS.forEach((t, i) => {
+    if (t.group && (i === 0 || TRACKS[i - 1].group !== t.group)) {
+      const run = TRACKS.filter(u => u.group === t.group);
+      const gh = document.createElement("li"); gh.className = "group-head";
+      gh.innerHTML = `<div class="g-title">${t.group}</div><div class="g-sub">Chapters ${run[0].n}–${run[run.length - 1].n} · ${run.length} parts, read by Jesus</div>`;
+      list.appendChild(gh);
+    }
     const li = document.createElement("li");
+    if (t.group) li.className = "in-group";
     const b = document.createElement("button");
     b.className = "track"; b.id = "track-" + i;
     b.setAttribute("aria-label", "Play " + t.title);
