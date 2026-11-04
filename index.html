@@ -163,6 +163,9 @@ html.matthew {
 html.proverbs {
   --bg: #e1e8e6; --surface: #edf2f0; --fg: #142120; --muted: #536664; --line: #c6d3d0; --accent: #2c6a64; --accent-ink: #eef6f4;
 }
+html.prophets {
+  --bg: #ece4e1; --surface: #f5efed; --fg: #22171a; --muted: #6b5a5e; --line: #d8c9cc; --accent: #7d2d3f; --accent-ink: #fbf1f3;
+}
 html.judges {
   --bg: #efe6d8; --surface: #f6efe4; --fg: #261b12; --muted: #6e5d4c; --line: #d9cbb6; --accent: #a8501a; --accent-ink: #fff4e6;
 }
@@ -179,6 +182,9 @@ html.judges {
   html.proverbs:not([data-theme="light"]) {
     --bg: #0a1211; --surface: #121c1b; --fg: #e0ebe8; --muted: #93a8a4; --line: #22312f; --accent: #8fcbc1; --accent-ink: #081312;
   }
+  html.prophets:not([data-theme="light"]) {
+    --bg: #120b0d; --surface: #1c1215; --fg: #f0e4e7; --muted: #a9969b; --line: #33232a; --accent: #e08a9f; --accent-ink: #1d0a10;
+  }
   html.judges:not([data-theme="light"]) {
     --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
   }
@@ -194,6 +200,9 @@ html.matthew[data-theme="dark"] {
 }
 html.proverbs[data-theme="dark"] {
   --bg: #0a1211; --surface: #121c1b; --fg: #e0ebe8; --muted: #93a8a4; --line: #22312f; --accent: #8fcbc1; --accent-ink: #081312;
+}
+html.prophets[data-theme="dark"] {
+  --bg: #120b0d; --surface: #1c1215; --fg: #f0e4e7; --muted: #a9969b; --line: #33232a; --accent: #e08a9f; --accent-ink: #1d0a10;
 }
 html.judges[data-theme="dark"] {
   --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
@@ -214,9 +223,9 @@ body { margin: 0; }
 .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .cframe { display: none; position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--bg); }
-html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe, html.matthew #matthewframe, html.proverbs #proverbsframe { display: block; }
-html.rev .wrap, html.judges .wrap, html.prayers .wrap, html.matthew .wrap, html.proverbs .wrap { display: none; }
-html.rev body, html.judges body, html.prayers body, html.matthew body, html.proverbs body { overflow: hidden; }
+html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe, html.matthew #matthewframe, html.proverbs #proverbsframe, html.prophets #prophetsframe { display: block; }
+html.rev .wrap, html.judges .wrap, html.prayers .wrap, html.matthew .wrap, html.proverbs .wrap, html.prophets .wrap { display: none; }
+html.rev body, html.judges body, html.prayers body, html.matthew body, html.proverbs body, html.prophets body { overflow: hidden; }
 
 /* Make a clip: opens the clip maker in the top page */
 .clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
@@ -269,12 +278,14 @@ html.cm-open, html.cm-open body { overflow: hidden; }
   <button class="tab" role="tab" id="tab-prayers" aria-selected="false">Prayers</button>
   <button class="tab" role="tab" id="tab-matthew" aria-selected="false">Matthew</button>
   <button class="tab" role="tab" id="tab-proverbs" aria-selected="false">Proverbs</button>
+  <button class="tab" role="tab" id="tab-prophets" aria-selected="false">Prophets</button>
 </nav>
 <iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
 <iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
 <iframe id="prayersframe" class="cframe" title="Prayers" loading="lazy"></iframe>
 <iframe id="matthewframe" class="cframe" title="Matthew" loading="lazy"></iframe>
 <iframe id="proverbsframe" class="cframe" title="Proverbs" loading="lazy"></iframe>
+<iframe id="prophetsframe" class="cframe" title="The Prophets" loading="lazy"></iframe>
 
 
 <section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
@@ -802,8 +813,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/index.html" },
     matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/index.html" },
     proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/index.html" },
+    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/index.html" },
   };
-  const ORDER = ["psalter", "rev", "judges", "prayers", "matthew", "proverbs"];
+  const ORDER = ["psalter", "rev", "judges", "prayers", "matthew", "proverbs", "prophets"];
   let cur = null;
   const fr = k => TABS[k].frame && document.getElementById(TABS[k].frame);
   const fit = () => { const h = bar.getBoundingClientRect().height;
@@ -816,7 +828,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     if (!TABS[which]) which = "psalter";
     for (const k of ORDER) if (k !== which) pauseTab(k);
     const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
-    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers"); root.classList.toggle("matthew", which === "matthew"); root.classList.toggle("proverbs", which === "proverbs");
+    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers"); root.classList.toggle("matthew", which === "matthew"); root.classList.toggle("proverbs", which === "proverbs"); root.classList.toggle("prophets", which === "prophets");
     for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
     cur = which; fit();
     if (remember) { try { localStorage.setItem("tab", which); } catch (e) {} }
@@ -861,10 +873,11 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     revelation: { name: 'REVELATION', mark: '\u1f08\u03c0\u03bf\u03ba\u03ac\u03bb\u03c5\u03c8\u03b9\u03c2', top: '#120a09', bottom: '#341611', glow: '#e0674a', ink: '#f3e7e1', accent: '#ef8a6c', soft: '#b39f96' },
     judges: { name: 'JUDGES BY THE FIRE', mark: '\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd', top: '#110a05', bottom: '#38200d', glow: '#f0a04b', ink: '#f6ead6', accent: '#f6b465', soft: '#b8a389' },
     matthew: { name: 'MATTHEW', mark: '\u05de\u05ea\u05d9', top: '#0e120b', bottom: '#2a331c', glow: '#c3cf86', ink: '#eef0e2', accent: '#d2dc98', soft: '#a7ad97' },
+    prophets: { name: 'THE PROPHETS', mark: '\u05e0\u05d1\u05d9\u05d0\u05d9\u05dd', top: '#140a0d', bottom: '#3a1a23', glow: '#e08a9f', ink: '#f6e9ec', accent: '#eaa3b4', soft: '#b39aa1' },
     proverbs: { name: 'PROVERBS', mark: '\u05de\u05e9\u05dc\u05d9', top: '#0a1312', bottom: '#183330', glow: '#8fcbc1', ink: '#e9f3f1', accent: '#a6d8cf', soft: '#9fb3af' },
     prayers: { name: 'PRAYERS', mark: '\u05ea\u05e4\u05d9\u05dc\u05d5\u05ea', top: '#0e1120', bottom: '#232b4a', glow: '#9fb2ec', ink: '#eef0f8', accent: '#b9c7f2', soft: '#a3a9bd' },
   };
-  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : f.startsWith('matthew/') ? 'matthew' : f.startsWith('proverbs/') ? 'proverbs' : 'psalter';
+  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : f.startsWith('matthew/') ? 'matthew' : f.startsWith('proverbs/') ? 'proverbs' : f.startsWith('prophets/') ? 'prophets' : 'psalter';
   let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
   const bytesCache = new Map();
 
@@ -1010,7 +1023,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
   function fillReadings() {
     const sel = $('cm-reading'); sel.innerHTML = '';
-    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers', matthew: 'Matthew', proverbs: 'Proverbs' };
+    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers', matthew: 'Matthew', proverbs: 'Proverbs', prophets: 'The Prophets' };
     for (const [key, label] of Object.entries(groups)) {
       const og = document.createElement('optgroup'); og.label = label;
       for (const f of Object.keys(DATA)) if (colOf(f) === key) { const o = document.createElement('option'); o.value = f; o.textContent = DATA[f].title; og.appendChild(o); }
