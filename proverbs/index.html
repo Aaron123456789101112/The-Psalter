@@ -169,7 +169,7 @@ footer p { margin: 0; max-width: 62ch; }
 
 
   <footer>
-    <p>Text: Berean Standard Bible (public domain). Voices: the father and Lady Wisdom, designed in ElevenLabs.</p>
+    <p>Text: Berean Standard Bible (public domain). Voices: the father, Lady Wisdom and King Lemuel’s mother (read by the Lady Wisdom voice), designed in ElevenLabs.</p>
     <p>Choir and strings: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified. Frame drum: Versilian Community Sample Library (CC0).</p>
   </footer>
 </div>
@@ -191,6 +191,22 @@ const TRACKS = [
   { n: "13", he: "ch. 13", title: "Hope Deferred", line: "Hope deferred makes the heart sick", mood: "Proverbs 13:1–25 · walk with the wise, the light of the righteous", file: "audio/proverbs-13.mp3", voice: "the father", dur: 276 },
   { n: "14", he: "ch. 14", title: "A Way That Seems Right", line: "There is a way that seems right to a man", mood: "Proverbs 14:1–35 · the wise woman builds her house, righteousness exalts a nation", file: "audio/proverbs-14.mp3", voice: "the father", dur: 367 },
   { n: "15", he: "ch. 15", title: "A Gentle Answer", line: "A gentle answer turns away wrath", mood: "Proverbs 15:1–33 · better a dish of vegetables where there is love", file: "audio/proverbs-15.mp3", voice: "the father", dur: 330 },
+  { n: "16", he: "ch. 16", title: "Pride Goes Before Destruction", line: "Commit your works to the Lord and your plans will be achieved", mood: "Proverbs 16:1–33 · the Lord determines his steps, pleasant words are a honeycomb", file: "audio/proverbs-16.mp3", voice: "the father", dur: 333 },
+  { n: "17", he: "ch. 17", title: "A Friend Loves at All Times", line: "A joyful heart is good medicine", mood: "Proverbs 17:1–28 · grandchildren are the crown of the aged, a bear robbed of her cubs", file: "audio/proverbs-17.mp3", voice: "the father", dur: 288 },
+  { n: "18", he: "ch. 18", title: "A Strong Tower", line: "The name of the Lord is a strong tower", mood: "Proverbs 18:1–24 · life and death in the tongue, a friend closer than a brother", file: "audio/proverbs-18.mp3", voice: "the father", dur: 238 },
+  { n: "19", he: "ch. 19", title: "Kindness to the Poor", line: "Kindness to the poor is a loan to the Lord", mood: "Proverbs 19:1–29 · the purpose of the Lord will prevail, the slacker’s dish", file: "audio/proverbs-19.mp3", voice: "the father", dur: 316 },
+  { n: "20", he: "ch. 20", title: "The Lamp of the Lord", line: "The spirit of a man is the lamp of the Lord", mood: "Proverbs 20:1–30 · wine is a mocker, “Worthless!” says the buyer", file: "audio/proverbs-20.mp3", voice: "the father", dur: 314 },
+  { n: "21", he: "ch. 21", title: "The King’s Heart", line: "The king’s heart is a waterway in the hand of the Lord", mood: "Proverbs 21:1–31 · a corner of the roof, victory is of the Lord", file: "audio/proverbs-21.mp3", voice: "the father", dur: 312 },
+  { n: "22", he: "ch. 22", title: "Train Up a Child", line: "Train up a child in the way he should go", mood: "Proverbs 22:1–29 · a good name, the sayings of the wise begin", file: "audio/proverbs-22.mp3", voice: "the father", dur: 299 },
+  { n: "23", he: "ch. 23", title: "Who Has Woe?", line: "My son, give me your heart", mood: "Proverbs 23:1–35 · dining with a ruler, wine that bites like a snake", file: "audio/proverbs-23.mp3", voice: "the father", dur: 349 },
+  { n: "24", he: "ch. 24", title: "Seven Times He Falls", line: "Though a righteous man may fall seven times, he still gets up", mood: "Proverbs 24:1–34 · rescue those led to death, the slacker’s field", file: "audio/proverbs-24.mp3", voice: "the father", dur: 349 },
+  { n: "25", he: "ch. 25", title: "Apples of Gold", line: "A word fitly spoken is like apples of gold in settings of silver", mood: "Proverbs 25:1–28 · the men of Hezekiah, burning coals on his head", file: "audio/proverbs-25.mp3", voice: "the father", dur: 292 },
+  { n: "26", he: "ch. 26", title: "Answer a Fool", line: "Do not answer a fool according to his folly", mood: "Proverbs 26:1–28 · the slacker on his hinges, he who digs a pit", file: "audio/proverbs-26.mp3", voice: "the father", dur: 271 },
+  { n: "27", he: "ch. 27", title: "Iron Sharpens Iron", line: "As iron sharpens iron, so one man sharpens another", mood: "Proverbs 27:1–27 · do not boast about tomorrow, the wounds of a friend, know your flocks", file: "audio/proverbs-27.mp3", voice: "the father", dur: 282 },
+  { n: "28", he: "ch. 28", title: "Bold as a Lion", line: "The righteous are as bold as a lion", mood: "Proverbs 28:1–28 · he who confesses finds mercy, the poor man of integrity", file: "audio/proverbs-28.mp3", voice: "the father", dur: 309 },
+  { n: "29", he: "ch. 29", title: "Where There Is No Vision", line: "Where there is no vision, the people cast off restraint", mood: "Proverbs 29:1–27 · the fear of man is a snare", file: "audio/proverbs-29.mp3", voice: "the father", dur: 289 },
+  { n: "30", he: "ch. 30", title: "The Words of Agur", line: "Every word of God is flawless", mood: "Proverbs 30:1–33 · give me neither poverty nor riches, three things and four", file: "audio/proverbs-30.mp3", voice: "the father", dur: 391 },
+  { n: "31", he: "ch. 31", title: "The Wife of Noble Character", line: "A wife of noble character, who can find?", mood: "Proverbs 31:1–31 · the words of King Lemuel’s mother, a woman who fears the Lord", file: "audio/proverbs-31.mp3", voice: "the father and King Lemuel’s mother", dur: 294 },
 ];
 
 /* Playback: each psalm is fetched (allowed for files published with the page) and played through the
