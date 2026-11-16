@@ -4,6 +4,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-title" content="Psalter">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e6e8e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121714" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="icon-512.png">
 <title>The Psalter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -278,6 +284,36 @@ html.cm-open, html.cm-open body { overflow: hidden; }
 .cm-result video { width: 100%; max-width: 340px; max-height: 60vh; border-radius: 8px; background: #000; align-self: center; }
 .cm-saved { font-family: var(--ui); font-size: 15px; margin: 0; }
 .cm-help { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+/* Listen offline: a sheet like the clip maker's, listing every collection with Save / Remove. */
+#of [hidden] { display: none !important; }
+.tab.of-tab { display: inline-flex; align-items: center; gap: 6px; }
+.tab.of-tab svg { width: 16px; height: 16px; fill: currentColor; }
+.of-net { font-family: var(--ui); font-size: 15px; margin: -6px 0 0; color: var(--muted); }
+.of-net.off { color: var(--accent); font-weight: 500; }
+.of-box { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.of-box h3 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; }
+.of-box p, .of-box ol { margin: 0; font-family: var(--ui); font-size: 15px; line-height: 1.5; }
+.of-box ol { padding-left: 1.4em; list-style: decimal; display: flex; flex-direction: column; gap: 6px; }
+.of-sum { font-family: var(--ui); font-size: 15px; color: var(--muted); margin: 0; font-variant-numeric: tabular-nums; }
+.of-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.of-col { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.of-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.of-name { flex: 1 1 160px; min-width: 0; }
+.of-name b { display: block; font-family: var(--display); font-weight: 400; font-size: 21px; line-height: 1.2; }
+.of-name span { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.of-col .cm-btn { min-height: 44px; padding: 8px 16px; font-size: 15px; }
+.of-col details summary { font-family: var(--ui); font-size: 15px; color: var(--accent); cursor: pointer; min-height: 32px; padding: 4px 0; }
+.of-col details summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.of-tracks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; }
+.of-tracks li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
+.of-tracks li span { flex: 1; min-width: 0; font-size: 16px; overflow-wrap: anywhere; }
+.of-tracks li small { font-family: var(--ui); font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.of-tbtn { font-family: var(--ui); font-size: 14px; min-height: 40px; min-width: 92px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent);
+  background: transparent; color: var(--accent); cursor: pointer; }
+.of-tbtn.saved { border-color: var(--line); color: var(--muted); }
+.of-tbtn:disabled, .of-col .cm-btn:disabled { opacity: .5; cursor: default; }
+.of-tbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -289,6 +325,7 @@ html.cm-open, html.cm-open body { overflow: hidden; }
   <button class="tab" role="tab" id="tab-matthew" aria-selected="false">Matthew</button>
   <button class="tab" role="tab" id="tab-proverbs" aria-selected="false">Proverbs</button>
   <button class="tab" role="tab" id="tab-prophets" aria-selected="false">Prophets</button>
+  <button class="tab of-tab" id="of-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16 6.3 10.3l1.4-1.4L11 12.2zM5 18h14v2H5z"/></svg>Offline</button>
 </nav>
 <iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
 <iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
@@ -299,6 +336,33 @@ html.cm-open, html.cm-open body { overflow: hidden; }
 <iframe id="prophetsframe" class="cframe" title="The Prophets" loading="lazy"></iframe>
 
 
+<section class="cm" id="of" role="dialog" aria-modal="true" aria-labelledby="of-h" hidden>
+  <div class="cm-in">
+    <div class="cm-head"><h2 id="of-h">Listen offline</h2><button class="cm-x" id="of-close" type="button">Close</button></div>
+    <p class="cm-lede">Save recordings to this phone and they play with no internet: on a plane, in the country, anywhere without signal.</p>
+    <p class="of-net" id="of-net" role="status"></p>
+    <div class="of-box" id="of-install" hidden>
+      <h3>Put the Psalter on your home screen</h3>
+      <div id="of-install-android" hidden>
+        <p>It will open by itself, full screen, like any other app, instead of in the web browser.</p>
+        <button class="cm-btn go" id="of-install-btn" type="button">Add to home screen</button>
+      </div>
+      <div id="of-install-ios" hidden>
+        <p>It will then open by itself, full screen, like any other app, instead of in Safari.</p>
+        <ol>
+          <li>In Safari, tap the Share button (the square with an arrow pointing up).</li>
+          <li>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+          <li>Open the Psalter from its new icon, and save your recordings there. On an iPhone, the home-screen Psalter keeps its own saved recordings, separate from Safari.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="of-sum" id="of-sum"></p>
+    <div class="cm-prog" id="of-progress" hidden><progress id="of-bar" max="1" value="0"></progress><span id="of-ptext"></span><button class="cm-x" id="of-stop" type="button">Stop</button></div>
+    <p class="cm-status" id="of-status" role="status"></p>
+    <ul class="of-list" id="of-list"></ul>
+    <p class="cm-help">Saved recordings stay on this phone until you remove them. New psalms and chapters aren’t saved by themselves: open this page and press Save again to add them.</p>
+  </div>
+</section>
 <section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
   <div class="cm-in">
     <div class="cm-head"><h2 id="cm-h">Make a clip</h2><button class="cm-x" id="cm-close" type="button">Close</button></div>
@@ -1382,5 +1446,228 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   }
   window.ClipMaker = { open, close, _test: { last: () => lastBlob, ext: () => lastExt, data, unitsOf, frames, decodeSpan, span: (f, a, b) => { file = f; units = unitsOf(f); return span(a, b); }, reference: (f, a, b) => { file = f; units = unitsOf(f); return reference(f, a, b); } } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+})();
+</script>
+<script>
+/* Listen offline. The app is installable (manifest.webmanifest) and has a service worker (sw.js) that keeps the pages
+   and plays any recording saved here straight from the phone. This sheet lists every collection, read from each
+   tab's own track list, so newly published readings appear here by themselves. Saved files live in the
+   "psalter-audio" cache, under each recording's full address. */
+(() => {
+  const $ = id => document.getElementById(id);
+  const AUDIO = 'psalter-audio';
+  const COLS = [
+    { key: 'psalter', name: 'The Psalter', page: 'index.html' },
+    { key: 'rev', name: 'Revelation', page: 'revelation/index.html' },
+    { key: 'judges', name: 'Judges by the Fire', page: 'judges/index.html' },
+    { key: 'mighty', name: 'The Mighty Men of David', page: 'mighty/index.html' },
+    { key: 'prayers', name: 'Prayers', page: 'prayers/index.html' },
+    { key: 'matthew', name: 'Matthew', page: 'matthew/index.html' },
+    { key: 'proverbs', name: 'Proverbs', page: 'proverbs/index.html' },
+    { key: 'prophets', name: 'The Prophets', page: 'prophets/index.html' },
+  ];
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const canCache = 'caches' in window;
+
+  // ------------------------------------------------------------ the service worker
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}   // fails quietly where it isn't allowed (inside claude.ai)
+  }
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; paintInstall(); });
+  addEventListener('appinstalled', () => { installEvt = null; paintInstall(); });
+
+  // ------------------------------------------------------------ what there is to save
+  let cols = null;                       // [{ ...COLS[i], tracks: [{ title, url, dur }] }]
+  const unq = s => s.replace(/\\(.)/g, '$1');
+  function parseTracks(html, base) {
+    const a = html.indexOf('const TRACKS = ['); if (a < 0) return [];
+    const b = html.indexOf('\n];', a), body = html.slice(a, b < 0 ? undefined : b), out = [];
+    for (const m of body.matchAll(/\{[^\n]*?file:\s*"([^"]+)"[^\n]*\}/g)) {
+      const line = m[0], t = /title:\s*"((?:[^"\\]|\\.)*)"/.exec(line), d = /dur:\s*(\d+)/.exec(line);
+      out.push({ title: t ? unq(t[1]) : m[1], url: new URL(m[1], base).href, dur: d ? +d[1] : 0 });
+    }
+    return out;
+  }
+  async function load() {
+    if (cols) return cols;
+    const out = [];
+    for (const c of COLS) {
+      const base = new URL(c.page, location.href);
+      let html = '';
+      try { const r = await fetch(base.href); if (r.ok) html = await r.text(); } catch (e) {}
+      out.push({ ...c, tracks: parseTracks(html, base) });
+    }
+    return (cols = out);
+  }
+
+  // sizes: exact once known (from the server, or from the saved copy), otherwise an estimate from the length
+  let sizes = {}; try { sizes = JSON.parse(localStorage.getItem('of-sizes') || '{}'); } catch (e) {}
+  const keepSizes = () => { try { localStorage.setItem('of-sizes', JSON.stringify(sizes)); } catch (e) {} };
+  const sizeOf = t => sizes[t.url] || t.dur * 24000;
+  const mb = n => n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : Math.max(1, Math.round(n / 1e6)) + ' MB';
+  let saved = new Set();
+  async function readSaved() {
+    saved = new Set();
+    if (!canCache) return;
+    try { const c = await caches.open(AUDIO); for (const r of await c.keys()) saved.add(r.url); } catch (e) {}
+  }
+  async function learnSizes() {             // one quick HEAD per recording, only while online and only once
+    if (!navigator.onLine) return;
+    const todo = cols.flatMap(c => c.tracks).filter(t => !sizes[t.url]);
+    let i = 0;
+    const worker = async () => { while (i < todo.length) { const t = todo[i++];
+      try { const r = await fetch(t.url, { method: 'HEAD', cache: 'no-store' }); const n = +r.headers.get('content-length'); if (r.ok && n) sizes[t.url] = n; } catch (e) {} } };
+    await Promise.all([1, 2, 3, 4].map(worker)); keepSizes(); paint();
+  }
+
+  // ------------------------------------------------------------ saving and removing
+  let busy = false, stopNow = false;
+  async function saveOne(t, onBytes) {
+    const r = await fetch(t.url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const total = +r.headers.get('content-length') || sizeOf(t), parts = [];
+    let got = 0;
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader();
+      for (;;) { if (stopNow) { try { rd.cancel(); } catch (e) {} throw new Error('stopped'); }
+        const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; onBytes(got, total); }
+    } else { const b = new Uint8Array(await r.arrayBuffer()); parts.push(b); got = b.length; onBytes(got, total); }
+    const blob = new Blob(parts, { type: 'audio/mpeg' });
+    const h = { 'Content-Type': 'audio/mpeg', 'Content-Length': String(blob.size), 'Accept-Ranges': 'bytes' };
+    for (const k of ['etag', 'last-modified']) { const v = r.headers.get(k); if (v) h[k] = v; }
+    const c = await caches.open(AUDIO); await c.put(t.url, new Response(blob, { headers: h }));
+    sizes[t.url] = blob.size; saved.add(t.url);
+  }
+  async function saveMany(list, label) {
+    if (busy || !list.length) return;
+    if (!navigator.onLine) { say('There’s no internet connection right now. Connect to Wi-Fi, then try again.'); return; }
+    busy = true; stopNow = false; paint();
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+    const total = list.reduce((s, t) => s + sizeOf(t), 0); let done = 0, failed = 0, n = 0;
+    $('of-progress').hidden = false; say('Saving ' + label + '. Keep this page open until it finishes.');
+    for (const t of list) {
+      if (stopNow) break;
+      n++;
+      try {
+        await saveOne(t, (got) => { $('of-bar').value = Math.min(1, (done + got) / total); $('of-ptext').textContent = n + ' of ' + list.length; });
+      } catch (e) { if (stopNow) break; failed++; console.log('[offline]', t.url, e); }
+      done += sizeOf(t); paint();
+    }
+    $('of-progress').hidden = true; busy = false; keepSizes();
+    if (stopNow) say('Stopped. What finished saving is kept.');
+    else if (failed) say(failed + (failed === 1 ? ' recording' : ' recordings') + ' couldn’t be saved. Check the connection and press Save again; the rest are saved.');
+    else say('Saved. ' + label.charAt(0).toUpperCase() + label.slice(1) + ' will now play with no internet.');
+    if (isQuotaLow()) say('This phone is running out of room. Remove a collection you’ve finished with to make space.');
+    paint();
+  }
+  let lastEst = null;
+  const isQuotaLow = () => lastEst && lastEst.quota && lastEst.usage / lastEst.quota > 0.95;
+  async function removeMany(list) {
+    if (busy) return;
+    const c = await caches.open(AUDIO);
+    for (const t of list) { await c.delete(t.url); saved.delete(t.url); }
+    say(list.length === 1 ? 'Removed from this phone.' : 'Removed ' + list.length + ' recordings from this phone.');
+    paint();
+  }
+  // a reading that was re-recorded since it was saved: compare the saved copy's tag with the site's
+  async function findUpdated() {
+    if (!navigator.onLine || !canCache) return [];
+    const c = await caches.open(AUDIO), out = [];
+    for (const t of cols.flatMap(x => x.tracks).filter(t => saved.has(t.url))) {
+      try {
+        const old = await c.match(t.url), oe = old && old.headers.get('etag');
+        if (!oe) continue;
+        const r = await fetch(t.url, { method: 'HEAD', cache: 'no-store' }), ne = r.headers.get('etag');
+        if (r.ok && ne && ne !== oe) out.push(t);
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------ drawing the sheet
+  const say = m => { $('of-status').textContent = m; };
+  function paintInstall() {
+    const box = $('of-install'); if (!box) return;
+    const show = !standalone() && (installEvt || isIOS);
+    box.hidden = !show;
+    $('of-install-android').hidden = !installEvt;
+    $('of-install-ios').hidden = !(isIOS && !installEvt);
+  }
+  function paintNet() {
+    const el = $('of-net');
+    if (!canCache) { el.className = 'of-net off'; el.textContent = 'This browser can’t save recordings. Open the Psalter in Safari or Chrome.'; return; }
+    el.className = navigator.onLine ? 'of-net' : 'of-net off';
+    el.textContent = navigator.onLine ? '' : 'You’re offline now. Recordings marked Saved will play.';
+  }
+  function btn(text, cls, on) { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = text; b.addEventListener('click', on); return b; }
+  async function paint() {
+    paintNet(); paintInstall();
+    if (!cols) return;
+    const all = cols.flatMap(c => c.tracks), have = all.filter(t => saved.has(t.url));
+    let line = have.length ? 'Saved on this phone: ' + have.length + ' of ' + all.length + ' recordings, ' + mb(have.reduce((s, t) => s + sizeOf(t), 0)) + '.'
+      : 'Nothing saved yet. Everything together is about ' + mb(all.reduce((s, t) => s + sizeOf(t), 0)) + '.';
+    try { if (navigator.storage && navigator.storage.estimate) { lastEst = await navigator.storage.estimate(); if (lastEst.quota) line += ' Room left for about ' + mb(Math.max(0, lastEst.quota - lastEst.usage)) + ' more.'; } } catch (e) {}
+    $('of-sum').textContent = line;
+    const ul = $('of-list'), openKeys = new Set([...ul.querySelectorAll('details[open]')].map(d => d.dataset.key));
+    ul.innerHTML = '';
+    for (const c of cols) {
+      if (!c.tracks.length) continue;
+      const mine = c.tracks.filter(t => saved.has(t.url)), rest = c.tracks.filter(t => !saved.has(t.url));
+      const li = document.createElement('li'); li.className = 'of-col';
+      const top = document.createElement('div'); top.className = 'of-top';
+      const nm = document.createElement('div'); nm.className = 'of-name';
+      const b = document.createElement('b'); b.textContent = c.name;
+      const sp = document.createElement('span');
+      sp.textContent = !mine.length ? c.tracks.length + (c.tracks.length === 1 ? ' recording' : ' recordings') + ' · ' + mb(c.tracks.reduce((s, t) => s + sizeOf(t), 0))
+        : !rest.length ? 'All ' + c.tracks.length + ' saved · ' + mb(mine.reduce((s, t) => s + sizeOf(t), 0))
+        : mine.length + ' of ' + c.tracks.length + ' saved · ' + mb(rest.reduce((s, t) => s + sizeOf(t), 0)) + ' more to save';
+      nm.append(b, sp); top.append(nm);
+      if (rest.length) { const s = btn(mine.length ? 'Save the rest' : 'Save all', 'cm-btn go', () => saveMany(rest, c.name)); s.disabled = busy; top.append(s); }
+      if (mine.length) { const r = btn(rest.length ? 'Remove saved' : 'Remove all', 'cm-btn', () => removeMany(mine)); r.disabled = busy; top.append(r); }
+      li.append(top);
+      const det = document.createElement('details'); det.dataset.key = c.key; if (openKeys.has(c.key)) det.open = true;
+      const sum = document.createElement('summary'); sum.textContent = 'Choose recordings one by one'; det.append(sum);
+      const tl = document.createElement('ul'); tl.className = 'of-tracks';
+      for (const t of c.tracks) {
+        const r = document.createElement('li'), name = document.createElement('span'), sz = document.createElement('small');
+        name.textContent = t.title; sz.textContent = mb(sizeOf(t));
+        const on = saved.has(t.url);
+        const tb = btn(on ? 'Saved ✓' : 'Save', on ? 'of-tbtn saved' : 'of-tbtn', () => on ? removeMany([t]) : saveMany([t], '“' + t.title + '”'));
+        tb.disabled = busy; if (on) tb.setAttribute('aria-label', 'Saved. Remove ' + t.title + ' from this phone');
+        r.append(name, sz, tb); tl.append(r);
+      }
+      det.append(tl); li.append(det); ul.append(li);
+    }
+  }
+
+  async function open() {
+    $('of').hidden = false; document.documentElement.classList.add('cm-open');
+    say(''); paintNet(); paintInstall();
+    if (!canCache) return;
+    if (!cols) $('of-sum').textContent = 'Loading…';
+    await load(); await readSaved(); await paint();
+    $('of-close').focus();
+    learnSizes();
+    const upd = await findUpdated();
+    if (upd.length && !busy) {
+      say(upd.length === 1 ? 'One of your saved recordings has been improved since you saved it.' : upd.length + ' of your saved recordings have been improved since you saved them.');
+      const b = btn('Get the new version' + (upd.length === 1 ? '' : 's'), 'cm-btn go', () => { b.remove(); saveMany(upd, 'the improved recordings'); });
+      $('of-status').append(' ', b);
+    }
+  }
+  function close() { if (busy) { say('Still saving. Press Stop first, or wait until it finishes.'); return; } $('of').hidden = true; document.documentElement.classList.remove('cm-open'); }
+  function wire() {
+    $('of-open').addEventListener('click', open);
+    $('of-close').addEventListener('click', close);
+    $('of-stop').addEventListener('click', () => { stopNow = true; });
+    $('of-install-btn').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; paintInstall(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('of').hidden) close(); });
+    addEventListener('online', () => { if (!$('of').hidden) paint(); });
+    addEventListener('offline', () => { if (!$('of').hidden) paint(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+  window.OfflineSheet = { open, close };
 })();
 </script>
