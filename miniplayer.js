@@ -86,9 +86,9 @@
     return /playing|loading|paused/i.test(l) || icon.innerHTML.includes('h4.5');
   };
   function sync() {
-    const show = !bigVisible && active();
+    const show = (!bigVisible || document.body.classList.contains('art-idle')) && active();   // the Psalter's resting view keeps the bar
     bar.classList.toggle('on', show);
-    document.body.style.paddingBottom = show ? (bar.offsetHeight + 8) + 'px' : '';
+    if (!document.body.classList.contains('art-idle')) document.body.style.paddingBottom = show ? (bar.offsetHeight + 8) + 'px' : '';
     if (!show) return;
     if (mIcon.innerHTML !== icon.innerHTML) mIcon.innerHTML = icon.innerHTML;
     mLabel.textContent = ($('now-label') || {}).textContent || '';
