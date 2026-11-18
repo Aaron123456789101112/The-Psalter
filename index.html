@@ -1126,6 +1126,19 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : f.startsWith('matthew/') ? 'matthew' : f.startsWith('proverbs/') ? 'proverbs' : f.startsWith('prophets/') ? 'prophets' : f.startsWith('mighty/') ? 'mighty' : 'psalter';
   let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
   const bytesCache = new Map();
+  // paintings (ART / TRACKS live in the page's main script): the reading's painting, loaded before any frame is drawn
+  const tall0 = (W, H) => H > W;
+  let artImg = null;
+  function artFor(f) {
+    try { const t = TRACKS.find(x => x.file === f); return t && typeof ART !== 'undefined' ? ART[t.n] || null : null; } catch (e) { return null; }
+  }
+  function loadArt(f) {
+    const src = artFor(f);
+    if (!src) { artImg = null; return Promise.resolve(); }
+    if (artImg && artImg.dataset.for === f) return artImg.complete ? Promise.resolve() : new Promise(r => { artImg.addEventListener('load', r, { once: true }); artImg.addEventListener('error', r, { once: true }); });
+    const im = new Image(); im.dataset.for = f; artImg = im;
+    return new Promise(r => { im.onload = () => { r(); if (!busy && file === f) drawStill(); }; im.onerror = () => r(); im.src = src; });
+  }
 
   // ------------------------------------------------------------------ data
   async function data() {
@@ -1224,6 +1237,15 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     const C = COL[col], k = W / 1080;
     const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, C.top); bg.addColorStop(1, C.bottom);
     g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const art = artImg && artImg.complete && artImg.naturalWidth && artImg.dataset.for === file ? artImg : null;
+    if (art) {   // the psalm's painting: cover-cropped, a slow drift and zoom, darkened under the words
+      const iw = art.naturalWidth, ih = art.naturalHeight, z = 1.04 + 0.05 * Math.min(1, Math.max(0, (t - t0) / Math.max(1, t1 - t0)));
+      const sc = Math.max(W / iw, H / ih) * z, dw = iw * sc, dh = ih * sc;
+      g.drawImage(art, (W - dw) / 2, (H - dh) * (tall0(W, H) ? 0.5 : 0.62), dw, dh);
+      const sh = g.createLinearGradient(0, 0, 0, H);
+      sh.addColorStop(0, C.top + 'b0'); sh.addColorStop(0.35, C.top + '94'); sh.addColorStop(0.7, C.top + 'a0'); sh.addColorStop(1, C.top + 'd0');
+      g.fillStyle = sh; g.fillRect(0, 0, W, H);
+    }
     const gx = W * (0.5 + 0.08 * Math.sin((t - t0) * 0.11)), gy = H * (0.58 + 0.04 * Math.cos((t - t0) * 0.07));
     const gl = g.createRadialGradient(gx, gy, 0, gx, gy, W * 0.75);
     gl.addColorStop(0, C.glow + '30'); gl.addColorStop(1, C.glow + '00'); g.fillStyle = gl; g.fillRect(0, 0, W, H);
@@ -1421,6 +1443,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     let wake = null; try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {}
     try {
       await Promise.all(['76px Bellefair', '58px Alegreya', '700 26px "Alegreya Sans"'].map(f => document.fonts?.load(f).catch(() => {})));
+      await loadArt(file);
       const { ab, at } = await decodeSpan(ctx, file, t0, t1);
       const c = canvasFor(), g = c.getContext('2d');
       if (record) {
@@ -1551,13 +1574,13 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     try { await data(); } catch (e) { $('cm-status').textContent = 'The verse list couldn\u2019t load. Check the connection and try again.'; return; }
     if (!$('cm-reading').options.length) fillReadings();
     file = (f && DATA[f]) ? f : (file || Object.keys(DATA)[0]);
-    $('cm-reading').value = file; fillUnits(); $('cm-status').textContent = '';
+    $('cm-reading').value = file; loadArt(file); fillUnits(); $('cm-status').textContent = '';
     $('cm-close').focus();
   }
   function close() { if (stopFn) stopFn(); $('cm').hidden = true; document.documentElement.classList.remove('cm-open'); }
 
   function wire() {
-    $('cm-reading').addEventListener('change', e => { file = e.target.value; fillUnits(); });
+    $('cm-reading').addEventListener('change', e => { file = e.target.value; loadArt(file); fillUnits(); });
     $('cm-from').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-to').value = $('cm-from').value; refresh(); });
     $('cm-to').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-from').value = $('cm-to').value; refresh(); });
     $('cm-square').addEventListener('click', () => setShape('square'));
