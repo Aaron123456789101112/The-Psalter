@@ -13,22 +13,34 @@
 
   const css = document.createElement('style');
   css.textContent = `
-.mini { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: none;
-  background: var(--surface); color: var(--fg); border-top: 1px solid var(--line); box-shadow: 0 -6px 18px rgba(0,0,0,.12);
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom)); }
+.mini { position: fixed; left: 0; right: 0; bottom: calc(8px + env(safe-area-inset-bottom)); z-index: 20; display: none;
+  width: min(720px, calc(100% - 16px)); margin: 0 auto; box-sizing: border-box; padding: 10px 12px 8px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+  color: var(--fg); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.18), 0 1px 3px rgba(0,0,0,.08); }
 .mini.on { display: block; }
-.mini-row { max-width: 720px; margin: 0 auto; display: flex; align-items: center; gap: 10px; }
-.mini-play { flex: none; width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink);
-  display: grid; place-items: center; cursor: pointer; }
+.mini-row { display: flex; align-items: center; gap: 12px; }
+.mini-play { flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--accent); color: var(--accent-ink);
+  display: grid; place-items: center; cursor: pointer; box-shadow: 0 2px 6px color-mix(in srgb, var(--accent) 35%, transparent); }
 .mini-play svg { width: 22px; height: 22px; fill: currentColor; }
-.mini-btn { flex: none; width: 40px; height: 40px; border: 0; background: none; color: var(--fg); display: grid; place-items: center; cursor: pointer; }
+.mini-btn { flex: none; width: 44px; height: 44px; border: 0; border-radius: 50%; background: none; color: var(--fg); display: grid; place-items: center; cursor: pointer; }
+.mini-btn:active, .mini-play:active { transform: scale(.94); }
+.mini-btn:focus-visible, .mini-play:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mini-btn svg { width: 22px; height: 22px; fill: currentColor; }
-.mini-text { flex: 1; min-width: 0; display: flex; flex-direction: column; cursor: pointer; }
-.mini-label { font-family: var(--ui); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.mini-fs svg { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mini-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; cursor: pointer; }
 .mini-title { font-family: var(--display); font-size: 18px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-meta { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mini-seekrow { max-width: 720px; margin: 4px auto 0; display: flex; align-items: center; gap: 6px; }
-.mini-seek { flex: 1; min-width: 0; accent-color: var(--accent); }
+.mini-meta { font-family: var(--ui); font-size: 13.5px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-meta b { font-weight: 600; color: var(--accent); }
+.mini-seekrow { display: flex; align-items: center; gap: 2px; margin-top: 4px; }
+.mini-seek { flex: 1; min-width: 0; height: 30px; margin: 0 6px; background: transparent; -webkit-appearance: none; appearance: none; --p: 0%; cursor: pointer; }
+.mini-seek::-webkit-slider-runnable-track { height: 4px; border-radius: 2px;
+  background: linear-gradient(to right, var(--accent) var(--p), color-mix(in srgb, var(--fg) 16%, transparent) var(--p)); }
+.mini-seek::-webkit-slider-thumb { -webkit-appearance: none; width: 16px; height: 16px; margin-top: -6px; border-radius: 50%; background: var(--accent);
+  box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.mini-seek::-moz-range-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg) 16%, transparent); }
+.mini-seek::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--accent); }
+.mini-seek::-moz-range-thumb { width: 16px; height: 16px; border: 0; border-radius: 50%; background: var(--accent); }
+.mini-seek:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 .jump svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .jump svg text { fill: currentColor; stroke: none; font: 700 7.5px system-ui, sans-serif; text-anchor: middle; }
 .icon-btn.jump svg { width: 22px; height: 22px; fill: none; stroke: var(--fg); }
@@ -239,25 +251,27 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   bar.innerHTML = `
   <div class="mini-row">
     <button class="mini-play" type="button" aria-label="Play or pause"><svg viewBox="0 0 24 24" aria-hidden="true"></svg></button>
-    <div class="mini-text" title="Show the full player"><span class="mini-label"></span><span class="mini-title"></span><span class="mini-meta"></span></div>
-    <button class="mini-btn" data-go="prev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
-    <button class="mini-btn" data-go="next" type="button" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+    <div class="mini-text" title="Show the full player"><span class="mini-title"></span><span class="mini-meta"></span></div>
+    <button class="mini-btn mini-fs" type="button" aria-label="Full screen"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div class="mini-seekrow">
+    <button class="mini-btn" data-go="prev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
     <button class="mini-btn jump" data-jump="-1" type="button" aria-label="Back 15 seconds">${back}</button>
     <input class="mini-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Position">
     <button class="mini-btn jump" data-jump="1" type="button" aria-label="Forward 15 seconds">${fwd}</button>
+    <button class="mini-btn" data-go="next" type="button" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
   </div>`;
   document.body.appendChild(bar);
 
-  const mIcon = bar.querySelector('.mini-play svg'), mLabel = bar.querySelector('.mini-label'),
+  const mIcon = bar.querySelector('.mini-play svg'),
         mTitle = bar.querySelector('.mini-title'), mSeek = bar.querySelector('.mini-seek'), mMeta = bar.querySelector('.mini-meta');
   bar.querySelector('.mini-play').addEventListener('click', () => play.click());
   bar.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { const t = $(b.dataset.go); if (t) t.click(); }));
   bar.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => jump(JUMP * +b.dataset.jump)));
   bar.querySelector('.mini-text').addEventListener('click', () => big.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  bar.querySelector('.mini-fs').addEventListener('click', () => openFs(false));
   let dragging = false;
-  mSeek.addEventListener('input', () => { dragging = true; seek.value = mSeek.value; seek.dispatchEvent(new Event('input', { bubbles: true })); });
+  mSeek.addEventListener('input', () => { dragging = true; mSeek.style.setProperty('--p', mSeek.value + '%'); seek.value = mSeek.value; seek.dispatchEvent(new Event('input', { bubbles: true })); });
   mSeek.addEventListener('change', () => { seek.value = mSeek.value; seek.dispatchEvent(new Event('change', { bubbles: true })); dragging = false; });
 
   let bigVisible = true;
@@ -271,15 +285,17 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   function sync() {
     const show = !bigVisible && active();
     bar.classList.toggle('on', show);
-    document.body.style.paddingBottom = show ? (bar.offsetHeight + 8) + 'px' : '';
+    document.body.style.paddingBottom = show ? (bar.offsetHeight + 24) + 'px' : '';
     if (!show) return;
     if (mIcon.innerHTML !== icon.innerHTML) mIcon.innerHTML = icon.innerHTML;
-    mLabel.textContent = ($('now-label') || {}).textContent || '';
     mTitle.textContent = ($('now-title') || {}).textContent || '';
     loadClips();
     const [k, segs, file] = segAt(), vl = segs && CLIPS[file].unit === 'verse' && k >= 0 ? verseLabel(segs[k][2]) : '';
-    mMeta.textContent = (($('t-cur') || {}).textContent || '0:00') + ' of ' + (($('t-dur') || {}).textContent || '') + (vl ? ' \u00b7 ' + vl : '');
+    const lab = (($('now-label') || {}).textContent || '').trim(), state = /loading/i.test(lab) ? 'Loading' : /paused/i.test(lab) ? 'Paused' : '';
+    const parts = [vl, (($('t-cur') || {}).textContent || '0:00') + ' / ' + (($('t-dur') || {}).textContent || '')].filter(Boolean);
+    mMeta.innerHTML = (state ? '<b>' + state + '</b> \u00b7 ' : '') + parts.join(' \u00b7 ');
     if (!dragging) mSeek.value = seek.value;
+    mSeek.style.setProperty('--p', mSeek.value + '%');
   }
   setInterval(sync, 250);
 })();
