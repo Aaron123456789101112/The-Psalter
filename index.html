@@ -362,13 +362,13 @@ body.art-idle { cursor: none; }
   <button class="tab" role="tab" id="tab-prophets" aria-selected="false">Prophets</button>
   <button class="tab of-tab" id="of-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16 6.3 10.3l1.4-1.4L11 12.2zM5 18h14v2H5z"/></svg>Offline</button>
 </nav>
-<iframe id="revframe" class="cframe" title="Revelation" loading="lazy"></iframe>
-<iframe id="judgesframe" class="cframe" title="Judges by the Fire" loading="lazy"></iframe>
-<iframe id="mightyframe" class="cframe" title="The Mighty Men of David" loading="lazy"></iframe>
-<iframe id="prayersframe" class="cframe" title="Prayers" loading="lazy"></iframe>
-<iframe id="matthewframe" class="cframe" title="Matthew" loading="lazy"></iframe>
-<iframe id="proverbsframe" class="cframe" title="Proverbs" loading="lazy"></iframe>
-<iframe id="prophetsframe" class="cframe" title="The Prophets" loading="lazy"></iframe>
+<iframe id="revframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Revelation" loading="lazy"></iframe>
+<iframe id="judgesframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Judges by the Fire" loading="lazy"></iframe>
+<iframe id="mightyframe" class="cframe" allow="fullscreen; screen-wake-lock" title="The Mighty Men of David" loading="lazy"></iframe>
+<iframe id="prayersframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Prayers" loading="lazy"></iframe>
+<iframe id="matthewframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Matthew" loading="lazy"></iframe>
+<iframe id="proverbsframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Proverbs" loading="lazy"></iframe>
+<iframe id="prophetsframe" class="cframe" allow="fullscreen; screen-wake-lock" title="The Prophets" loading="lazy"></iframe>
 
 
 <section class="cm" id="of" role="dialog" aria-modal="true" aria-labelledby="of-h" hidden>
@@ -816,7 +816,7 @@ function renderList() {
 (() => {
   const IDLE_MS = 6000; let timer = 0, swallowClick = false;
   const psalterShown = () => { const w = document.querySelector(".wrap"); return !!(w && w.offsetParent !== null); };
-  const canRest = () => document.body.classList.contains("has-art") && playing && psalterShown() && !document.querySelector(".cm:not([hidden])");
+  const canRest = () => document.body.classList.contains("has-art") && playing && psalterShown() && !document.querySelector(".cm:not([hidden])") && !document.querySelector(".fs.on");
   function arm() { clearTimeout(timer); timer = setTimeout(() => { if (canRest()) { document.body.classList.add("art-idle"); changedAt = performance.now(); lastY = scrollY; } else arm(); }, IDLE_MS); }
   let lastY = scrollY, changedAt = 0;
   function wake(e) {
