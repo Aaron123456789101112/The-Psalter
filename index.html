@@ -314,6 +314,32 @@ html.cm-open, html.cm-open body { overflow: hidden; }
 .of-tbtn.saved { border-color: var(--line); color: var(--muted); }
 .of-tbtn:disabled, .of-col .cm-btn:disabled { opacity: .5; cursor: default; }
 .of-tbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* paintings: an oil painting behind the page for the psalm that's current (art/psalm-NNN.jpg, listed in ART) */
+.art-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.art-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 60%;
+  opacity: 0; transition: opacity 1.2s ease; }
+.art-bg img.on { opacity: 1; }
+.art-bg::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 42%, transparent) 0%, color-mix(in srgb, var(--bg) 30%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 40%, transparent) 65%, color-mix(in srgb, var(--bg) 62%, transparent) 100%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%, color-mix(in srgb, var(--bg) 40%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 60%, transparent) 65%, color-mix(in srgb, var(--bg) 78%, transparent) 100%); } }
+:root[data-theme="dark"] .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%, color-mix(in srgb, var(--bg) 40%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 60%, transparent) 65%, color-mix(in srgb, var(--bg) 78%, transparent) 100%); }
+body.has-art { background: var(--bg); }
+body.has-art .art-bg { z-index: 0; }
+body.has-art .wrap { position: relative; z-index: 1; }
+body.has-art header { text-shadow: 0 0 10px var(--bg), 0 0 4px var(--bg), 0 0 2px var(--bg); }
+body.has-art .sub { color: var(--fg); }
+body.has-art .player, body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.has-art footer {
+  background: color-mix(in srgb, var(--surface) 84%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 14px; }
+body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.has-art footer { padding: 16px; }
+body.has-art .s-form { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+@media (prefers-reduced-motion: reduce) { .art-bg img { transition: none; } }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -391,6 +417,7 @@ html.cm-open, html.cm-open body { overflow: hidden; }
     </div>
   </div>
 </section>
+<div class="art-bg" aria-hidden="true"><img alt=""><img alt=""></div>
 <div class="wrap">
   <header>
     <div class="hebrew" lang="he">תהלים</div>
@@ -775,7 +802,21 @@ function renderList() {
   $("total").textContent = TRACKS.length + " readings · " + Math.round(total / 60) + " min";
 }
 
+// paintings behind the page (art/psalm-NNN.jpg); psalms without one keep the plain page
+const ART = { "23": "art/psalm-023.jpg", "42–43": "art/psalm-042.jpg", "137": "art/psalm-137.jpg" };
+let artNow = null, artFlip = 0;
+function setArt(t) {
+  const src = ART[t.n] || null;
+  if (src === artNow) return;
+  artNow = src;
+  const imgs = document.querySelectorAll(".art-bg img");
+  if (!src) { imgs.forEach(im => im.classList.remove("on")); document.body.classList.remove("has-art"); return; }
+  const next = imgs[artFlip = 1 - artFlip], prev = imgs[1 - artFlip];
+  next.onload = () => { if (artNow !== src) return; document.body.classList.add("has-art"); next.classList.add("on"); prev.classList.remove("on"); };
+  next.src = src;
+}
 function paint() {
+  setArt(TRACKS[cur()]);
   const t = TRACKS[cur()];
   $("now-title").textContent = t.title;
   $("now-line").textContent = t.line;
