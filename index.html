@@ -341,14 +341,6 @@ body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.h
 body.has-art .s-form { background: color-mix(in srgb, var(--bg) 60%, transparent); }
 @media (prefers-reduced-motion: reduce) { .art-bg img { transition: none; } }
 
-/* resting view: while a psalm with a painting plays and nobody touches the screen for a few seconds, everything but the
-   painting and the small bottom player fades away; any scroll or tap brings the page back */
-.wrap, .tabs { transition: opacity .9s ease; }
-body.art-idle .wrap, body.art-idle .tabs { opacity: 0; pointer-events: none; }
-.art-bg::after { transition: opacity .9s ease; }
-body.art-idle .art-bg::after { opacity: .25; }
-body.art-idle { cursor: none; }
-@media (prefers-reduced-motion: reduce) { .wrap, .tabs, .art-bg::after { transition: none; } }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -811,32 +803,6 @@ function renderList() {
   $("total").textContent = TRACKS.length + " readings · " + Math.round(total / 60) + " min";
 }
 
-// resting view (see the CSS above): fade the page after 6 s without a scroll or touch, only while a psalm that has a
-// painting is playing on the Psalter tab; the first tap after that only wakes the page and never presses anything
-(() => {
-  const IDLE_MS = 6000; let timer = 0, swallowClick = false;
-  const psalterShown = () => { const w = document.querySelector(".wrap"); return !!(w && w.offsetParent !== null); };
-  const canRest = () => document.body.classList.contains("has-art") && playing && psalterShown() && !document.querySelector(".cm:not([hidden])") && !document.querySelector(".fs.on");
-  function arm() { clearTimeout(timer); timer = setTimeout(() => { if (canRest()) { document.body.classList.add("art-idle"); changedAt = performance.now(); lastY = scrollY; } else arm(); }, IDLE_MS); }
-  let lastY = scrollY, changedAt = 0;
-  function wake(e) {
-    if (e && e.type === "scroll") {   // only a real scroll by the reader counts (layout shifts also fire scroll events)
-      const moved = Math.abs(scrollY - lastY) > 24; lastY = scrollY;
-      if (!moved || performance.now() - changedAt < 1200) return;
-    }
-    if (document.body.classList.contains("art-idle")) changedAt = performance.now();
-    const inMini = e && e.target && e.target.closest && e.target.closest(".mini");
-    if (document.body.classList.contains("art-idle")) {
-      document.body.classList.remove("art-idle");
-      if (e && !inMini && (e.type === "pointerdown" || e.type === "touchstart")) { swallowClick = true; setTimeout(() => swallowClick = false, 700); }
-    }
-    arm();
-  }
-  for (const ev of ["scroll", "wheel", "keydown", "pointerdown", "touchstart"]) addEventListener(ev, wake, { capture: true, passive: true });
-  addEventListener("click", e => { if (swallowClick) { swallowClick = false; e.preventDefault(); e.stopPropagation(); } }, true);
-  setInterval(() => { if (document.body.classList.contains("art-idle") && !canRest()) document.body.classList.remove("art-idle"); }, 500);
-  arm();
-})();
 // paintings behind the page (art/psalm-NNN.jpg); psalms without one keep the plain page
 const ART = { "23": "art/psalm-023.jpg", "42–43": "art/psalm-042.jpg", "137": "art/psalm-137.jpg" };
 let artNow = null, artFlip = 0;

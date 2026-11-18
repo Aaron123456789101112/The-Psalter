@@ -26,6 +26,7 @@
 .mini-text { flex: 1; min-width: 0; display: flex; flex-direction: column; cursor: pointer; }
 .mini-label { font-family: var(--ui); font-size: 11px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
 .mini-title { font-family: var(--display); font-size: 18px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-meta { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mini-seekrow { max-width: 720px; margin: 4px auto 0; display: flex; align-items: center; gap: 6px; }
 .mini-seek { flex: 1; min-width: 0; accent-color: var(--accent); }
 .jump svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -77,6 +78,9 @@
 .fs { position: fixed; inset: 0; z-index: 40; display: none; flex-direction: column; color: #f3eee2; overflow: hidden;
   background: #0f120e; font-family: var(--body, Georgia, serif); -webkit-user-select: none; user-select: none; }
 .fs.on { display: flex; }
+.fs { opacity: 0; transition: opacity .8s ease; }
+.fs.show { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .fs { transition: none; } }
 .fs-bg { position: absolute; inset: 0; background: radial-gradient(120% 80% at 50% 62%, color-mix(in srgb, var(--accent) 22%, #10130f) 0%, #0b0d0a 75%); }
 .fs-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 60%; transform: scale(1.04);
   animation: fs-drift 60s ease-in-out infinite alternate; }
@@ -141,15 +145,18 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   fSeek.addEventListener('change', () => { seek.value = fSeek.value; seek.dispatchEvent(new Event('change', { bubbles: true })); fDrag = false; });
 
   let fsOpen = false, wakeLock = null, artShown = undefined, lineShown = null, flip = 0;
-  async function openFs() {
-    loadClips(); fsOpen = true; fs.classList.add('on'); document.documentElement.style.overflow = 'hidden';
-    try { await (document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }) || Promise.reject()); }
+  let hideT = 0;
+  async function openFs(auto) {
+    loadClips(); fsOpen = true; clearTimeout(hideT); fs.classList.add('on'); requestAnimationFrame(() => requestAnimationFrame(() => fs.classList.add('show')));
+    document.documentElement.style.overflow = 'hidden';
+    try { if (auto === true) throw 0; await (document.documentElement.requestFullscreen?.({ navigationUI: 'hide' }) || Promise.reject()); }
     catch (e) { try { if (window.parent !== window) parent.document.documentElement.classList.add('fs-child'); } catch (e2) {} }
     try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (e) {}
-    artShown = undefined; lineShown = null; fsSync(); F('.fs-x').focus();
+    artShown = undefined; lineShown = null; fsSync(); if (auto !== true) F('.fs-x').focus();
   }
   function closeFs() {
-    if (!fsOpen) return; fsOpen = false; fs.classList.remove('on'); document.documentElement.style.overflow = '';
+    if (!fsOpen) return; fsOpen = false; fs.classList.remove('show'); hideT = setTimeout(() => fs.classList.remove('on'), 650);
+    document.documentElement.style.overflow = ''; armRest();
     try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
     try { if (window.parent !== window) parent.document.documentElement.classList.remove('fs-child'); } catch (e) {}
     try { wakeLock && wakeLock.release(); } catch (e) {} wakeLock = null;
@@ -159,6 +166,14 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && fsOpen) closeFs(); });
   document.addEventListener('visibilitychange', async () => { if (fsOpen && document.visibilityState === 'visible' && !wakeLock) { try { wakeLock = await navigator.wakeLock?.request('screen'); } catch (e) {} } });
 
+  function verseLabel(v) { return v && v !== 'title' && /^\d/.test(v) ? 'Verse ' + v : ''; }
+  function segAt() {   // [index, segs, file] of the piece being spoken now (or the last one begun)
+    const t = curTrack(), file = t ? PRE + t.file : null, segs = CLIPS && file && CLIPS[file] ? CLIPS[file].segs : null;
+    if (!segs) return [-1, null, file];
+    const now = nowTime(); let k = -1;
+    for (let i = 0; i < segs.length; i++) { if (segs[i][0] <= now + 0.12) k = i; else break; }
+    return [k, segs, file];
+  }
   function setLine(text) {
     if (text === lineShown) return; lineShown = text;
     const a = fLines[flip], b = fLines[flip = 1 - flip];
@@ -180,22 +195,41 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
       if (art) { const im = new Image(); im.alt = ''; im.src = art; fBg.appendChild(im); }
     }
     // the words being spoken now (held through short pauses, as in the clip maker)
-    const segs = CLIPS && file && CLIPS[file] ? CLIPS[file].segs : null;
+    const [k, segs] = segAt();
     if (!segs) { fRef.textContent = ''; setLine(t ? t.line || '' : ''); return; }
-    const now = nowTime(); let k = -1;
-    for (let i = 0; i < segs.length; i++) { if (segs[i][0] <= now + 0.12) k = i; else break; }
-    let text = '';
+    const now = nowTime(); let text = '';
     if (k >= 0) { const [s0, e0] = segs[k], nx = segs[k + 1] ? segs[k + 1][0] : Infinity; if (now < Math.min(nx - 0.12, e0 + 3.0)) text = segs[k][3]; }
-    const v = k >= 0 ? segs[k][2] : '';
-    fRef.textContent = v && v !== 'title' && /^\d/.test(v) ? (CLIPS[file].unit === 'verse' ? 'VERSE ' + v : '') : '';
+    fRef.textContent = CLIPS[file].unit === 'verse' && k >= 0 ? verseLabel(segs[k][2]).toUpperCase() : '';
     setLine(text);
   }
   setInterval(fsSync, 100);
 
+  // resting view: while something plays and nobody scrolls or touches for 6 s, the page fades into the full-screen player.
+  // A swipe, a scroll or the close button brings the page back; the controls work as normal while it shows.
+  const REST_MS = 6000; let restT = 0, lastY = scrollY;
+  function blocked() {
+    const open = d => { try { return !!d.querySelector('.cm:not([hidden])'); } catch (e) { return false; } };
+    return open(document) || (window.parent !== window && open(parent.document));
+  }
+  const canRest = () => !fsOpen && document.visibilityState === 'visible' && big.offsetParent !== null && !blocked()
+    && /playing|loading/i.test(($('now-label') || {}).textContent || '');
+  function armRest() { clearTimeout(restT); restT = setTimeout(() => { if (canRest()) openFs(true); else armRest(); }, REST_MS); }
+  function activity(e) {
+    if (e.type === 'scroll') { const moved = Math.abs(scrollY - lastY) > 24; lastY = scrollY; if (!moved) return; }
+    armRest();
+  }
+  for (const ev of ['scroll', 'wheel', 'keydown', 'pointerdown', 'touchstart']) addEventListener(ev, activity, { capture: true, passive: true });
+  // leaving it: a swipe or wheel on the full-screen player (not on its seek bar) closes it
+  let ty = null;
+  fs.addEventListener('touchstart', e => { ty = e.target.closest('input') ? null : e.touches[0].clientY; }, { passive: true });
+  fs.addEventListener('touchmove', e => { if (ty != null && Math.abs(e.touches[0].clientY - ty) > 40) { ty = null; closeFs(); } }, { passive: true });
+  fs.addEventListener('wheel', e => { if (Math.abs(e.deltaY) > 20) closeFs(); }, { passive: true });
+  armRest();
+
   if (skipRow) {
     const fb = document.createElement('button'); fb.type = 'button'; fb.className = 'fsbtn';
     fb.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>Full screen';
-    fb.addEventListener('click', openFs);
+    fb.addEventListener('click', () => openFs(false));
     const clip = big.querySelector('.clipbtn'); if (clip) clip.before(fb); else big.appendChild(fb);
     big.addEventListener('pointerenter', loadClips, { once: true });
   }
@@ -205,7 +239,7 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   bar.innerHTML = `
   <div class="mini-row">
     <button class="mini-play" type="button" aria-label="Play or pause"><svg viewBox="0 0 24 24" aria-hidden="true"></svg></button>
-    <div class="mini-text" title="Show the full player"><span class="mini-label"></span><span class="mini-title"></span></div>
+    <div class="mini-text" title="Show the full player"><span class="mini-label"></span><span class="mini-title"></span><span class="mini-meta"></span></div>
     <button class="mini-btn" data-go="prev" type="button" aria-label="Previous"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
     <button class="mini-btn" data-go="next" type="button" aria-label="Next"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
   </div>
@@ -217,7 +251,7 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
   document.body.appendChild(bar);
 
   const mIcon = bar.querySelector('.mini-play svg'), mLabel = bar.querySelector('.mini-label'),
-        mTitle = bar.querySelector('.mini-title'), mSeek = bar.querySelector('.mini-seek');
+        mTitle = bar.querySelector('.mini-title'), mSeek = bar.querySelector('.mini-seek'), mMeta = bar.querySelector('.mini-meta');
   bar.querySelector('.mini-play').addEventListener('click', () => play.click());
   bar.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { const t = $(b.dataset.go); if (t) t.click(); }));
   bar.querySelectorAll('[data-jump]').forEach(b => b.addEventListener('click', () => jump(JUMP * +b.dataset.jump)));
@@ -235,13 +269,16 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
     return /playing|loading|paused/i.test(l) || icon.innerHTML.includes('h4.5');
   };
   function sync() {
-    const show = (!bigVisible || document.body.classList.contains('art-idle')) && active();   // the Psalter's resting view keeps the bar
+    const show = !bigVisible && active();
     bar.classList.toggle('on', show);
-    if (!document.body.classList.contains('art-idle')) document.body.style.paddingBottom = show ? (bar.offsetHeight + 8) + 'px' : '';
+    document.body.style.paddingBottom = show ? (bar.offsetHeight + 8) + 'px' : '';
     if (!show) return;
     if (mIcon.innerHTML !== icon.innerHTML) mIcon.innerHTML = icon.innerHTML;
     mLabel.textContent = ($('now-label') || {}).textContent || '';
     mTitle.textContent = ($('now-title') || {}).textContent || '';
+    loadClips();
+    const [k, segs, file] = segAt(), vl = segs && CLIPS[file].unit === 'verse' && k >= 0 ? verseLabel(segs[k][2]) : '';
+    mMeta.textContent = (($('t-cur') || {}).textContent || '0:00') + ' of ' + (($('t-dur') || {}).textContent || '') + (vl ? ' \u00b7 ' + vl : '');
     if (!dragging) mSeek.value = seek.value;
   }
   setInterval(sync, 250);
