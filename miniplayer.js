@@ -98,6 +98,8 @@
   animation: fs-drift 60s ease-in-out infinite alternate; }
 @keyframes fs-drift { from { transform: scale(1.04) translateY(0); } to { transform: scale(1.1) translateY(-1.5%); } }
 @media (prefers-reduced-motion: reduce) { .fs-bg img { animation: none; } }
+.fs-bg img.fade { opacity: 0; transition: opacity 1.2s ease; } .fs-bg img.fade.on { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .fs-bg img.fade { transition: none; } }
 .fs-bg.art::after { content: ""; position: absolute; inset: 0;
   background: linear-gradient(to bottom, rgba(12,14,11,.62) 0%, rgba(12,14,11,.38) 30%, rgba(12,14,11,.52) 62%, rgba(12,14,11,.86) 100%); }
 .fs-top { position: relative; display: flex; align-items: center; gap: 12px; padding: calc(12px + env(safe-area-inset-top)) 16px 0; }
@@ -201,10 +203,20 @@ html.fs-child .cframe { top: 0 !important; height: 100dvh !important; }`;
     F('.fs-dur').textContent = ($('t-dur') || {}).textContent || '';
     if (!fDrag) fSeek.value = seek.value;
     // background: the Psalter's painting for this psalm, if it has one
-    let art = null; try { const A = g('ART'); art = A && t ? A[t.n] || null : null; } catch (e) {}
+    // (a psalm with several scenes follows the page's current one, artNow, and cross-fades like the page)
+    let art = null; try { const A = g('ART'); art = A && t && A[t.n] ? (g('artNow') || A[t.n]) : null; } catch (e) {}
     if (art !== artShown) {
-      artShown = art; fBg.innerHTML = ''; fBg.classList.toggle('art', !!art);
-      if (art) { const im = new Image(); im.alt = ''; im.src = art; fBg.appendChild(im); }
+      const first = artShown === undefined; artShown = art; fBg.classList.toggle('art', !!art);
+      if (first || !art) fBg.innerHTML = '';
+      if (art) {
+        const im = new Image(); im.alt = ''; if (!first) im.className = 'fade';
+        im.onload = () => {
+          if (artShown !== art) return;
+          requestAnimationFrame(() => im.classList.add('on'));
+          fBg.querySelectorAll('img').forEach(x => { if (x !== im) setTimeout(() => x.remove(), 1300); });
+        };
+        im.src = art; fBg.appendChild(im);
+      }
     }
     // the words being spoken now (held through short pauses, as in the clip maker)
     const [k, segs] = segAt();
