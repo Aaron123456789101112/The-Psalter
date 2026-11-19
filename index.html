@@ -1177,7 +1177,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   let artImg = null;
   function artFor(f, t0) {   // the painting for this reading where the clip starts (psalms with several scenes)
     try { if (DATA && typeof CLIPV !== 'undefined' && !CLIPV) CLIPV = DATA;
-      const t = TRACKS.find(x => x.file === f); return t && typeof ART !== 'undefined' ? (t0 != null && typeof sceneAt === 'function' ? sceneAt(t, t0, 0) : ART[t.n] || null) : null; } catch (e) { return null; }
+      const t = TRACKS.find(x => x.file === f);
+      if (!t) { const m = /^([a-z]+)\/audio\/([^/]+)\.mp3$/.exec(f); return m ? m[1] + '/art/' + m[2] + '.jpg' : null; }   // other books: <book>/art/<audio name>.jpg, if it exists
+      return typeof ART !== 'undefined' ? (t0 != null && typeof sceneAt === 'function' ? sceneAt(t, t0, 0) : ART[t.n] || null) : null; } catch (e) { return null; }
   }
   function loadArt(f, t0) {
     const src = artFor(f, t0);
