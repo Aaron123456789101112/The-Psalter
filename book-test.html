@@ -461,7 +461,10 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { pos
   background:
     linear-gradient(90deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 9%, transparent 95%, rgba(50,28,8,.12)),
     radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.22)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .3  0 0 0 0 .1  0 0 0 .9 -.25'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23m)' opacity='.35'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page);
+    radial-gradient(closest-side, rgba(150,100,40,.10), transparent) 0 0 / 520px 460px,
+    radial-gradient(closest-side, rgba(150,100,40,.08), transparent) 230px 170px / 610px 540px,
+    radial-gradient(closest-side, rgba(255,240,205,.08), transparent) 90px 300px / 380px 420px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page);
   box-shadow: inset 0 0 0 1px rgba(110,75,30,.25),
     1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
     7px 4px 0 #1a1007, 0 14px 34px rgba(0,0,0,.6); }
@@ -548,6 +551,55 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini { --f
   box-shadow: inset 0 0 0 3px rgba(0,0,0,.2), inset 0 0 0 4px color-mix(in srgb, var(--gild) 40%, transparent), 0 10px 30px rgba(0,0,0,.45); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini-play { background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a); color: #2a1a0a; box-shadow: 0 0 0 2px #5a3d12; }
 
+
+/* ---------- finishing: one button style, equal widths, a centred player, a gilt seek bar ---------- */
+/* every button is a small gilt frame: a gold edge with a fine hairline just inside it */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab {
+  border-radius: 5px; border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px;
+  box-shadow: 0 1px 0 rgba(255,240,200,.08) inset, 0 2px 4px rgba(30,16,4,.18); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab { outline-offset: -4px; min-height: 42px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .player, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .player { background: none; padding: 26px 4px 22px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now { flex-direction: column; text-align: center; gap: 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-text { align-items: center; gap: 3px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-label { font-family: var(--ui); font-size: 12px; letter-spacing: .2em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-title { font-size: 30px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-line { font-size: 18px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play { width: 78px; height: 78px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play svg { width: 30px; height: 30px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek { gap: 12px; font-size: 14px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input { -webkit-appearance: none; appearance: none; background: transparent; height: 34px; --p: 0%; cursor: pointer; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, #8c6220, var(--gild) calc(var(--p) - 1px), color-mix(in srgb, var(--fg) 16%, transparent) var(--p));
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.25); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%; border: 0;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a);
+  box-shadow: 0 0 0 1.5px #5a3d12, 0 2px 4px rgba(30,16,4,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg) 16%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a); box-shadow: 0 0 0 1.5px #5a3d12; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .skip { justify-content: center; gap: 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn { width: 50px; height: 50px; border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px;
+  background: none; box-shadow: 0 2px 4px rgba(30,16,4,.15); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn svg { width: 22px; height: 22px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode { display: flex; width: 100%; padding: 5px; gap: 4px; background: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button { flex: 1; min-height: 44px; border-radius: 2px; font-family: var(--ui); font-size: 16px; font-weight: 500; letter-spacing: .03em; color: var(--muted); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gild) 55%, transparent), 0 1px 3px rgba(0,0,0,.3); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn { align-self: stretch; width: 100%; justify-content: center; min-height: 54px; padding: 12px 18px;
+  font-size: 17px; font-weight: 500; letter-spacing: .03em; color: var(--accent); background: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn svg, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn svg { width: 19px; height: 19px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .player .status { text-align: center; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-title, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-line, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-line { text-wrap: pretty; }
+/* suggestions: the two buttons side by side, the same width */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-row:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send { min-height: 54px; padding: 12px 10px; border-radius: 5px; text-align: center; display: grid; place-items: center; font-size: 16px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send:only-child { grid-column: 1 / -1; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form label { font-family: var(--body); font-size: 16px; font-weight: 500; }
+/* the contents: numbers centred in their column, a little more air between entries */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .num { align-items: center; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track { padding: 15px 2px 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-mood { margin-top: 2px; }
 @media (max-width: 380px) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { padding-left: 26px; padding-right: 20px; } html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current::before { left: -23px; } }
 
 /* =================== opening a book =================== */
@@ -2309,6 +2361,13 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     await go(fl, [{ opacity: 1 }, { opacity: 0 }], 350, { easing: "ease" });
     fl.remove(); done();
   };
+})();
+
+/* The seek bar's gilt fill: the page moves the bar itself, so follow its value. */
+(() => {
+  const sk = document.getElementById("seek"); if (!sk) return;
+  const upd = () => sk.style.setProperty("--p", (+sk.value || 0) + "%");
+  sk.addEventListener("input", upd); setInterval(upd, 250); upd();
 })();
 
 /* The Psalter's painting, set as a framed plate on its title page: it follows the page's own painting (and its scenes). */
