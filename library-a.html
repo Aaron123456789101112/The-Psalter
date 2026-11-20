@@ -1,0 +1,2055 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-title" content="Psalter">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#e6e8e2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121714" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="icon-512.png">
+<title>The Psalter</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English&family=Bellefair&family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow column like a scroll — the Hebrew name as the masthead, the player, then the psalms in order. */
+:root {
+  --bg: #e6e8e2;        /* pale limestone, faintly sage */
+  --surface: #f2f3ef;
+  --fg: #1c231f;        /* olive-black ink */
+  --muted: #5a645d;
+  --line: #c8cdc5;
+  --accent: #82540f;    /* lamp bronze */
+  --accent-ink: #f7f1e4;
+  --display: "Bellefair", "Times New Roman", serif;
+  --body: "Alegreya", Georgia, serif;
+  --ui: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121714; --surface: #1a211c; --fg: #e5e3d8; --muted: #9aa49c; --line: #2b352e;
+    --accent: #d7a447; --accent-ink: #1a1408; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121714; --surface: #1a211c; --fg: #e5e3d8; --muted: #9aa49c; --line: #2b352e;
+  --accent: #d7a447; --accent-ink: #1a1408; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 32px; }
+
+header { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.hebrew { font-family: var(--display); font-size: clamp(56px, 14vw, 88px); line-height: 1; direction: rtl; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 6px 0 0; letter-spacing: 0.02em; text-wrap: balance; }
+.sub { font-family: var(--ui); color: var(--muted); font-size: 14px; letter-spacing: 0.04em; }
+
+/* player */
+.player { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.now { display: flex; align-items: center; gap: 16px; }
+.now-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.now-label { font-family: var(--ui); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.now-title { font-family: var(--display); font-size: 26px; line-height: 1.15; }
+.now-line { font-style: italic; color: var(--muted); overflow-wrap: anywhere; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.play {
+  flex: none; width: 64px; height: 64px; border-radius: 50%; border: none;
+  background: var(--accent); color: var(--accent-ink); display: grid; place-items: center;
+}
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play:active { transform: scale(0.96); }
+
+.seek { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.seek input { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.skip { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; display: grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; fill: var(--fg); }
+.mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; font-family: var(--ui); font-size: 14px; }
+.mode button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; color: var(--muted); }
+.mode button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.status { font-family: var(--ui); font-size: 14px; color: var(--accent); min-height: 1.2em; margin: 0; }
+
+/* list */
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+ol { list-style: none; margin: 0; padding: 0; }
+.track {
+  width: 100%; text-align: left; border: none; background: transparent; padding: 14px 4px;
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.track:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.num { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.num span { font-family: var(--display); font-size: 15px; color: var(--muted); direction: rtl; }
+.mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.t-line { font-style: italic; overflow-wrap: anywhere; }
+.t-mood { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+.dur { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.track.current .num b, .track.current .t-line { color: var(--accent); }
+
+/* humming indicator on the playing row */
+.hum { display: none; gap: 2px; align-items: flex-end; height: 14px; }
+.hum i { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
+.track.current.playing .hum { display: inline-flex; }
+.track.current.playing .hum i { animation: hum 1.6s ease-in-out infinite; }
+.hum i:nth-child(2) { animation-delay: .25s !important; }
+.hum i:nth-child(3) { animation-delay: .5s !important; }
+@keyframes hum { 0%,100% { height: 4px } 50% { height: 13px } }
+@media (prefers-reduced-motion: reduce) { .track.current.playing .hum i { animation: none; height: 10px; } }
+
+/* suggestions */
+.suggest { display: flex; flex-direction: column; gap: 14px; }
+.suggest h2 { font-family: var(--display); font-weight: 400; font-size: 26px; margin: 0; }
+.suggest .lede { margin: -6px 0 0; color: var(--muted); }
+.s-form { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.s-form[hidden] { display: none; }
+.s-form label { font-family: var(--ui); font-size: 15px; font-weight: 500; display: flex; flex-direction: column; gap: 6px; }
+.s-form input, .s-form textarea {
+  font: inherit; font-family: var(--body); font-size: 18px; color: var(--fg); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; width: 100%;
+}
+.s-form input { max-width: 320px; }
+.s-form textarea { min-height: 76px; resize: vertical; }
+.s-form textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.s-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.send { border: none; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-family: var(--ui); font-size: 16px; font-weight: 500; padding: 12px 22px; }
+.send { text-decoration: none; display: inline-block; }
+.send:disabled { opacity: .55; cursor: default; }
+.send.alt { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.s-row[hidden] { display: none; }
+.s-msg { font-family: var(--ui); font-size: 15px; color: var(--accent); margin: 0; }
+.s-note { font-family: var(--ui); font-size: 15px; color: var(--muted); margin: 0; }
+.s-list { list-style: none; margin: 0; padding: 0; }
+.s-item { border-bottom: 1px solid var(--line); padding: 12px 4px; display: grid; grid-template-columns: 56px 1fr; gap: 14px; }
+.s-item .num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; }
+.s-body { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.s-text { overflow-wrap: anywhere; font-style: italic; }
+.s-meta { font-family: var(--ui); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+.chip { font-family: var(--ui); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; border: 1px solid var(--line); border-radius: 999px; padding: 2px 9px; color: var(--muted); }
+.chip.next { border-color: var(--accent); color: var(--accent); }
+.chip.made { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.s-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 2px; }
+.s-actions button, .linkish { font-family: var(--ui); font-size: 14px; border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 6px 12px; }
+
+footer { font-family: var(--ui); font-size: 13px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
+footer p { margin: 0; max-width: 62ch; }
+
+@media (max-width: 440px) {
+  .wrap { padding-block: 24px 40px; gap: 24px; }
+  .track { grid-template-columns: 44px 1fr auto; gap: 10px; }
+  .now-title { font-size: 22px; }
+}
+
+/* Three tabs: The Psalter (this page), Revelation and Judges (each its own page, in a frame, keeping its own design).
+   The tab bar takes on the colours of whichever collection is showing. */
+html.rev {
+  --bg: #e9e4de; --surface: #f3efea; --fg: #221a17; --muted: #6a5d57; --line: #d3c9c1; --accent: #8e2316; --accent-ink: #fbefe9;
+}
+html.prayers {
+  --bg: #e4e6ec; --surface: #eff0f4; --fg: #1a1d2a; --muted: #5b6072; --line: #c9cdd8; --accent: #3b4f8f; --accent-ink: #f1f3fa;
+}
+html.matthew {
+  --bg: #e6e8dc; --surface: #f0f1e8; --fg: #1c2016; --muted: #5c6352; --line: #cdd1bf; --accent: #56692a; --accent-ink: #f4f6ea;
+}
+html.proverbs {
+  --bg: #e1e8e6; --surface: #edf2f0; --fg: #142120; --muted: #536664; --line: #c6d3d0; --accent: #2c6a64; --accent-ink: #eef6f4;
+}
+html.prophets {
+  --bg: #ece4e1; --surface: #f5efed; --fg: #22171a; --muted: #6b5a5e; --line: #d8c9cc; --accent: #7d2d3f; --accent-ink: #fbf1f3;
+}
+html.mighty {
+  --bg: #e6e3dc; --surface: #f0eee8; --fg: #1b1b1c; --muted: #5c5b58; --line: #cfcbc2; --accent: #7a5a1f; --accent-ink: #fbf6ec;
+}
+html.judges {
+  --bg: #efe6d8; --surface: #f6efe4; --fg: #261b12; --muted: #6e5d4c; --line: #d9cbb6; --accent: #a8501a; --accent-ink: #fff4e6;
+}
+@media (prefers-color-scheme: dark) {
+  html.rev:not([data-theme="light"]) {
+    --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
+  }
+  html.prayers:not([data-theme="light"]) {
+    --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
+  }
+  html.matthew:not([data-theme="light"]) {
+    --bg: #0d100a; --surface: #161b11; --fg: #e6e9da; --muted: #9da38c; --line: #283020; --accent: #c3cf86; --accent-ink: #12160a;
+  }
+  html.proverbs:not([data-theme="light"]) {
+    --bg: #0a1211; --surface: #121c1b; --fg: #e0ebe8; --muted: #93a8a4; --line: #22312f; --accent: #8fcbc1; --accent-ink: #081312;
+  }
+  html.prophets:not([data-theme="light"]) {
+    --bg: #120b0d; --surface: #1c1215; --fg: #f0e4e7; --muted: #a9969b; --line: #33232a; --accent: #e08a9f; --accent-ink: #1d0a10;
+  }
+  html.mighty:not([data-theme="light"]) {
+    --bg: #0c0c0d; --surface: #161617; --fg: #ebe7df; --muted: #a19c92; --line: #2a2927; --accent: #d6a85a; --accent-ink: #161006;
+  }
+  html.judges:not([data-theme="light"]) {
+    --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
+  }
+}
+html.rev[data-theme="dark"] {
+  --bg: #120d0c; --surface: #1d1513; --fg: #ece2dc; --muted: #a5958d; --line: #33261f; --accent: #e0674a; --accent-ink: #1c0d08;
+}
+html.prayers[data-theme="dark"] {
+  --bg: #0d0f17; --surface: #161a26; --fg: #e3e5ee; --muted: #9aa0b4; --line: #262b3b; --accent: #9fb2ec; --accent-ink: #0d1120;
+}
+html.matthew[data-theme="dark"] {
+  --bg: #0d100a; --surface: #161b11; --fg: #e6e9da; --muted: #9da38c; --line: #283020; --accent: #c3cf86; --accent-ink: #12160a;
+}
+html.proverbs[data-theme="dark"] {
+  --bg: #0a1211; --surface: #121c1b; --fg: #e0ebe8; --muted: #93a8a4; --line: #22312f; --accent: #8fcbc1; --accent-ink: #081312;
+}
+html.prophets[data-theme="dark"] {
+  --bg: #120b0d; --surface: #1c1215; --fg: #f0e4e7; --muted: #a9969b; --line: #33232a; --accent: #e08a9f; --accent-ink: #1d0a10;
+}
+html.mighty[data-theme="dark"] {
+  --bg: #0c0c0d; --surface: #161617; --fg: #ebe7df; --muted: #a19c92; --line: #2a2927; --accent: #d6a85a; --accent-ink: #161006;
+}
+html.judges[data-theme="dark"] {
+  --bg: #0f0b08; --surface: #1a130d; --fg: #f1e4d0; --muted: #a8957c; --line: #33271b; --accent: #f0a04b; --accent-ink: #1d1206;
+}
+body { margin: 0; }
+.tabs {
+  position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+  padding: 12px 0 10px; background: var(--bg); border-bottom: 1px solid var(--line);
+  margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px)));
+}
+.tab {
+  font-family: var(--ui); font-size: 15px; font-weight: 500; letter-spacing: 0.02em;
+  min-height: 40px; padding: 8px 16px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--muted);
+}
+@media (max-width: 400px) { .tab { padding: 8px 12px; font-size: 14px; } }
+.tab:hover { color: var(--fg); }
+.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cframe { display: none; position: fixed; left: 0; right: 0; bottom: 0; width: 100%; border: 0; background: var(--bg); }
+html.rev #revframe, html.judges #judgesframe, html.prayers #prayersframe, html.matthew #matthewframe, html.proverbs #proverbsframe, html.prophets #prophetsframe, html.mighty #mightyframe { display: block; }
+html.rev .wrap, html.judges .wrap, html.prayers .wrap, html.matthew .wrap, html.proverbs .wrap, html.prophets .wrap, html.mighty .wrap { display: none; }
+html.rev body, html.judges body, html.prayers body, html.matthew body, html.proverbs body, html.prophets body, html.mighty body { overflow: hidden; }
+
+/* Make a clip: opens the clip maker in the top page */
+.clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
+  min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.clipbtn svg { width: 18px; height: 18px; fill: currentColor; }
+.clipbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* The clip maker: a full-screen sheet above every tab, in the colours of whichever collection is showing. */
+.cm { position: fixed; inset: 0; z-index: 30; background: var(--bg); color: var(--fg); overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 12px); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 32px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+html.cm-open, html.cm-open body { overflow: hidden; }
+.cm-in { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+.cm-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cm-head h2 { font-family: var(--display); font-weight: 400; font-size: 30px; margin: 0; text-wrap: balance; }
+.cm-x { font-family: var(--ui); font-size: 16px; min-height: 44px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
+.cm-lede { margin: -8px 0 0; color: var(--muted); }
+.cm-field { display: flex; flex-direction: column; gap: 6px; font-family: var(--ui); font-size: 15px; font-weight: 500; }
+.cm-field select { font-family: var(--body); font-size: 18px; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; width: 100%; min-width: 0; min-height: 48px; }
+.cm-field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cm-len { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: -8px 0 0; font-variant-numeric: tabular-nums; }
+.cm-shape { display: flex; gap: 8px; flex-wrap: wrap; }
+.cm-shape button { flex: 1 1 140px; font-family: var(--ui); font-size: 15px; min-height: 48px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: transparent; color: var(--fg); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.cm-shape button small { color: var(--muted); font-size: 13px; }
+.cm-shape button[aria-pressed="true"] { border-color: var(--accent); background: var(--surface); box-shadow: inset 0 0 0 1px var(--accent); }
+.cm-stage { display: flex; justify-content: center; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
+#cm-canvas { width: 100%; max-width: 340px; height: auto; border-radius: 6px; display: block; }
+#cm-canvas.tall { max-width: 210px; }
+.cm-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.cm-btn { font-family: var(--ui); font-size: 17px; font-weight: 500; min-height: 50px; padding: 12px 22px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--line); background: transparent; color: var(--fg); }
+.cm-btn.go { border: none; background: var(--accent); color: var(--accent-ink); }
+.cm-btn:disabled, .cm-field select:disabled, .cm-shape button:disabled { opacity: .5; cursor: default; }
+.cm-btn:focus-visible, .cm-x:focus-visible, .cm-shape button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.cm-prog { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cm-prog progress { flex: 1; min-width: 0; height: 8px; accent-color: var(--accent); }
+.cm-status { font-family: var(--ui); font-size: 16px; color: var(--accent); margin: 0; min-height: 1.3em; }
+.cm-result { display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 16px; }
+.cm-result video { width: 100%; max-width: 340px; max-height: 60vh; border-radius: 8px; background: #000; align-self: center; }
+.cm-saved { font-family: var(--ui); font-size: 15px; margin: 0; }
+.cm-help { font-family: var(--ui); font-size: 14px; color: var(--muted); margin: 0; line-height: 1.5; }
+
+/* Listen offline: a sheet like the clip maker's, listing every collection with Save / Remove. */
+#of [hidden] { display: none !important; }
+.tab.of-tab { display: inline-flex; align-items: center; gap: 6px; }
+.tab.of-tab svg { width: 16px; height: 16px; fill: currentColor; }
+.of-net { font-family: var(--ui); font-size: 15px; margin: -6px 0 0; color: var(--muted); }
+.of-net.off { color: var(--accent); font-weight: 500; }
+.of-box { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.of-box h3 { font-family: var(--display); font-weight: 400; font-size: 22px; margin: 0; }
+.of-box p, .of-box ol { margin: 0; font-family: var(--ui); font-size: 15px; line-height: 1.5; }
+.of-box ol { padding-left: 1.4em; list-style: decimal; display: flex; flex-direction: column; gap: 6px; }
+.of-sum { font-family: var(--ui); font-size: 15px; color: var(--muted); margin: 0; font-variant-numeric: tabular-nums; }
+.of-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.of-col { border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.of-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.of-name { flex: 1 1 160px; min-width: 0; }
+.of-name b { display: block; font-family: var(--display); font-weight: 400; font-size: 21px; line-height: 1.2; }
+.of-name span { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.of-col .cm-btn { min-height: 44px; padding: 8px 16px; font-size: 15px; }
+.of-col details summary { font-family: var(--ui); font-size: 15px; color: var(--accent); cursor: pointer; min-height: 32px; padding: 4px 0; }
+.of-col details summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.of-tracks { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; }
+.of-tracks li { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--line); }
+.of-tracks li span { flex: 1; min-width: 0; font-size: 16px; overflow-wrap: anywhere; }
+.of-tracks li small { font-family: var(--ui); font-size: 13px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.of-tbtn { font-family: var(--ui); font-size: 14px; min-height: 40px; min-width: 92px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--accent);
+  background: transparent; color: var(--accent); cursor: pointer; }
+.of-tbtn.saved { border-color: var(--line); color: var(--muted); }
+.of-tbtn:disabled, .of-col .cm-btn:disabled { opacity: .5; cursor: default; }
+.of-tbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* paintings: an oil painting behind the page for the psalm that's current (art/psalm-NNN.jpg, listed in ART) */
+.art-bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+.art-bg img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 60%;
+  opacity: 0; transition: opacity 1.2s ease; }
+.art-bg img.on { opacity: 1; }
+.art-bg::after { content: ""; position: absolute; inset: 0;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 42%, transparent) 0%, color-mix(in srgb, var(--bg) 30%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 40%, transparent) 65%, color-mix(in srgb, var(--bg) 62%, transparent) 100%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%, color-mix(in srgb, var(--bg) 40%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 60%, transparent) 65%, color-mix(in srgb, var(--bg) 78%, transparent) 100%); } }
+:root[data-theme="dark"] .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 55%, transparent) 0%, color-mix(in srgb, var(--bg) 40%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 60%, transparent) 65%, color-mix(in srgb, var(--bg) 78%, transparent) 100%); }
+/* stronger wash when a painting's upper half is dark (light theme) or bright (dark theme), so words stay easy to read */
+body.art-dark .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 76%, transparent) 0%, color-mix(in srgb, var(--bg) 64%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 58%, transparent) 65%, color-mix(in srgb, var(--bg) 70%, transparent) 100%); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body.art-bright .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 74%, transparent) 0%, color-mix(in srgb, var(--bg) 60%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 66%, transparent) 65%, color-mix(in srgb, var(--bg) 82%, transparent) 100%); } }
+:root[data-theme="dark"] body.art-bright .art-bg::after {
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--bg) 74%, transparent) 0%, color-mix(in srgb, var(--bg) 60%, transparent) 30%,
+    color-mix(in srgb, var(--bg) 66%, transparent) 65%, color-mix(in srgb, var(--bg) 82%, transparent) 100%); }
+body.has-art { background: var(--bg); }
+body.has-art .art-bg { z-index: 0; }
+body.has-art .wrap { position: relative; z-index: 1; }
+/* the Psalter's painting belongs to the Psalter tab only; it must never cover another tab's page */
+html.rev .art-bg, html.judges .art-bg, html.mighty .art-bg, html.prayers .art-bg, html.matthew .art-bg, html.proverbs .art-bg, html.prophets .art-bg { display: none; }
+body.has-art header { text-shadow: 0 0 10px var(--bg), 0 0 4px var(--bg), 0 0 2px var(--bg); }
+body.has-art .sub { color: var(--fg); }
+body.has-art .player, body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.has-art footer {
+  background: color-mix(in srgb, var(--surface) 84%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, var(--line) 80%, transparent); border-radius: 14px; }
+body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.has-art footer { padding: 16px; }
+body.has-art .s-form { background: color-mix(in srgb, var(--bg) 60%, transparent); }
+@media (prefers-reduced-motion: reduce) { .art-bg img { transition: none; } }
+
+
+/* ---------- the Library: choosing a collection ---------- */
+.tabs { flex-wrap: nowrap; justify-content: space-between; align-items: center; gap: 10px; padding: 8px max(14px, env(safe-area-inset-left, 0px)); }
+.tabs .tab:not(.of-tab) { display: none; }   /* the old buttons stay in the page; the library presses them */
+.lib-open { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 6px 15px 6px 11px; border-radius: 999px;
+  border: 1px solid var(--line); background: transparent; color: var(--fg); font: 500 15px var(--ui); cursor: pointer; flex: none; }
+.lib-open svg { width: 22px; height: 22px; fill: var(--accent); }
+.lib-open:focus-visible, .lib-close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lib-now { flex: 1; min-width: 0; text-align: center; font-family: Bellefair, Georgia, serif; font-size: 20px; color: var(--accent);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib { position: fixed; inset: 0; z-index: 60; display: none; flex-direction: column; align-items: center; overflow-y: auto;
+  -webkit-overflow-scrolling: touch; color: #f3e6cf; padding: calc(16px + env(safe-area-inset-top)) 12px calc(28px + env(safe-area-inset-bottom)); }
+.lib.on { display: flex; animation: lib-in .3s ease both; }
+@keyframes lib-in { from { opacity: 0; } to { opacity: 1; } }
+.lib h2 { font: 400 34px/1.1 Bellefair, Georgia, serif; letter-spacing: .05em; margin: 10px 0 2px; color: #f1d9a8; text-align: center; }
+.lib .hint { font: 16px var(--ui); color: #cdb690; margin: 0 0 22px; text-align: center; }
+.lib-close { position: absolute; top: calc(12px + env(safe-area-inset-top)); right: 12px; width: 44px; height: 44px; border-radius: 22px;
+  border: 1px solid rgba(241, 217, 168, .35); background: rgba(0, 0, 0, .25); color: #f1d9a8; font-size: 20px; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .lib.on { animation: none; } .pick, .pick * { transition: none !important; } }
+
+.lib.luxe { background:
+    radial-gradient(110% 55% at 50% -5%, rgba(255, 196, 120, .24), transparent 62%),
+    radial-gradient(80% 50% at 85% 78%, rgba(255, 170, 80, .10), transparent 70%),
+    repeating-linear-gradient(90deg, #26170d 0 56px, #1d1109 56px 58px, #2a190e 58px 114px, #1e120a 114px 116px), #22140b; }
+.luxe .shelf { position: relative; width: 100%; max-width: 440px; margin: 0 auto 26px; }
+.luxe .row { display: flex; align-items: flex-end; justify-content: center; gap: 4px; height: clamp(292px, 44vh, 350px); padding: 0 4px; }
+.luxe .board { position: relative; height: 22px; border-radius: 3px;
+  background: linear-gradient(#7d4f2c, #5b3519 40%, #3a2010); box-shadow: 0 14px 22px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 220, 170, .3); }
+.luxe .rail { position: absolute; left: 0; right: 0; top: 4px; height: 5px; background: linear-gradient(#f3d98c, #b0812e 55%, #6b4a17); box-shadow: 0 1px 1px rgba(0,0,0,.5); }
+.luxe .plate { display: block; width: max-content; margin: 9px auto 0; padding: 3px 12px; border-radius: 2px;
+  font: 700 11px var(--ui); letter-spacing: .16em; text-transform: uppercase; color: #3a2410;
+  background: linear-gradient(#f3d690, #b98a40); box-shadow: 0 1px 2px rgba(0, 0, 0, .5), inset 0 0 0 1px rgba(90, 55, 15, .5); }
+.book { --goldg: linear-gradient(180deg, #fff1bf, #e8c05e 30%, #9b6b1e 60%, #f0d27a 85%, #b38330);
+  position: relative; flex: 0 1 var(--w); min-width: 50px; height: var(--h); margin: 0; padding: 0; border: 0; cursor: pointer;
+  border-radius: 6px 6px 3px 3px; overflow: hidden; color: var(--gilt);
+  display: flex; flex-direction: column; align-items: stretch;
+  background:
+    linear-gradient(90deg, rgba(0,0,0,.62), rgba(255,255,255,.13) 24%, rgba(255,255,255,.04) 44%, rgba(0,0,0,.22) 74%, rgba(0,0,0,.66)),
+    radial-gradient(60% 18% at 30% 22%, rgba(255,255,255,.07), transparent 70%),
+    radial-gradient(50% 12% at 70% 70%, rgba(0,0,0,.25), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"),
+    linear-gradient(180deg, var(--mid), var(--dark) 85%);
+  box-shadow: 3px 0 5px rgba(0, 0, 0, .5), -1px 0 2px rgba(0, 0, 0, .4);
+  transition: transform .45s cubic-bezier(.2, .8, .2, 1), box-shadow .45s; -webkit-tap-highlight-color: transparent; }
+.book .cap { flex: none; height: 11px; background:
+    radial-gradient(circle at 22% 55%, #fff3c4 0 1.3px, #6b4a17 1.6px 2.2px, transparent 2.4px),
+    radial-gradient(circle at 78% 55%, #fff3c4 0 1.3px, #6b4a17 1.6px 2.2px, transparent 2.4px),
+    linear-gradient(180deg, #f6dc8e, #c49440 45%, #7a5519 80%, #3b2508);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .6); }
+.book .cap.bot { transform: scaleY(-1); }
+.book .tool { flex: none; height: 9px; margin: 4px 7px; opacity: .85;
+  background: repeating-linear-gradient(45deg, var(--gilt) 0 1px, transparent 1px 5px), repeating-linear-gradient(-45deg, var(--gilt) 0 1px, transparent 1px 5px);
+  -webkit-mask: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent); mask: linear-gradient(90deg, transparent, #000 15%, #000 85%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--gilt) 70%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--gilt) 70%, transparent); }
+.book .mk { flex: none; text-align: center; font: 500 13px/1 Alegreya, Georgia, serif; white-space: nowrap; padding: 3px 0 5px;
+  background: var(--goldg); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .7)); }
+.book .mk[lang="grc"] { font-size: 10px; }
+.book .hub { position: relative; flex: none; height: 8px; margin: 2px 0;
+  background: linear-gradient(rgba(0,0,0,.55), rgba(255,255,255,.2) 45%, rgba(0,0,0,.5));
+  box-shadow: 0 -2px 0 -1px color-mix(in srgb, var(--gilt) 75%, transparent), 0 2px 0 -1px color-mix(in srgb, var(--gilt) 75%, transparent); }
+.book .gem { position: absolute; left: 50%; top: 50%; width: 11px; height: 11px; margin: -5.5px 0 0 -5.5px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff 0 1.2px, color-mix(in srgb, var(--gem) 55%, #fff) 2px, var(--gem) 55%, color-mix(in srgb, var(--gem) 50%, #000));
+  box-shadow: 0 0 0 1.6px #d9ac4f, 0 0 0 2.6px #6b4a17, 0 1px 3px rgba(0, 0, 0, .7); }
+.book .lab { flex: 1 1 auto; min-height: 0; margin: 6px 7px; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  border-radius: 2px; background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,.18) 40%, rgba(0,0,0,.42));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gilt) 85%, transparent), inset 0 0 0 3px rgba(0,0,0,.35), inset 0 0 0 4px color-mix(in srgb, var(--gilt) 45%, transparent), inset 0 2px 6px rgba(0,0,0,.6); }
+.book .ttl { writing-mode: vertical-rl; font: 400 21px/1 Bellefair, Georgia, serif; letter-spacing: .08em; white-space: nowrap;
+  background: var(--goldg); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .75)) drop-shadow(0 0 1px rgba(0, 0, 0, .5)); }
+.book .ttl.judges { font-family: "IM Fell English", Georgia, serif; }
+.book .roundel { flex: none; align-self: center; width: 32px; height: 32px; margin: 6px 0 4px; border-radius: 50%; display: grid; place-items: center;
+  box-shadow: inset 0 0 0 1.4px color-mix(in srgb, var(--gilt) 85%, transparent), inset 0 0 0 3.5px rgba(0,0,0,.3), inset 0 0 0 4.4px color-mix(in srgb, var(--gilt) 45%, transparent); }
+.book .em { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, .7)); }
+.book.current { transform: translateY(-16px); box-shadow: 3px 0 5px rgba(0, 0, 0, .5), 0 0 24px -3px var(--glow); }
+.book.pull { transform: translateY(-74px) scale(1.05); box-shadow: 0 0 32px -2px var(--glow); z-index: 2; }
+.book:focus-visible { outline: 2px solid #f1d9a8; outline-offset: 3px; }
+.luxe .lamp { width: 64px; height: 44px; flex: none; margin-left: 8px; align-self: flex-end; filter: drop-shadow(0 0 10px rgba(255, 190, 90, .35)); }
+@media (max-width: 380px) { .luxe .row { gap: 3px; } }
+</style>
+
+<nav class="tabs" role="tablist" aria-label="Collections">
+  <button class="lib-open" id="lib-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h3v16H3zM7.5 4h3v16h-3zM12 6.2l2.9-.8 3.9 14.4-2.9.8z"/><path d="M2 20.5h20v1.5H2z"/></svg>Library</button>
+  <span class="lib-now" id="lib-now" aria-live="polite"></span>
+  <button class="tab" role="tab" id="tab-psalter" aria-selected="true">The Psalter</button>
+  <button class="tab" role="tab" id="tab-rev" aria-selected="false">Revelation</button>
+  <button class="tab" role="tab" id="tab-judges" aria-selected="false">Judges</button>
+  <button class="tab" role="tab" id="tab-mighty" aria-selected="false">Mighty Men</button>
+  <button class="tab" role="tab" id="tab-prayers" aria-selected="false">Prayers</button>
+  <button class="tab" role="tab" id="tab-matthew" aria-selected="false">Matthew</button>
+  <button class="tab" role="tab" id="tab-proverbs" aria-selected="false">Proverbs</button>
+  <button class="tab" role="tab" id="tab-prophets" aria-selected="false">Prophets</button>
+  <button class="tab of-tab" id="of-open" type="button" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v9.2l3.3-3.3 1.4 1.4L12 16 6.3 10.3l1.4-1.4L11 12.2zM5 18h14v2H5z"/></svg>Offline</button>
+</nav>
+<iframe id="revframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Revelation" loading="lazy"></iframe>
+<iframe id="judgesframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Judges by the Fire" loading="lazy"></iframe>
+<iframe id="mightyframe" class="cframe" allow="fullscreen; screen-wake-lock" title="The Mighty Men of David" loading="lazy"></iframe>
+<iframe id="prayersframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Prayers" loading="lazy"></iframe>
+<iframe id="matthewframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Matthew" loading="lazy"></iframe>
+<iframe id="proverbsframe" class="cframe" allow="fullscreen; screen-wake-lock" title="Proverbs" loading="lazy"></iframe>
+<iframe id="prophetsframe" class="cframe" allow="fullscreen; screen-wake-lock" title="The Prophets" loading="lazy"></iframe>
+
+
+<section class="cm" id="of" role="dialog" aria-modal="true" aria-labelledby="of-h" hidden>
+  <div class="cm-in">
+    <div class="cm-head"><h2 id="of-h">Listen offline</h2><button class="cm-x" id="of-close" type="button">Close</button></div>
+    <p class="cm-lede">Save recordings to this phone and they play with no internet: on a plane, in the country, anywhere without signal.</p>
+    <p class="of-net" id="of-net" role="status"></p>
+    <div class="of-box" id="of-install" hidden>
+      <h3>Put the Psalter on your home screen</h3>
+      <div id="of-install-android" hidden>
+        <p>It will open by itself, full screen, like any other app, instead of in the web browser.</p>
+        <button class="cm-btn go" id="of-install-btn" type="button">Add to home screen</button>
+      </div>
+      <div id="of-install-ios" hidden>
+        <p>It will then open by itself, full screen, like any other app, instead of in Safari.</p>
+        <ol>
+          <li>In Safari, tap the Share button (the square with an arrow pointing up).</li>
+          <li>Scroll down and tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+          <li>Open the Psalter from its new icon, and save your recordings there. On an iPhone, the home-screen Psalter keeps its own saved recordings, separate from Safari.</li>
+        </ol>
+      </div>
+    </div>
+    <p class="of-sum" id="of-sum"></p>
+    <div class="cm-prog" id="of-progress" hidden><progress id="of-bar" max="1" value="0"></progress><span id="of-ptext"></span><button class="cm-x" id="of-stop" type="button">Stop</button></div>
+    <p class="cm-status" id="of-status" role="status"></p>
+    <ul class="of-list" id="of-list"></ul>
+    <p class="cm-help">Saved recordings stay on this phone until you remove them. New psalms and chapters aren’t saved by themselves: open this page and press Save again to add them.</p>
+  </div>
+</section>
+<section class="cm" id="cm" role="dialog" aria-modal="true" aria-labelledby="cm-h" hidden>
+  <div class="cm-in">
+    <div class="cm-head"><h2 id="cm-h">Make a clip</h2><button class="cm-x" id="cm-close" type="button">Close</button></div>
+    <p class="cm-lede">Choose a reading and the verses you want. Your phone turns them into a short video with the words on screen, ready for Facebook.</p>
+    <label class="cm-field" for="cm-reading">Reading<select id="cm-reading"></select></label>
+    <label class="cm-field" for="cm-from">Start at<select id="cm-from"></select></label>
+    <label class="cm-field" for="cm-to">End at<select id="cm-to"></select></label>
+    <p class="cm-len" id="cm-len"></p>
+    <div class="cm-shape" role="group" aria-label="Video shape">
+      <button id="cm-square" type="button" aria-pressed="true">Square<small>for a Facebook post</small></button>
+      <button id="cm-tall" type="button" aria-pressed="false">Tall<small>for Reels and Stories</small></button>
+    </div>
+    <div class="cm-stage"><canvas id="cm-canvas" width="1080" height="1080" aria-label="How the video will look"></canvas></div>
+    <div class="cm-acts">
+      <button class="cm-btn" id="cm-listen" type="button">Listen first</button>
+      <button class="cm-btn go" id="cm-make" type="button">Make the video</button>
+      <button class="cm-btn" id="cm-stop" type="button" hidden>Stop</button>
+    </div>
+    <div class="cm-prog" id="cm-progress" hidden><progress id="cm-bar" max="1" value="0"></progress><span id="cm-time">0:00</span></div>
+    <p class="cm-status" id="cm-status" role="status"></p>
+    <div class="cm-result" id="cm-result" hidden>
+      <video id="cm-video" controls playsinline></video>
+      <div class="cm-acts"><button class="cm-btn go" id="cm-save" type="button">Save video</button><button class="cm-btn" id="cm-again" type="button">Make another</button></div>
+      <p class="cm-saved" id="cm-saved" role="status"></p>
+      <p class="cm-help">On an iPhone, Save video usually opens the Share menu: choose Save Video (it goes to Photos) or Facebook. If it saves to Downloads instead, open the Files app, tap Downloads, tap the video, tap the Share button, and choose Save Video or Facebook. Then in Facebook, start a post (or a Reel for a tall video), tap Photo/Video, and pick it.</p>
+    </div>
+  </div>
+</section>
+
+<div class="lib luxe" id="library" role="dialog" aria-modal="true" aria-label="Library" aria-hidden="true">
+  <button class="lib-close" id="lib-close" type="button" aria-label="Close the library">✕</button>
+  <h2>The Library</h2>
+  <p class="hint">Choose a book</p>
+  <div class="shelf"><div class="row"><button class="pick book" type="button" data-tab="judges" aria-label="Judges" style="--dark:#2a1608;--mid:#5a3212;--gilt:#f6b469;--glow:#f0a04b;--gem:#e8792a;--w:64px;--h:84%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>שופטים</span><span class="hub"></span><span class="lab"><span class="ttl judges">Judges</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3c3 4 6.5 6.5 6.5 11.5a6.5 6.5 0 0 1-13 0c0-3 1.5-5 3-7 0 3 1 4.5 3 5.5 0-4-1-6.5.5-10z"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="mighty" aria-label="Mighty Men" style="--dark:#121212;--mid:#36302a;--gilt:#dcb46a;--glow:#d6a85a;--gem:#b9bcc4;--w:68px;--h:90%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>הגבורים</span><span class="hub"></span><span class="lab"><span class="ttl">Mighty Men</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="13" r="6.5"/><circle cx="11" cy="13" r="1.8"/><path d="M5 21L21 3M18 3h3v3"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="psalter" aria-label="The Psalter" style="--dark:#14211a;--mid:#30503f;--gilt:#e6b85c;--glow:#d7a447;--gem:#2f8f5b;--w:88px;--h:99%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>תהלים</span><span class="hub"></span><span class="lab"><span class="ttl">The Psalter</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4c-2.5 4-2.5 10 1 15h8c3.5-5 3.5-11 1-15"/><path d="M6 6.5h12M10 7v11M12 7v11M14 7v11"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="proverbs" aria-label="Proverbs" style="--dark:#0c1c1a;--mid:#21524b;--gilt:#a6d8cf;--glow:#8fcbc1;--gem:#3fb5a5;--w:62px;--h:82%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>משלי</span><span class="hub"></span><span class="lab"><span class="ttl">Proverbs</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10a2 2 0 0 1 2 2v13H9a2 2 0 0 1-2-2z"/><path d="M7 4a2 2 0 0 0-2 2v2h2M10 9h6M10 12h6M10 15h4"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="prophets" aria-label="Prophets" style="--dark:#220d14;--mid:#5a2333;--gilt:#eaa3b4;--glow:#e08a9f;--gem:#9b3a66;--w:66px;--h:92%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>נביאים</span><span class="hub"></span><span class="lab"><span class="ttl">Prophets</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 17c5 0 11-3 15-10l2.5 1.2c-3 7.5-10 12-17.5 12z"/><path d="M18 7l1.2-2.5"/></svg></span><span class="tool"></span><span class="cap bot"></span></button></div><div class="board"><i class="rail"></i></div><span class="plate">Old Testament</span></div><div class="shelf"><div class="row"><button class="pick book" type="button" data-tab="matthew" aria-label="Matthew" style="--dark:#141b0e;--mid:#43542c;--gilt:#d2dc98;--glow:#c3cf86;--gem:#6f9a3a;--w:72px;--h:90%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>מתי</span><span class="hub"></span><span class="lab"><span class="ttl">Matthew</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l1.6 7.4L21 12l-7.4 1.6L12 22l-1.6-8.4L3 12l7.4-2.6z"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="rev" aria-label="Revelation" style="--dark:#1d0907;--mid:#5e2016;--gilt:#f09a7c;--glow:#e0674a;--gem:#b3261e;--w:68px;--h:95%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="grc">Ἀποκάλυψις</span><span class="hub"></span><span class="lab"><span class="ttl">Revelation</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="2.2"/><circle cx="12.00" cy="5.00" r="1.3" fill="currentColor" stroke="none"/><circle cx="17.47" cy="7.64" r="1.3" fill="currentColor" stroke="none"/><circle cx="18.82" cy="13.56" r="1.3" fill="currentColor" stroke="none"/><circle cx="15.04" cy="18.31" r="1.3" fill="currentColor" stroke="none"/><circle cx="8.96" cy="18.31" r="1.3" fill="currentColor" stroke="none"/><circle cx="5.18" cy="13.56" r="1.3" fill="currentColor" stroke="none"/><circle cx="6.53" cy="7.64" r="1.3" fill="currentColor" stroke="none"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><button class="pick book" type="button" data-tab="prayers" aria-label="Prayers" style="--dark:#10152a;--mid:#2e3a68;--gilt:#c4d0f4;--glow:#9fb2ec;--gem:#4b62c4;--w:60px;--h:80%"><span class="cap"></span><span class="tool"></span><span class="mk" lang="he" dir=rtl>תפילות</span><span class="hub"></span><span class="lab"><span class="ttl">Prayers</span></span><span class="hub"><i class="gem"></i></span><span class="roundel"><svg class="em" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 14c3.5 3.2 11.5 3.2 15.5 0l2.5-3.2h-6c-3.5 0-9 .2-12 3.2z"/><path d="M19.5 9.5c-.6-2 .6-3.4.6-5.5 1.3 2 1.6 3.8-.6 5.5z"/></svg></span><span class="tool"></span><span class="cap bot"></span></button><svg class="lamp" viewBox="0 0 64 44" aria-hidden="true"><ellipse cx="50" cy="12" rx="7" ry="11" fill="url(#lampglow)"/><path d="M50 20c-2-3 0-6 0-11 2.5 4.5 3 7.5 0 11z" fill="#ffcf7a"/><path d="M6 28c6 9 34 10 42 0l6-6H38c-10 0-26 0-32 6z" fill="#9a5a30"/><path d="M6 28c6 9 34 10 42 0" fill="none" stroke="#c98a55" stroke-width="1.5"/><ellipse cx="27" cy="24" rx="7" ry="2" fill="#3b2213"/><defs><radialGradient id="lampglow"><stop offset="0" stop-color="#ffd890" stop-opacity=".9"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient></defs></svg></div><div class="board"><i class="rail"></i></div><span class="plate">New Testament & Prayers</span></div>
+</div>
+<div class="art-bg" aria-hidden="true"><img alt=""><img alt=""></div>
+<div class="wrap">
+  <header>
+    <div class="hebrew" lang="he">תהלים</div>
+    <h1>The Psalter</h1>
+    <div class="sub">Read by Psalm Reader II over a humming choir</div>
+  </header>
+
+  <section class="player" aria-label="Player">
+    <div class="now">
+      <button class="play" id="play" aria-label="Play">
+        <svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="now-text">
+        <span class="now-label" id="now-label">Ready</span>
+        <span class="now-title" id="now-title">Psalm 23</span>
+        <span class="now-line" id="now-line">The Lord is my shepherd</span>
+      </div>
+    </div>
+    <div class="seek">
+      <span id="t-cur">0:00</span>
+      <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Position in this psalm">
+      <span id="t-dur">1:38</span>
+    </div>
+    <div class="controls">
+      <div class="skip">
+        <button class="icon-btn" id="prev" aria-label="Previous psalm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+        <button class="icon-btn" id="next" aria-label="Next psalm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+      </div>
+      <div class="mode" role="group" aria-label="Play order">
+        <button id="m-order" aria-pressed="true">In order</button>
+        <button id="m-shuffle" aria-pressed="false">Shuffle</button>
+      </div>
+    </div>
+    <button class="clipbtn" id="clipbtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Make a clip to share</button>
+    <p class="status" id="status" role="status"></p>
+  </section>
+
+  <section aria-label="Psalms">
+    <div class="list-head"><span>Psalms</span><span id="total"></span></div>
+    <ol id="list"></ol>
+  </section>
+
+  <section class="suggest" aria-labelledby="s-h">
+    <h2 id="s-h">Suggest a psalm</h2>
+    <p class="lede">Is there a psalm — or another Bible passage — you'd like to hear read? Ask for it here.</p>
+    <form class="s-form" id="s-form">
+      <label>Psalm number, or another passage
+        <input id="s-num" type="text" autocomplete="off" maxlength="80" placeholder="e.g. 90, or Isaiah 40">
+      </label>
+      <label><span>Why this one? <span class="s-note">(optional)</span></span>
+        <textarea id="s-text" maxlength="400" placeholder="A favourite verse, or what it means to you"></textarea>
+      </label>
+      <div class="s-row" id="s-save-row" hidden>
+        <button class="send" id="s-send" type="submit">Send suggestion</button>
+      </div>
+      <div class="s-row" id="s-msg-row">
+        <a class="send" id="s-sms" href="sms:" target="_top">Text it to Aaron</a>
+        <a class="send alt" id="s-mail" href="mailto:" target="_top">Email it to Aaron</a>
+      </div>
+      <p class="s-msg" id="s-msg" role="status"></p>
+    </form>
+    <p class="s-note" id="s-off" hidden></p>
+    <ol class="s-list" id="s-list"></ol>
+  </section>
+
+  <footer>
+    <p>Text: Berean Standard Bible (public domain). Voice: Psalm Reader II, designed in ElevenLabs; the women of The Song of the Women, designed in ElevenLabs.</p>
+    <p>Choir and strings: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified. Drums, tambourines, claps, finger cymbals, harp and gong: Versilian Community Sample Library (CC0).</p>
+  </footer>
+</div>
+
+<script>
+const TRACKS = [
+  { n: "1", he: "א׳", title: "Psalm 1", line: "Blessed is the man", mood: "Wisdom · the two ways", file: "audio/psalm-001.mp3", dur: 91 },
+  { n: "2", he: "ב׳", title: "Psalm 2", line: "Why do the nations rage", mood: "The Lord's King · \"You are My Son\"", file: "audio/psalm-002.mp3", dur: 136 },
+  { n: "3", he: "ג׳", title: "Psalm 3", line: "O Lord, how my foes have increased", mood: "A shield around me · three Selahs", file: "audio/psalm-003.mp3", dur: 102 },
+  { n: "4", he: "ד׳", title: "Psalm 4", line: "Answer me when I call", mood: "An evening prayer · sleep in peace", file: "audio/psalm-004.mp3", dur: 114 },
+  { n: "5", he: "ה׳", title: "Psalm 5", line: "Give ear to my words, O Lord", mood: "A morning prayer · the shield of His favor", file: "audio/psalm-005.mp3", dur: 161 },
+  { n: "6", he: "ו׳", title: "Psalm 6", line: "O Lord, do not rebuke me in Your anger", mood: "Lament turning to assurance", file: "audio/psalm-006.mp3", dur: 129 },
+  { n: "7", he: "ז׳", title: "Psalm 7", line: "O Lord my God, I take refuge in You", mood: "Refuge · the righteous Judge", file: "audio/psalm-007.mp3", dur: 187 },
+  { n: "8", he: "ח׳", title: "Psalm 8", line: "O Lord, our Lord, how majestic is Your name", mood: "Majesty under the night sky", file: "audio/psalm-008.mp3", dur: 115 },
+  { n: "9", he: "ט׳", title: "Psalm 9", line: "I will give thanks to the Lord with all my heart", mood: "Praise of the righteous Judge", file: "audio/psalm-009.mp3", dur: 223 },
+  { n: "10", he: "י׳", title: "Psalm 10", line: "Why, O Lord, do You stand far off", mood: "Lament · the Lord is King forever", file: "audio/psalm-010.mp3", dur: 217 },
+  { n: "11", he: "י״א", title: "Psalm 11", line: "In the Lord I take refuge", mood: "Trust · the Lord in His holy temple", file: "audio/psalm-011.mp3", dur: 107 },
+  { n: "12", he: "י״ב", title: "Psalm 12", line: "Help, O Lord, for the godly are no more", mood: "Lament · words like refined silver", file: "audio/psalm-012.mp3", dur: 114 },
+  { n: "13", he: "י״ג", title: "Psalm 13", line: "How long, O Lord", mood: "Lament turning to song", file: "audio/psalm-013.mp3", dur: 94 },
+  { n: "14", he: "י״ד", title: "Psalm 14", line: "The fool says in his heart, \"There is no God\"", mood: "The corrupt and the righteous · \"let Israel be glad\"", file: "audio/psalm-014.mp3", dur: 114 },
+  { n: "15", he: "ט״ו", title: "Psalm 15", line: "O Lord, who may abide in Your tent", mood: "Who may dwell on Your holy mountain", file: "audio/psalm-015.mp3", dur: 86 },
+  { n: "16", he: "ט״ז", title: "Psalm 16", line: "Preserve me, O God, for in You I take refuge", mood: "Trust · the path of life", file: "audio/psalm-016.mp3", dur: 142 },
+  { n: "17", he: "י״ז", title: "Psalm 17", line: "Hear, O Lord, my righteous plea", mood: "A prayer · the apple of Your eye", file: "audio/psalm-017.mp3", dur: 182 },
+  { n: "18", he: "י״ח", title: "Psalm 18", line: "I love You, O Lord, my strength", mood: "Deliverance · the storm, the rescue, the victory", file: "audio/psalm-018.mp3", dur: 511 },
+  { n: "19", he: "י״ט", title: "Psalm 19", line: "The heavens declare the glory of God", mood: "The heavens, the Law, the prayer", file: "audio/psalm-019.mp3", dur: 184 },
+  { n: "20", he: "כ׳", title: "Psalm 20", line: "May the Lord answer you in the day of trouble", mood: "A blessing before battle", file: "audio/psalm-020.mp3", dur: 114 },
+  { n: "21", he: "כ״א", title: "Psalm 21", line: "O Lord, the king rejoices in Your strength", mood: "Thanksgiving for the king", file: "audio/psalm-021.mp3", dur: 155 },
+  { n: "22", he: "כ״ב", title: "Psalm 22", line: "My God, my God, why have You forsaken me", mood: "The great lament turning to praise", file: "audio/psalm-022.mp3", dur: 350 },
+  { n: "23", he: "כ״ג", title: "Psalm 23", line: "The Lord is my shepherd", mood: "Trust · bright and gentle", file: "audio/psalm-023.mp3", dur: 98 },
+  { n: "24", he: "כ״ד", title: "Psalm 24", line: "The earth is the Lord's, and the fullness thereof", mood: "Processional · lift up your heads, O gates", file: "audio/psalm-024.mp3", dur: 130 },
+  { n: "25", he: "כ״ה", title: "Psalm 25", line: "To You, O Lord, I lift up my soul", mood: "Trust · show me Your ways", file: "audio/psalm-025.mp3", dur: 226 },
+  { n: "26", he: "כ״ו", title: "Psalm 26", line: "Vindicate me, O Lord", mood: "Integrity · I love the house where You dwell", file: "audio/psalm-026.mp3", dur: 136 },
+  { n: "27", he: "כ״ז", title: "Psalm 27", line: "The Lord is my light and my salvation", mood: "Light, then longing · Wait for the Lord", file: "audio/psalm-027.mp3", dur: 200 },
+  { n: "28", he: "כ״ח", title: "Psalm 28", line: "To You, O Lord, I call", mood: "A plea answered · my strength and my shield", file: "audio/psalm-028.mp3", dur: 126 },
+  { n: "29", he: "כ״ט", title: "Psalm 29", line: "Ascribe to the Lord, O heavenly beings", mood: "The voice of the Lord in the storm", file: "audio/psalm-029.mp3", dur: 140 },
+  { n: "30", he: "ל׳", title: "Psalm 30", line: "I will exalt You, O Lord", mood: "Thanksgiving · joy comes in the morning", file: "audio/psalm-030.mp3", dur: 148 },
+  { n: "31", he: "ל״א", title: "Psalm 31", line: "In You, O Lord, I have taken refuge", mood: "Into Your hands I commit my spirit", file: "audio/psalm-031.mp3", dur: 306 },
+  { n: "32", he: "ל״ב", title: "Psalm 32", line: "Blessed is he whose transgressions are forgiven", mood: "Confession and forgiveness · You are my hiding place", file: "audio/psalm-032.mp3", dur: 164 },
+  { n: "33", he: "ל״ג", title: "Psalm 33", line: "Rejoice in the Lord, O righteous ones", mood: "Praise · by His word the heavens were made", file: "audio/psalm-033.mp3", dur: 215 },
+  { n: "34", he: "ל״ד", title: "Psalm 34", line: "I will bless the Lord at all times", mood: "Thanksgiving · Taste and see", file: "audio/psalm-034.mp3", dur: 226 },
+  { n: "35", he: "ל״ה", title: "Psalm 35", line: "Contend with my opponents, O Lord", mood: "A plea for vindication · \"I am your salvation\"", file: "audio/psalm-035.mp3", dur: 305 },
+  { n: "36", he: "ל״ו", title: "Psalm 36", line: "An oracle is in my heart regarding the transgression of the wicked man", mood: "In Your light we see light", file: "audio/psalm-036.mp3", dur: 158 },
+  { n: "37", he: "ל״ז", title: "Psalm 37", line: "Do not fret over those who do evil", mood: "Wisdom · be still and wait for the Lord", file: "audio/psalm-037.mp3", dur: 404 },
+  { n: "38", he: "ל״ח", title: "Psalm 38", line: "O Lord, do not rebuke me in Your anger", mood: "A penitent's lament", file: "audio/psalm-038.mp3", dur: 222 },
+  { n: "39", he: "ל״ט", title: "Psalm 39", line: "I said, I will watch my ways", mood: "A lament · each man is but a breath", file: "audio/psalm-039.mp3", dur: 192 },
+  { n: "40", he: "מ׳", title: "Psalm 40", line: "I waited patiently for the Lord", mood: "A new song · the pit and the rock", file: "audio/psalm-040.mp3", dur: 242 },
+  { n: "41", he: "מ״א", title: "Psalm 41", line: "Blessed is the one who cares for the poor", mood: "Betrayal and healing · the doxology that closes Book I", file: "audio/psalm-041.mp3", dur: 160 },
+  { n: "42–43", he: "מ״ב–מ״ג", title: "Psalms 42–43", line: "As the deer pants for streams of water", mood: "Lament turning to hope", file: "audio/psalm-042-043.mp3", dur: 266 },
+  { n: "44", he: "מ״ד", title: "Psalm 44", line: "We have heard with our ears, O God", mood: "National lament · \"Wake up, O Lord!\"", file: "audio/psalm-044.mp3", dur: 274 },
+  { n: "45", he: "מ״ה", title: "Psalm 45", line: "My heart is stirred by a noble theme", mood: "The royal wedding song", file: "audio/psalm-045.mp3", dur: 217 },
+  { n: "46", he: "מ״ו", title: "Psalm 46", line: "God is our refuge and strength", mood: "Strength in the storm · three Selahs", file: "audio/psalm-046.mp3", dur: 139 },
+  { n: "47", he: "מ״ז", title: "Psalm 47", line: "Clap your hands, all you peoples", mood: "Praise · God has ascended amid shouts of joy", file: "audio/psalm-047.mp3", dur: 115 },
+  { n: "48", he: "מ״ח", title: "Psalm 48", line: "Great is the Lord, and greatly to be praised", mood: "Zion, the city of the great King", file: "audio/psalm-048.mp3", dur: 162 },
+  { n: "49", he: "מ״ט", title: "Psalm 49", line: "Hear this, all you peoples", mood: "Wisdom · riches cannot ransom a soul", file: "audio/psalm-049.mp3", dur: 222 },
+  { n: "50", he: "נ׳", title: "Psalm 50", line: "The Mighty One, God the Lord, speaks", mood: "The Judge summons His people · \"Call upon Me\"", file: "audio/psalm-050.mp3", dur: 255 },
+  { n: "51", he: "נ״א", title: "Psalm 51", line: "Have mercy on me, O God", mood: "Confession turning to restoration", file: "audio/psalm-051.mp3", dur: 214 },
+  { n: "52", he: "נ״ב", title: "Psalm 52", line: "Why do you boast of evil, O mighty man?", mood: "Against the boaster · an olive tree in the house of God", file: "audio/psalm-052.mp3", dur: 127 },
+  { n: "53", he: "נ״ג", title: "Psalm 53", line: "The fool says in his heart, \"There is no God\"", mood: "Human folly · longing for Zion's salvation", file: "audio/psalm-053.mp3", dur: 118 },
+  { n: "54", he: "נ״ד", title: "Psalm 54", line: "Save me, O God, by Your name", mood: "A plea turning to trust", file: "audio/psalm-054.mp3", dur: 94 },
+  { n: "55", he: "נ״ה", title: "Psalm 55", line: "Listen to my prayer, O God", mood: "Betrayal · \"Cast your burden upon the Lord\"", file: "audio/psalm-055.mp3", dur: 273 },
+  { n: "56", he: "נ״ו", title: "Psalm 56", line: "Be merciful to me, O God", mood: "Trust in danger · \"In God I trust; I will not be afraid\"", file: "audio/psalm-056.mp3", dur: 164 },
+  { n: "57", he: "נ״ז", title: "Psalm 57", line: "Have mercy on me, O God, have mercy", mood: "In the shadow of His wings · \"Be exalted, O God\"", file: "audio/psalm-057.mp3", dur: 153 },
+  { n: "58", he: "נ״ח", title: "Psalm 58", line: "Do you indeed speak justly, O rulers?", mood: "Judgment on unjust rulers · a God who judges the earth", file: "audio/psalm-058.mp3", dur: 140 },
+  { n: "59", he: "נ״ט", title: "Psalm 59", line: "Deliver me from my enemies, O my God", mood: "Enemies like dogs at evening · \"You are my fortress\"", file: "audio/psalm-059.mp3", dur: 214 },
+  { n: "60", he: "ס׳", title: "Psalm 60", line: "You have rejected us, O God", mood: "National lament · \"With God we will perform with valor\"", file: "audio/psalm-060.mp3", dur: 150 },
+  { n: "61", he: "ס״א", title: "Psalm 61", line: "Hear my cry, O God", mood: "Lead me to the rock that is higher than I", file: "audio/psalm-061.mp3", dur: 102 },
+  { n: "62", he: "ס״ב", title: "Psalm 62", line: "In God alone my soul finds rest", mood: "Quiet trust · \"God is our refuge\"", file: "audio/psalm-062.mp3", dur: 168 },
+  { n: "63", he: "ס״ג", title: "Psalm 63", line: "O God, You are my God", mood: "Thirst in the wilderness · better than life", file: "audio/psalm-063.mp3", dur: 141 },
+  { n: "64", he: "ס״ד", title: "Psalm 64", line: "Hear, O God, my voice of complaint", mood: "Hidden arrows · \"Let the righteous rejoice\"", file: "audio/psalm-064.mp3", dur: 123 },
+  { n: "65", he: "ס״ה", title: "Psalm 65", line: "Praise awaits You, O God, in Zion", mood: "The harvest · the hills are robed with joy", file: "audio/psalm-065.mp3", dur: 170 },
+  { n: "66", he: "ס״ו", title: "Psalm 66", line: "Make a joyful noise to God, all the earth!", mood: "Praise · tested like silver, brought into abundance", file: "audio/psalm-066.mp3", dur: 211 },
+  { n: "67", he: "ס״ז", title: "Psalm 67", line: "May God be gracious to us and bless us", mood: "A blessing for all nations", file: "audio/psalm-067.mp3", dur: 100 },
+  { n: "68", he: "ס״ח", title: "Psalm 68", line: "God arises", mood: "The march of God, from Sinai to the sanctuary", file: "audio/psalm-068.mp3", dur: 412 },
+  { n: "69", he: "ס״ט", title: "Psalm 69", line: "Save me, O God, for the waters are up to my neck", mood: "Deep lament · turning to praise", file: "audio/psalm-069.mp3", dur: 367 },
+  { n: "70", he: "ע׳", title: "Psalm 70", line: "Make haste, O God, to deliver me!", mood: "An urgent cry · \"Let God be magnified!\"", file: "audio/psalm-070.mp3", dur: 79 },
+  { n: "71", he: "ע״א", title: "Psalm 71", line: "In You, O Lord, I have taken refuge", mood: "An old man's trust · \"Do not discard me in my old age\"", file: "audio/psalm-071.mp3", dur: 281 },
+  { n: "72", he: "ע״ב", title: "Psalm 72", line: "Endow the king with Your justice, O God", mood: "The royal psalm · the doxology that closes Book II", file: "audio/psalm-072.mp3", dur: 235 },
+  { n: "73", he: "ע״ג", title: "Psalm 73", line: "Surely God is good to Israel", mood: "Envy of the wicked · \"Whom have I in heaven but You?\"", file: "audio/psalm-073.mp3", dur: 274 },
+  { n: "74", he: "ע״ד", title: "Psalm 74", line: "Why have You rejected us forever, O God?", mood: "Lament for the burned sanctuary · \"Yet God is my King\"", file: "audio/psalm-074.mp3", dur: 241 },
+  { n: "75", he: "ע״ה", title: "Psalm 75", line: "We give thanks to You, O God", mood: "Thanksgiving · God judges in His time", file: "audio/psalm-075.mp3", dur: 138 },
+  { n: "76", he: "ע״ו", title: "Psalm 76", line: "God is known in Judah", mood: "Awe · the earth feared and was still", file: "audio/psalm-076.mp3", dur: 144 },
+  { n: "77", he: "ע״ז", title: "Psalm 77", line: "I cried out to God", mood: "Lament · Hijaz", file: "audio/psalm-077.mp3", dur: 217 },
+  { n: "78", he: "ע״ח", title: "Psalm 78", line: "Give ear, O my people, to my instruction", mood: "The history of Israel · from Egypt to David the shepherd", file: "audio/psalm-078.mp3", dur: 664 },
+  { n: "79", he: "ע״ט", title: "Psalm 79", line: "O God, the nations have invaded Your inheritance", mood: "Lament for Jerusalem · \"Help us, O God of our salvation\"", file: "audio/psalm-079.mp3", dur: 170 },
+  { n: "80", he: "פ׳", title: "Psalm 80", line: "Hear us, O Shepherd of Israel", mood: "The vine out of Egypt · \"Restore us, O God\"", file: "audio/psalm-080.mp3", dur: 208 },
+  { n: "81", he: "פ״א", title: "Psalm 81", line: "Sing for joy to God our strength", mood: "The festival call · \"If only My people would listen\"", file: "audio/psalm-081.mp3", dur: 178 },
+  { n: "82", he: "פ״ב", title: "Psalm 82", line: "God presides in the divine assembly", mood: "Judgment on unjust rulers · \"Arise, O God\"", file: "audio/psalm-082.mp3", dur: 107 },
+  { n: "83", he: "פ״ג", title: "Psalm 83", line: "O God, be not silent", mood: "A plea against the nations · the tempest", file: "audio/psalm-083.mp3", dur: 174 },
+  { n: "84", he: "פ״ד", title: "Psalm 84", line: "How lovely is Your dwelling place", mood: "Longing for God's house · better is one day in Your courts", file: "audio/psalm-084.mp3", dur: 160 },
+  { n: "85", he: "פ״ה", title: "Psalm 85", line: "You showed favor to Your land, O Lord", mood: "Righteousness and peace have kissed", file: "audio/psalm-085.mp3", dur: 154 },
+  { n: "86", he: "פ״ו", title: "Psalm 86", line: "Incline Your ear, O Lord, and answer me", mood: "A plea · \"Give me an undivided heart\"", file: "audio/psalm-086.mp3", dur: 203 },
+  { n: "87", he: "פ״ז", title: "Psalm 87", line: "He has founded His city on the holy mountains", mood: "Zion, mother of nations · \"All my springs of joy are in You\"", file: "audio/psalm-087.mp3", dur: 98 },
+  { n: "88", he: "פ״ח", title: "Psalm 88", line: "O Lord, the God of my salvation", mood: "The darkest lament · darkness is my closest companion", file: "audio/psalm-088.mp3", dur: 212 },
+  { n: "89", he: "פ״ט", title: "Psalm 89", line: "I will sing of the loving devotion of the Lord forever", mood: "The covenant with David · the doxology that closes Book III", file: "audio/psalm-089.mp3", dur: 508 },
+  { n: "90", he: "צ׳", title: "Psalm 90", line: "Lord, You have been our dwelling place", mood: "A prayer of Moses · \"Teach us to number our days\"", file: "audio/psalm-090.mp3", dur: 207 },
+  { n: "91", he: "צ״א", title: "Psalm 91", line: "He who dwells in the shelter of the Most High", mood: "Shelter · God speaks at the close", file: "audio/psalm-091.mp3", dur: 177 },
+  { n: "92", he: "צ״ב", title: "Psalm 92", line: "It is good to praise the Lord", mood: "A song for the Sabbath · the righteous flourish like a palm tree", file: "audio/psalm-092.mp3", dur: 164 },
+  { n: "93", he: "צ״ג", title: "Psalm 93", line: "The Lord reigns! He is robed in majesty", mood: "Majesty above the roar of many waters", file: "audio/psalm-093.mp3", dur: 89 },
+  { n: "94", he: "צ״ד", title: "Psalm 94", line: "O Lord, God of vengeance, shine forth", mood: "Justice for the oppressed · \"Your consolation delights my soul\"", file: "audio/psalm-094.mp3", dur: 229 },
+  { n: "95", he: "צ״ה", title: "Psalm 95", line: "Come, let us sing for joy to the Lord", mood: "A call to worship · \"Today, if you hear His voice\"", file: "audio/psalm-095.mp3", dur: 136 },
+  { n: "96", he: "צ״ו", title: "Psalm 96", line: "Sing to the Lord a new song", mood: "All the earth · the trees of the forest sing for joy", file: "audio/psalm-096.mp3", dur: 160 },
+  { n: "97", he: "צ״ז", title: "Psalm 97", line: "The Lord reigns, let the earth rejoice", mood: "Fire and lightning · light shines on the righteous", file: "audio/psalm-097.mp3", dur: 141 },
+  { n: "98", he: "צ״ח", title: "Psalm 98", line: "Sing to the Lord a new song, for He has done wonders", mood: "Joy · let the rivers clap their hands", file: "audio/psalm-098.mp3", dur: 124 },
+  { n: "99", he: "צ״ט", title: "Psalm 99", line: "The Lord reigns; let the nations tremble!", mood: "Holy is He · Moses, Aaron and Samuel", file: "audio/psalm-099.mp3", dur: 122 },
+  { n: "100", he: "ק׳", title: "Psalm 100", line: "Make a joyful noise to the Lord", mood: "Praise", file: "audio/psalm-100.mp3", dur: 84 },
+  { n: "101", he: "ק״א", title: "Psalm 101", line: "I will sing of Your loving devotion and justice", mood: "A king's vow · walking with integrity of heart", file: "audio/psalm-101.mp3", dur: 122 },
+  { n: "102", he: "ק״ב", title: "Psalm 102", line: "Hear my prayer, O Lord", mood: "The prayer of the afflicted · \"But You remain the same\"", file: "audio/psalm-102.mp3", dur: 286 },
+  { n: "103", he: "ק״ג", title: "Psalm 103", line: "Bless the Lord, O my soul", mood: "Blessing · compassion and praise", file: "audio/psalm-103.mp3", dur: 227 },
+  { n: "104", he: "ק״ד", title: "Psalm 104", line: "Bless the Lord, O my soul!", mood: "Creation · how many are Your works, O Lord", file: "audio/psalm-104.mp3", dur: 363 },
+  { n: "105", he: "ק״ה", title: "Psalm 105", line: "Give thanks to the Lord, call upon His name", mood: "The covenant remembered · from Abraham to the promised land", file: "audio/psalm-105.mp3", dur: 390 },
+  { n: "106", he: "ק״ו", title: "Psalm 106", line: "Hallelujah! Give thanks to the Lord, for He is good", mood: "Israel's story of mercy · the doxology that closes Book IV", file: "audio/psalm-106.mp3", dur: 455 },
+  { n: "107", he: "ק״ז", title: "Psalm 107", line: "Give thanks to the Lord, for He is good", mood: "Let the redeemed say so · He calmed the storm to a whisper", file: "audio/psalm-107.mp3", dur: 385 },
+  { n: "108", he: "ק״ח", title: "Psalm 108", line: "My heart is steadfast, O God", mood: "Awake, harp and lyre · \"With God we will perform with valor\"", file: "audio/psalm-108.mp3", dur: 157 },
+  { n: "109", he: "ק״ט", title: "Psalm 109", line: "O God of my praise, be not silent", mood: "A cry against false accusers · He stands at the right hand of the needy", file: "audio/psalm-109.mp3", dur: 308 },
+  { n: "110", he: "ק״י", title: "Psalm 110", line: "The Lord said to my Lord", mood: "\"Sit at My right hand\" · a priest forever", file: "audio/psalm-110.mp3", dur: 107 },
+  { n: "111", he: "קי״א", title: "Psalm 111", line: "I will give thanks to the Lord with all my heart", mood: "Hallelujah · the fear of the Lord is the beginning of wisdom", file: "audio/psalm-111.mp3", dur: 127 },
+  { n: "112", he: "קי״ב", title: "Psalm 112", line: "Blessed is the man who fears the Lord", mood: "Hallelujah · light dawns in the darkness for the upright", file: "audio/psalm-112.mp3", dur: 128 },
+  { n: "113", he: "קי״ג", title: "Psalm 113", line: "Give praise, O servants of the Lord", mood: "Hallelujah · He raises the poor from the dust", file: "audio/psalm-113.mp3", dur: 100 },
+  { n: "114", he: "קי״ד", title: "Psalm 114", line: "When Israel departed from Egypt", mood: "The sea fled, the mountains skipped like rams", file: "audio/psalm-114.mp3", dur: 96 },
+  { n: "115", he: "קט״ו", title: "Psalm 115", line: "Not to us, O Lord, not to us", mood: "But to Your name be the glory · He is their help and shield", file: "audio/psalm-115.mp3", dur: 193 },
+  { n: "116", he: "קט״ז", title: "Psalm 116", line: "I love the Lord, for He has heard my voice", mood: "Return to your rest, O my soul · the cup of salvation", file: "audio/psalm-116.mp3", dur: 187 },
+  { n: "117", he: "קי״ז", title: "Psalm 117", line: "Praise the Lord, all you nations!", mood: "The shortest psalm · His loving devotion toward us", file: "audio/psalm-117.mp3", dur: 45 },
+  { n: "118", he: "קי״ח", title: "Psalm 118", line: "Give thanks to the Lord, for He is good", mood: "The stone the builders rejected · this is the day the Lord has made", file: "audio/psalm-118.mp3", dur: 310 },
+  { n: "119", he: "קי״ט", title: "Psalm 119", line: "Blessed are those whose way is blameless", mood: "The great psalm of God's word · Your word is a lamp to my feet", file: "audio/psalm-119.mp3", dur: 1536 },
+  { n: "120", he: "ק״כ", title: "Psalm 120", line: "In my distress I cried to the Lord", mood: "A song of ascents · I am for peace", file: "audio/psalm-120.mp3", dur: 88 },
+  { n: "121", he: "קכ״א", title: "Psalm 121", line: "I lift up my eyes to the hills", mood: "Trust on the road · Song of Ascents", file: "audio/psalm-121.mp3", dur: 97 },
+  { n: "122", he: "קכ״ב", title: "Psalm 122", line: "I was glad when they said to me", mood: "A song of ascents · pray for the peace of Jerusalem", file: "audio/psalm-122.mp3", dur: 113 },
+  { n: "123", he: "קכ״ג", title: "Psalm 123", line: "I lift up my eyes to You", mood: "A song of ascents · our eyes are on the Lord our God", file: "audio/psalm-123.mp3", dur: 75 },
+  { n: "124", he: "קכ״ד", title: "Psalm 124", line: "If the Lord had not been on our side", mood: "A song of ascents · escaped like a bird from the snare", file: "audio/psalm-124.mp3", dur: 94 },
+  { n: "125", he: "קכ״ה", title: "Psalm 125", line: "Those who trust in the Lord are like Mount Zion", mood: "A song of ascents · as the mountains surround Jerusalem", file: "audio/psalm-125.mp3", dur: 87 },
+  { n: "126", he: "קכ״ו", title: "Psalm 126", line: "When the Lord restored the captives of Zion", mood: "A song of ascents · those who sow in tears will reap with joy", file: "audio/psalm-126.mp3", dur: 93 },
+  { n: "127", he: "קכ״ז", title: "Psalm 127", line: "Unless the Lord builds the house", mood: "A song of ascents · He gives sleep to His beloved", file: "audio/psalm-127.mp3", dur: 88 },
+  { n: "128", he: "קכ״ח", title: "Psalm 128", line: "Blessed are all who fear the Lord", mood: "A song of ascents · olive shoots around your table", file: "audio/psalm-128.mp3", dur: 83 },
+  { n: "129", he: "קכ״ט", title: "Psalm 129", line: "Many a time they have persecuted me from my youth", mood: "A song of ascents · they have not prevailed", file: "audio/psalm-129.mp3", dur: 103 },
+  { n: "130", he: "ק״ל", title: "Psalm 130", line: "Out of the depths I cry to You, O Lord!", mood: "A song of ascents · more than watchmen wait for the morning", file: "audio/psalm-130.mp3", dur: 103 },
+  { n: "131", he: "קל״א", title: "Psalm 131", line: "My heart is not proud, O Lord", mood: "A song of ascents · like a weaned child with his mother", file: "audio/psalm-131.mp3", dur: 67 },
+  { n: "132", he: "קל״ב", title: "Psalm 132", line: "O Lord, remember on behalf of David", mood: "A song of ascents · \"This is My resting place forever\"", file: "audio/psalm-132.mp3", dur: 191 },
+  { n: "133", he: "קל״ג", title: "Psalm 133", line: "Behold, how good and pleasant it is", mood: "A song of ascents · brothers living together in harmony", file: "audio/psalm-133.mp3", dur: 63 },
+  { n: "134", he: "קל״ד", title: "Psalm 134", line: "Come, bless the Lord, all you servants of the Lord", mood: "A song of ascents · the evening blessing", file: "audio/psalm-134.mp3", dur: 53 },
+  { n: "135", he: "קל״ה", title: "Psalm 135", line: "Hallelujah! Praise the name of the Lord", mood: "Praise for the Lord who chose Jacob · bless the Lord, O house of Israel", file: "audio/psalm-135.mp3", dur: 225 },
+  { n: "136", he: "קל״ו", title: "Psalm 136", line: "Give thanks to the Lord, for He is good", mood: "His loving devotion endures forever", file: "audio/psalm-136.mp3", dur: 271 },
+  { n: "137", he: "קל״ז", title: "Psalm 137", line: "By the rivers of Babylon we sat and wept", mood: "A lament in exile · if I forget you, O Jerusalem", file: "audio/psalm-137.mp3", dur: 113 },
+  { n: "138", he: "קל״ח", title: "Psalm 138", line: "I give You thanks with all my heart", mood: "Of David · the Lord will fulfill His purpose for me", file: "audio/psalm-138.mp3", dur: 119 },
+  { n: "139", he: "קל״ט", title: "Psalm 139", line: "O Lord, You have searched me and known me", mood: "Awe · shadowed and bright", file: "audio/psalm-139.mp3", dur: 242 },
+  { n: "♪", he: "שִׁיר", title: "The Song of the Women", line: "Saul has slain his thousands, and David his tens of thousands", mood: "1 Samuel 18 · tambourines and dancing", file: "audio/song-of-the-women.mp3", dur: 599 },
+  { n: "140", he: "ק״מ", title: "Psalm 140", line: "Rescue me, O Lord, from evil men", mood: "A plea for protection · the upright will dwell in Your presence", file: "audio/psalm-140.mp3", dur: 158 },
+  { n: "141", he: "קמ״א", title: "Psalm 141", line: "I call upon You, O Lord; come quickly to me", mood: "My prayer like incense · my eyes are fixed on You", file: "audio/psalm-141.mp3", dur: 148 },
+  { n: "142", he: "קמ״ב", title: "Psalm 142", line: "I cry aloud to the Lord", mood: "A prayer from the cave · You are my refuge", file: "audio/psalm-142.mp3", dur: 108 },
+  { n: "143", he: "קמ״ג", title: "Psalm 143", line: "O Lord, hear my prayer", mood: "My soul thirsts for You · teach me to do Your will", file: "audio/psalm-143.mp3", dur: 170 },
+  { n: "144", he: "קמ״ד", title: "Psalm 144", line: "Blessed be the Lord, my Rock", mood: "What is man? · I will sing to You a new song", file: "audio/psalm-144.mp3", dur: 190 },
+  { n: "145", he: "קמ״ה", title: "Psalm 145", line: "I will exalt You, my God and King", mood: "A psalm of praise · the Lord is near to all who call on Him", file: "audio/psalm-145.mp3", dur: 233 },
+  { n: "146", he: "קמ״ו", title: "Psalm 146", line: "Hallelujah! Praise the Lord, O my soul", mood: "Put not your trust in princes · the Lord reigns forever", file: "audio/psalm-146.mp3", dur: 131 },
+  { n: "147", he: "קמ״ז", title: "Psalm 147", line: "Hallelujah! How good it is to sing praises to our God", mood: "He heals the brokenhearted · He calls the stars by name", file: "audio/psalm-147.mp3", dur: 208 },
+  { n: "148", he: "קמ״ח", title: "Psalm 148", line: "Hallelujah! Praise the Lord from the heavens", mood: "All creation praises · sun, moon and stars", file: "audio/psalm-148.mp3", dur: 156 },
+  { n: "149", he: "קמ״ט", title: "Psalm 149", line: "Hallelujah! Sing to the Lord a new song", mood: "Let Israel rejoice in their Maker", file: "audio/psalm-149.mp3", dur: 109 },
+  { n: "150", he: "ק״נ", title: "Psalm 150", line: "Hallelujah! Praise God in His sanctuary", mood: "Let everything that has breath praise the Lord · the end of the Psalter", file: "audio/psalm-150.mp3", dur: 78 },
+];
+
+/* Playback: each psalm is fetched (allowed for files published with the page) and played through the
+   Web Audio API, so nothing depends on the browser streaming media from the page's host. */
+const $ = id => document.getElementById(id);
+let ctx = null, out = null;
+const bytes = new Map();      // compressed mp3 bytes, kept for every psalm fetched
+const decoded = new Map();    // decoded audio, only the current and next psalm
+let shuffle = false, order = TRACKS.map((_, i) => i), pos = 0;
+let buf = null, bufIdx = -1, src = null, playing = false, loading = false, offset = 0, startedAt = 0, token = 0, seeking = false;
+try { shuffle = localStorage.getItem("psalter-shuffle") === "1"; } catch (e) {}
+
+const fmt = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const cur = () => order[pos];
+const durOf = i => (engine === "media" && elIdx === i && isFinite(el.duration) && el.duration > 0) ? el.duration
+  : (bufIdx === i && buf) ? buf.duration : TRACKS[i].dur;
+/* Two engines. "media" is a plain <audio> element: it keeps playing when the phone locks and shows lock-screen
+   controls. "webaudio" is the fallback for viewers that block page audio (the Claude app); phones pause it on lock. */
+let engine = "media";
+const el = new Audio(); el.preload = "auto"; let elIdx = -1;
+// probe once: if this view refuses media files, use Web Audio from the start. The probe lets go of the file
+// as soon as it knows, or the moment Play is pressed, so it never holds up the real player.
+let probe = new Audio();
+function endProbe() { if (probe) { const p = probe; probe = null; p.removeAttribute("src"); p.load(); } }
+probe.preload = "metadata"; probe.muted = true;
+probe.addEventListener("error", () => { if (probe && elIdx === -1) engine = "webaudio"; endProbe(); }, { once: true });
+probe.addEventListener("loadedmetadata", endProbe, { once: true });
+probe.src = TRACKS[0].file;
+const position = () => engine === "media"
+  ? (elIdx === cur() && (playing || loading) ? el.currentTime : offset)
+  : (playing ? Math.min(ctx.currentTime - startedAt, durOf(cur())) : offset);
+
+function ensureCtx() {        // must run inside the click, so the browser lets sound start
+  if (engine !== "webaudio") return;   // an idle AudioContext would put iPhones on the silent-switch audio path
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC(); out = ctx.createGain(); out.connect(ctx.destination);
+  }
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
+}
+
+async function fetchBytes(i, onProgress) {
+  if (bytes.has(i)) return bytes.get(i);
+  const res = await fetch(TRACKS[i].file);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const total = +res.headers.get("content-length") || 0;
+  let data;
+  if (res.body && total && onProgress) {
+    const reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress(got / total); }
+    data = new Uint8Array(got); let o = 0; for (const p of parts) { data.set(p, o); o += p.length; }
+    data = data.buffer;
+  } else data = await res.arrayBuffer();
+  bytes.set(i, data); return data;
+}
+async function decode(i, onProgress) {
+  if (decoded.has(i)) return decoded.get(i);
+  const raw = await fetchBytes(i, onProgress);
+  const ab = await new Promise((ok, bad) => ctx.decodeAudioData(raw.slice(0), ok, bad));
+  decoded.set(i, ab);
+  const keep = new Set([cur(), order[(pos + 1) % order.length]]);
+  for (const k of [...decoded.keys()]) if (!keep.has(k)) decoded.delete(k);
+  return ab;
+}
+function prefetchNext() {
+  const n = order[(pos + 1) % order.length];
+  if (!bytes.has(n)) fetchBytes(n).catch(() => {});
+}
+
+function stopSource() { if (src) { src.onended = null; try { src.stop(); } catch (e) {} src.disconnect(); src = null; } }
+function startSource() {
+  stopSource();
+  src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+  const me = src;
+  src.onended = () => { if (me === src && playing) { playing = false; src = null; next(true); } };
+  if (offset >= buf.duration) offset = 0;
+  src.start(0, offset); startedAt = ctx.currentTime - offset; playing = true;
+}
+
+async function startMedia() {
+  endProbe();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (elIdx !== i) { el.src = TRACKS[i].file; elIdx = i; }
+  if (Math.abs(el.currentTime - offset) > 0.25) { try { el.currentTime = offset; } catch (e) {} }
+  loading = true; paint();
+  try { await el.play(); }
+  catch (e) {
+    if (my !== token) return;
+    loading = false;
+    if (e && e.name === "NotAllowedError") { $("status").textContent = "Press play to start."; paint(); return; }
+    if (e && e.name === "AbortError") { paint(); return; }
+    engine = "webaudio"; elIdx = -1; el.removeAttribute("src"); el.load();   // this view blocks media files
+    return start();
+  }
+  if (my !== token) { el.pause(); return; }
+  loading = false; playing = true; paint(); prefetchNextMedia();
+}
+const warmed = new Set();
+function prefetchNextMedia() {   // warm the browser cache so the next psalm starts quickly
+  const n = order[(pos + 1) % order.length];
+  if (!warmed.has(n)) { warmed.add(n); fetch(TRACKS[n].file).then(r => r.arrayBuffer()).catch(() => warmed.delete(n)); }
+}
+el.addEventListener("ended", () => { if (engine === "media" && playing) { playing = false; offset = 0; next(true); } });
+el.addEventListener("waiting", () => { if (engine === "media" && playing) $("now-label").textContent = "Loading"; });
+el.addEventListener("playing", () => { if (engine === "media" && playing) paint(); });
+el.addEventListener("loadedmetadata", () => { if (engine === "media") tick(); });
+
+async function start() {
+  if (engine === "media") return startMedia();
+  ensureCtx();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (bufIdx !== i || !buf) {
+    loading = true; paint();
+    try {
+      const ab = await decode(i, p => { if (my === token) $("status").textContent = "Loading " + TRACKS[i].title + "… " + Math.round(p * 100) + "%"; });
+      if (my !== token) return;
+      buf = ab; bufIdx = i;
+    } catch (e) {
+      if (my !== token) return;
+      loading = false; $("status").textContent = "Couldn't load " + TRACKS[i].title + ". Check your connection and press play again."; paint(); return;
+    }
+    loading = false; $("status").textContent = "";
+  }
+  if (ctx.state !== "running") { try { await ctx.resume(); } catch (e) {} }
+  if (my !== token) return;
+  startSource(); paint(); prefetchNext();
+}
+function pause() {
+  token++;
+  if (engine === "media") { if (elIdx === cur() && (playing || loading)) offset = el.currentTime; el.pause(); loading = false; playing = false; paint(); return; }
+  loading = false; if (playing) { offset = position(); playing = false; stopSource(); } paint();
+}
+function goTo(newPos) { pause(); pos = newPos; offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+
+function buildOrder(keepFirst) {
+  const idx = TRACKS.map((_, i) => i);
+  if (!shuffle) { order = idx; pos = keepFirst == null ? 0 : keepFirst; return; }
+  const rest = idx.filter(i => i !== keepFirst);
+  for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+  order = keepFirst == null ? rest : [keepFirst, ...rest]; pos = 0;
+}
+
+function renderList() {
+  const list = $("list"); list.innerHTML = "";
+  TRACKS.forEach((t, i) => {
+    const li = document.createElement("li");
+    const b = document.createElement("button");
+    b.className = "track"; b.id = "track-" + i;
+    b.setAttribute("aria-label", "Play " + t.title);
+    b.innerHTML = `<span class="num"><b>${t.n}</b><span lang="he">${t.he}</span></span>
+      <span class="mid"><span class="t-line">${t.line}</span><span class="t-mood">${t.mood}</span></span>
+      <span class="dur"><span class="hum" aria-hidden="true"><i></i><i></i><i></i></span>${fmt(t.dur)}</span>`;
+    b.addEventListener("click", () => playTrack(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const total = TRACKS.reduce((a, t) => a + t.dur, 0);
+  $("total").textContent = TRACKS.length + " readings · " + Math.round(total / 60) + " min";
+}
+
+// paintings behind the page (art/psalm-NNN.jpg); psalms without one keep the plain page
+const ART = { "1": "art/psalm-001.jpg", "2": "art/psalm-002.jpg", "3": "art/psalm-003.jpg", "4": "art/psalm-004.jpg", "5": "art/psalm-005.jpg", "6": "art/psalm-006.jpg", "7": "art/psalm-007.jpg", "8": "art/psalm-008.jpg", "9": "art/psalm-009.jpg", "10": "art/psalm-010.jpg", "11": "art/psalm-011.jpg", "12": "art/psalm-012.jpg", "13": "art/psalm-013.jpg", "14": "art/psalm-014.jpg", "15": "art/psalm-015.jpg", "16": "art/psalm-016.jpg", "17": "art/psalm-017.jpg", "18": "art/psalm-018.jpg", "19": "art/psalm-019.jpg", "20": "art/psalm-020.jpg", "21": "art/psalm-021.jpg", "22": "art/psalm-022.jpg", "23": "art/psalm-023.jpg", "24": "art/psalm-024.jpg", "25": "art/psalm-025.jpg", "26": "art/psalm-026.jpg", "27": "art/psalm-027.jpg", "28": "art/psalm-028.jpg", "29": "art/psalm-029.jpg", "30": "art/psalm-030.jpg", "31": "art/psalm-031.jpg", "32": "art/psalm-032.jpg", "33": "art/psalm-033.jpg", "34": "art/psalm-034.jpg", "35": "art/psalm-035.jpg", "36": "art/psalm-036.jpg", "37": "art/psalm-037.jpg", "38": "art/psalm-038.jpg", "39": "art/psalm-039.jpg", "40": "art/psalm-040.jpg", "41": "art/psalm-041.jpg", "42–43": "art/psalm-042.jpg", "44": "art/psalm-044.jpg", "45": "art/psalm-045.jpg", "46": "art/psalm-046.jpg", "47": "art/psalm-047.jpg", "48": "art/psalm-048.jpg", "49": "art/psalm-049.jpg", "50": "art/psalm-050.jpg", "51": "art/psalm-051.jpg", "52": "art/psalm-052.jpg", "53": "art/psalm-053.jpg", "54": "art/psalm-054.jpg", "55": "art/psalm-055.jpg", "56": "art/psalm-056.jpg", "57": "art/psalm-057.jpg", "58": "art/psalm-058.jpg", "59": "art/psalm-059.jpg", "60": "art/psalm-060.jpg", "61": "art/psalm-061.jpg", "62": "art/psalm-062.jpg", "63": "art/psalm-063.jpg", "64": "art/psalm-064.jpg", "65": "art/psalm-065.jpg", "66": "art/psalm-066.jpg", "67": "art/psalm-067.jpg", "68": "art/psalm-068.jpg", "69": "art/psalm-069.jpg", "70": "art/psalm-070.jpg", "71": "art/psalm-071.jpg", "72": "art/psalm-072.jpg", "73": "art/psalm-073.jpg", "74": "art/psalm-074.jpg", "75": "art/psalm-075.jpg", "76": "art/psalm-076.jpg", "77": "art/psalm-077.jpg", "78": "art/psalm-078.jpg", "79": "art/psalm-079.jpg", "80": "art/psalm-080.jpg", "81": "art/psalm-081.jpg", "82": "art/psalm-082.jpg", "83": "art/psalm-083.jpg", "84": "art/psalm-084.jpg", "85": "art/psalm-085.jpg", "86": "art/psalm-086.jpg", "87": "art/psalm-087.jpg", "88": "art/psalm-088.jpg", "89": "art/psalm-089.jpg", "90": "art/psalm-090.jpg", "91": "art/psalm-091.jpg", "92": "art/psalm-092.jpg", "93": "art/psalm-093.jpg", "94": "art/psalm-094.jpg", "95": "art/psalm-095.jpg", "96": "art/psalm-096.jpg", "97": "art/psalm-097.jpg", "98": "art/psalm-098.jpg", "99": "art/psalm-099.jpg", "100": "art/psalm-100.jpg", "101": "art/psalm-101.jpg", "102": "art/psalm-102.jpg", "103": "art/psalm-103.jpg", "104": "art/psalm-104.jpg", "105": "art/psalm-105.jpg", "106": "art/psalm-106.jpg", "107": "art/psalm-107.jpg", "108": "art/psalm-108.jpg", "109": "art/psalm-109.jpg", "110": "art/psalm-110.jpg", "111": "art/psalm-111.jpg", "112": "art/psalm-112.jpg", "113": "art/psalm-113.jpg", "114": "art/psalm-114.jpg", "115": "art/psalm-115.jpg", "116": "art/psalm-116.jpg", "117": "art/psalm-117.jpg", "118": "art/psalm-118.jpg", "119": "art/psalm-119.jpg", "120": "art/psalm-120.jpg", "121": "art/psalm-121.jpg", "122": "art/psalm-122.jpg", "123": "art/psalm-123.jpg", "124": "art/psalm-124.jpg", "125": "art/psalm-125.jpg", "126": "art/psalm-126.jpg", "127": "art/psalm-127.jpg", "128": "art/psalm-128.jpg", "129": "art/psalm-129.jpg", "130": "art/psalm-130.jpg", "131": "art/psalm-131.jpg", "132": "art/psalm-132.jpg", "133": "art/psalm-133.jpg", "134": "art/psalm-134.jpg", "135": "art/psalm-135.jpg", "136": "art/psalm-136.jpg", "137": "art/psalm-137.jpg", "138": "art/psalm-138.jpg", "139": "art/psalm-139.jpg", "140": "art/psalm-140.jpg", "141": "art/psalm-141.jpg", "142": "art/psalm-142.jpg", "143": "art/psalm-143.jpg", "144": "art/psalm-144.jpg", "145": "art/psalm-145.jpg", "146": "art/psalm-146.jpg", "147": "art/psalm-147.jpg", "148": "art/psalm-148.jpg", "149": "art/psalm-149.jpg", "150": "art/psalm-150.jpg" };
+// psalms whose scene changes partway: [first verse, painting] in order; verses as labelled in clip/clips.json
+// ("42:7" style for 42–43). The page switches a moment before that verse is spoken.
+const SCENES = {
+  "6": [["1", "art/psalm-006.jpg"], ["8", "art/psalm-006-b.jpg"]],
+  "18": [["1", "art/psalm-018-b.jpg"], ["16", "art/psalm-018-c.jpg"], ["25", "art/psalm-018.jpg"]],
+  "19": [["1", "art/psalm-019.jpg"], ["7", "art/psalm-019-b.jpg"]],
+  "22": [["1", "art/psalm-022.jpg"], ["22", "art/psalm-022-b.jpg"]],
+  "23": [["1", "art/psalm-023.jpg"], ["4", "art/psalm-023-b.jpg"], ["5", "art/psalm-023-c.jpg"]],
+  "24": [["1", "art/psalm-024-b.jpg"], ["7", "art/psalm-024.jpg"]],
+  "27": [["1", "art/psalm-027.jpg"], ["7", "art/psalm-027-b.jpg"]],
+  "29": [["1", "art/psalm-029.jpg"], ["10", "art/psalm-029-b.jpg"]],
+  "31": [["1", "art/psalm-031.jpg"], ["9", "art/psalm-031-b.jpg"], ["19", "art/psalm-031.jpg"]],
+  "42–43": [["42:1", "art/psalm-042.jpg"], ["42:7", "art/psalm-042-b.jpg"], ["43:1", "art/psalm-042-c.jpg"]],
+  "44": [["1", "art/psalm-044-b.jpg"], ["9", "art/psalm-044.jpg"]],
+  "45": [["1", "art/psalm-045-b.jpg"], ["10", "art/psalm-045.jpg"]],
+  "46": [["1", "art/psalm-046.jpg"], ["8", "art/psalm-046-b.jpg"]],
+  "48": [["1", "art/psalm-048.jpg"], ["4", "art/psalm-048-b.jpg"], ["9", "art/psalm-048.jpg"]],
+  "50": [["1", "art/psalm-050-b.jpg"], ["7", "art/psalm-050.jpg"]],
+  "51": [["1", "art/psalm-051-b.jpg"], ["7", "art/psalm-051.jpg"]],
+  "55": [["1", "art/psalm-055.jpg"], ["22", "art/psalm-055-b.jpg"]],
+  "57": [["1", "art/psalm-057-b.jpg"], ["7", "art/psalm-057.jpg"]],
+  "59": [["1", "art/psalm-059.jpg"], ["16", "art/psalm-059-b.jpg"]],
+  "68": [["1", "art/psalm-068-b.jpg"], ["19", "art/psalm-068.jpg"]],
+  "69": [["1", "art/psalm-069.jpg"], ["30", "art/psalm-069-b.jpg"]],
+  "73": [["1", "art/psalm-073-b.jpg"], ["15", "art/psalm-073.jpg"]],
+  "74": [["1", "art/psalm-074.jpg"], ["12", "art/psalm-074-b.jpg"], ["18", "art/psalm-074.jpg"]],
+  "77": [["1", "art/psalm-077-b.jpg"], ["11", "art/psalm-077.jpg"]],
+  "78": [["1", "art/psalm-078-b.jpg"], ["40", "art/psalm-078-c.jpg"], ["56", "art/psalm-078-d.jpg"], ["68", "art/psalm-078.jpg"]],
+  "81": [["1", "art/psalm-081.jpg"], ["13", "art/psalm-081-b.jpg"]],
+  "89": [["1", "art/psalm-089.jpg"], ["19", "art/psalm-089-b.jpg"], ["38", "art/psalm-089-c.jpg"]],
+  "90": [["1", "art/psalm-090.jpg"], ["13", "art/psalm-090-b.jpg"]],
+  "95": [["1", "art/psalm-095.jpg"], ["8", "art/psalm-095-b.jpg"]],
+  "102": [["1", "art/psalm-102.jpg"], ["25", "art/psalm-102-b.jpg"]],
+  "104": [["1", "art/psalm-104-b.jpg"], ["10", "art/psalm-104.jpg"], ["19", "art/psalm-104-c.jpg"], ["24", "art/psalm-104-d.jpg"]],
+  "105": [["1", "art/psalm-105-b.jpg"], ["16", "art/psalm-105-c.jpg"], ["39", "art/psalm-105.jpg"]],
+  "106": [["1", "art/psalm-106-b.jpg"], ["28", "art/psalm-106.jpg"]],
+  "107": [["1", "art/psalm-107-b.jpg"], ["10", "art/psalm-107-c.jpg"], ["17", "art/psalm-107-d.jpg"], ["23", "art/psalm-107.jpg"], ["33", "art/psalm-107-e.jpg"]],
+  "118": [["1", "art/psalm-118-b.jpg"], ["19", "art/psalm-118.jpg"]],
+  "119": [["1", "art/psalm-119-b.jpg"], ["81", "art/psalm-119-c.jpg"], ["105", "art/psalm-119.jpg"], ["169", "art/psalm-119-d.jpg"]],
+  "126": [["1", "art/psalm-126-b.jpg"], ["4", "art/psalm-126.jpg"]],
+  "136": [["1", "art/psalm-136-b.jpg"], ["10", "art/psalm-136.jpg"], ["16", "art/psalm-136-c.jpg"]],
+  "139": [["1", "art/psalm-139.jpg"], ["11", "art/psalm-139-b.jpg"]],
+  "144": [["1", "art/psalm-144-b.jpg"], ["9", "art/psalm-144.jpg"]],
+  "147": [["1", "art/psalm-147.jpg"], ["18", "art/psalm-147-b.jpg"]]
+};
+let CLIPV = null, clipvAsked = false;
+function clipVerses() {
+  if (!clipvAsked) {
+    clipvAsked = true;
+    fetch("clip/clips.json").then(r => r.ok ? r.json() : null).then(d => { CLIPV = d; if (d) setArt(TRACKS[cur()]); }).catch(() => {});
+  }
+  return CLIPV;
+}
+const verseKey = v => { const m = String(v).match(/^(?:(\d+):)?(\d+)/); return m ? (+(m[1] || 0)) * 1000 + +m[2] : -1; };
+function sceneAt(t, sec, lead = 1.0) {     // the painting for track t at sec seconds in
+  const seq = SCENES[t.n];
+  if (!seq) return ART[t.n] || null;
+  const C = clipVerses(), segs = C && C[t.file] && C[t.file].segs;
+  let v = -1;
+  if (segs) for (const s of segs) { if (s[0] > sec + lead) break; const k = verseKey(s[2]); if (k >= 0) v = k; }
+  let src = seq[0][1];
+  for (const [from, f] of seq) if (verseKey(from) <= v) src = f;
+  return src;
+}
+let artNow = null, artFlip = 0;
+function artTone(img) {   // how light the painting's upper half is (where the title and player sit)
+  let l = 0.5;
+  try {
+    const c = document.createElement("canvas"); c.width = 24; c.height = 43;
+    const g = c.getContext("2d", { willReadFrequently: true }); g.drawImage(img, 0, 0, 24, 43);
+    const d = g.getImageData(0, 0, 24, 20).data; let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    l = sum / (d.length / 4) / 255;
+  } catch (e) {}
+  document.body.classList.toggle("art-dark", l < 0.42);
+  document.body.classList.toggle("art-bright", l > 0.62);
+}
+function setArt(t) {
+  const src = sceneAt(t, position());
+  if (src === artNow) return;
+  artNow = src;
+  const imgs = document.querySelectorAll(".art-bg img");
+  if (!src) { imgs.forEach(im => im.classList.remove("on")); document.body.classList.remove("has-art"); return; }
+  const next = imgs[artFlip = 1 - artFlip], prev = imgs[1 - artFlip];
+  next.onload = () => { if (artNow !== src) return; artTone(next); document.body.classList.add("has-art"); next.classList.add("on"); prev.classList.remove("on"); };
+  next.src = src;
+}
+function paint() {
+  setArt(TRACKS[cur()]);
+  const t = TRACKS[cur()];
+  $("now-title").textContent = t.title;
+  $("now-line").textContent = t.line;
+  $("now-label").textContent = loading ? "Loading" : playing ? "Playing" : (offset > 0 ? "Paused" : (shuffle ? "Ready · shuffled" : "Ready"));
+  $("t-dur").textContent = fmt(durOf(cur()));
+  const showPause = playing || loading;
+  $("play").setAttribute("aria-label", showPause ? "Pause" : "Play");
+  $("play-icon").innerHTML = showPause ? '<path d="M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+  TRACKS.forEach((_, i) => {
+    const el = $("track-" + i);
+    el.classList.toggle("current", i === cur());
+    el.classList.toggle("playing", i === cur() && playing);
+    if (i === cur()) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+  });
+  $("m-order").setAttribute("aria-pressed", String(!shuffle));
+  $("m-shuffle").setAttribute("aria-pressed", String(shuffle));
+  try {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: "Psalm Reader II", album: "The Psalter" });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    }
+  } catch (e) {}
+  tick();
+}
+function tick() {
+  if (seeking) return;
+  setArt(TRACKS[cur()]);   // a psalm with several scenes moves on as the verses go by
+  const d = durOf(cur()), p = position();
+  $("seek").value = d ? (p / d) * 100 : 0;
+  $("t-cur").textContent = fmt(p);
+}
+setInterval(() => { if (playing) tick(); }, 250);
+
+function playTrack(i) {
+  ensureCtx();
+  if (shuffle) { pause(); buildOrder(i); offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+  else goTo(i);
+}
+function next(auto) {
+  if (auto) ensureCtx();
+  if (pos + 1 >= order.length) {
+    if (auto) { pos = 0; if (shuffle) buildOrder(); offset = 0; buf = null; bufIdx = -1; paint(); $("now-label").textContent = "Finished"; return; }
+    if (shuffle) { buildOrder(); goTo(0); } else goTo(0);
+  } else goTo(pos + 1);
+}
+function prev() {
+  ensureCtx();
+  if (position() > 4) { const was = playing; pause(); offset = 0; if (was) start(); else paint(); return; }
+  goTo(Math.max(0, pos - 1));
+}
+
+$("play").addEventListener("click", () => { if (playing || loading) pause(); else start(); });
+$("next").addEventListener("click", () => { ensureCtx(); next(false); });
+$("prev").addEventListener("click", prev);
+$("m-order").addEventListener("click", () => setShuffle(false));
+$("m-shuffle").addEventListener("click", () => setShuffle(true));
+function setShuffle(on) {
+  if (shuffle === on) return;
+  shuffle = on; const keep = cur();
+  try { localStorage.setItem("psalter-shuffle", on ? "1" : "0"); } catch (e) {}
+  buildOrder(keep); paint(); if (playing) prefetchNext();
+}
+
+const seek = $("seek");
+seek.addEventListener("input", () => { seeking = true; $("t-cur").textContent = fmt(seek.value / 100 * durOf(cur())); });
+seek.addEventListener("change", () => {
+  seeking = false;
+  offset = seek.value / 100 * durOf(cur());
+  if (engine === "media") { if (elIdx === cur()) { try { el.currentTime = offset; } catch (e) {} } paint(); }
+  else if (playing) { ensureCtx(); startSource(); } else paint();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement)) {
+    e.preventDefault(); if (playing || loading) pause(); else start();
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ctx && playing && ctx.state !== "running") ctx.resume().catch(() => {}); });
+
+try {
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", () => start());
+    navigator.mediaSession.setActionHandler("pause", pause);
+    navigator.mediaSession.setActionHandler("nexttrack", () => next(false));
+    navigator.mediaSession.setActionHandler("previoustrack", prev);
+    navigator.mediaSession.setActionHandler("seekto", d => { offset = d.seekTime || 0; if (engine === "media" && elIdx === cur()) el.currentTime = offset; else if (playing) startSource(); tick(); });
+  }
+} catch (e) {}
+
+function openClip(f) {
+  try {
+    if (!window.ClipMaker) throw new Error("not loaded");
+    window.ClipMaker.open(f);
+  } catch (e) {
+    $("status").textContent = "The clip maker couldn\u2019t start on this phone (" + (e && e.message || e) + "). Close the page, open it again, and tap Make a clip once more.";
+  }
+}
+$("clipbtn").addEventListener("click", () => openClip("" + TRACKS[cur()].file));
+/* the Revelation and Judges tabs ask for the clip maker by message as well, in case they can't reach this page directly */
+window.addEventListener("message", e => {
+  const d = e.data;
+  if (!d || d.type !== "psalter-clip" || typeof d.file !== "string") return;
+  if (![...document.querySelectorAll("iframe")].some(f => f.contentWindow === e.source)) return;
+  openClip(d.file);
+});
+renderList();
+buildOrder(shuffle ? undefined : 0);
+paint();
+
+/* Suggestions: kept in the page's shared store so everyone the Psalter is shared with sees the same list.
+   Each row: { psalm: number|null, passage: string (when not a psalm), note: string, by: viewer id, at: ISO time, status: "asked" | "next" } */
+const madeSet = new Set();
+TRACKS.forEach(t => { const [a, b] = t.n.split("–").map(Number); for (let k = a; k <= (b || a); k++) madeSet.add(k); });
+const trackOf = n => TRACKS.findIndex(t => { const [a, b] = t.n.split("–").map(Number); return n >= a && n <= (b || a); });
+
+/* Without an account (or without write access) the form composes a text or email on the visitor's own
+   phone instead; they choose Aaron as the recipient, so no contact details live on the page. */
+/* What was asked for: "90" or "Psalm 90" is a psalm (n); anything else ("Isaiah 40") is another passage (label). */
+function parseAsk(raw) {
+  const t = String(raw || "").trim().replace(/\s+/g, " ").slice(0, 80);
+  const m = t.match(/^(?:ps(?:alms?)?\.?\s*)?(\d{1,3})$/i);
+  if (m) return { n: +m[1], label: "Psalm " + (+m[1]) };
+  return { n: null, label: t };
+}
+function readForm() {
+  const a = parseAsk($("s-num").value), note = $("s-text").value.trim().slice(0, 400), msg = $("s-msg");
+  if (!a.label) { msg.textContent = "Please type a psalm number, or the passage you'd like."; $("s-num").focus(); return null; }
+  if (a.n !== null && !(a.n >= 1 && a.n <= 150)) { msg.textContent = "Psalms run from 1 to 150."; $("s-num").focus(); return null; }
+  if (a.n !== null && madeSet.has(a.n)) { msg.textContent = a.label + " is already in the Psalter, near the top."; return null; }
+  return { ...a, note };
+}
+/* The code tells the weekly helper this message came from the Psalter page; it only acts on messages carrying it. */
+const PSALTER_CODE = "PSALTER-GPSM7S";
+function composeText(f) { return "Psalm suggestion for the Psalter: " + f.label + (f.note ? ". " + f.note : "."); }
+function refreshLinks() {
+  const f = { ...parseAsk($("s-num").value), note: $("s-text").value.trim().slice(0, 400) };
+  $("s-sms").href = "sms:?&body=" + encodeURIComponent(composeText(f));
+  $("s-mail").href = "mailto:?subject=" + encodeURIComponent("Psalm suggestion: " + f.label) + "&body=" + encodeURIComponent(composeText(f));
+}
+for (const id of ["s-num", "s-text"]) $(id).addEventListener("input", () => { refreshLinks(); $("s-msg").textContent = ""; });
+for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
+  $(id).addEventListener("click", e => {
+    if (!readForm()) { e.preventDefault(); return; }
+    refreshLinks(); $("s-msg").textContent = "Opening your " + where + " — choose Aaron, then send.";
+  });
+}
+
+(async () => {
+  const off = $("s-off"), form = $("s-form"), list = $("s-list");
+  let db = null, user = null;
+  try { [db, user] = await Promise.all([window.claude?.use?.("db") ?? null, window.claude?.use?.("user") ?? null]); } catch (e) {}
+  if (!db) return;   // signed out or opened outside claude.ai: the text/email buttons stay
+  const [me, owner, canWrite] = await Promise.all([user ? user.id() : null, user ? user.isOwner() : false, user ? user.can("data.write") : null]);
+  let writable = canWrite !== false;
+  const setForm = () => { $("s-save-row").hidden = !writable; $("s-msg-row").hidden = writable; };
+  setForm();
+  const col = db.collection("suggestions");
+  let rows = [];
+
+  async function render() {
+    const ids = [...new Set(rows.map(r => r.d.by).filter(Boolean))];
+    const ps = (user && ids.length) ? await user.profiles(ids) : {};
+    list.innerHTML = "";
+    const sorted = rows.slice().sort((x, y) => {
+      const rank = r => madeSet.has(r.d.psalm) ? 2 : r.d.status === "next" ? 0 : 1;
+      return rank(x) - rank(y) || String(y.d.at).localeCompare(String(x.d.at));
+    });
+    for (const r of sorted) {
+      const d = r.d, made = madeSet.has(d.psalm);
+      const li = document.createElement("li"); li.className = "s-item";
+      const num = document.createElement("span"); num.className = "num";
+      const b = document.createElement("b"); b.textContent = d.psalm || "✦"; num.appendChild(b);
+      const body = document.createElement("div"); body.className = "s-body";
+      if (!d.psalm && d.passage) { const pt = document.createElement("span"); pt.textContent = d.passage; body.appendChild(pt); }
+      if (d.note) { const t = document.createElement("span"); t.className = "s-text"; t.textContent = d.note; body.appendChild(t); }
+      const meta = document.createElement("div"); meta.className = "s-meta";
+      const chip = document.createElement("span");
+      chip.className = "chip" + (made ? " made" : d.status === "next" ? " next" : "");
+      chip.textContent = made ? "Made" : d.status === "next" ? "Coming next" : "Asked for";
+      const who = document.createElement("span");
+      const p = ps[d.by];
+      who.textContent = (d.by && d.by === me) ? "You asked" : ((p && p.name) || "Someone") + " asked";
+      meta.append(chip, who); body.appendChild(meta);
+      const acts = document.createElement("div"); acts.className = "s-actions";
+      if (made) {
+        const play = document.createElement("button"); play.textContent = "Play it";
+        play.addEventListener("click", () => { const i = trackOf(d.psalm); if (i >= 0) { playTrack(i); window.scrollTo({ top: 0, behavior: "smooth" }); } });
+        acts.appendChild(play);
+      }
+      if (owner && !made) {
+        const nx = document.createElement("button");
+        nx.textContent = d.status === "next" ? "Unmark" : "Mark coming next";
+        nx.addEventListener("click", async () => { nx.disabled = true; try { await col.doc(r.id).update({ status: d.status === "next" ? "asked" : "next" }); } catch (e) { nx.disabled = false; } });
+        acts.appendChild(nx);
+      }
+      if (owner || (d.by && d.by === me && writable)) {
+        const rm = document.createElement("button"); rm.textContent = "Remove";
+        rm.addEventListener("click", async () => { rm.disabled = true; try { await col.doc(r.id).delete(); } catch (e) { rm.disabled = false; } });
+        acts.appendChild(rm);
+      }
+      if (acts.childNodes.length) body.appendChild(acts);
+      li.append(num, body); list.appendChild(li);
+    }
+    if (!rows.length && writable) { off.hidden = false; off.textContent = "No suggestions yet."; }
+    else if (writable) off.hidden = true;
+  }
+
+  col.onSnapshot(snap => { rows = snap.docs.filter(s => s.exists).map(s => ({ id: s.id, d: s.data() })); render(); },
+                 () => { off.hidden = false; off.textContent = "Suggestions couldn't load right now. Try reopening the page."; });
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    if (!writable) return;
+    const f = readForm(); if (!f) return;
+    const { n, label, note } = f, msg = $("s-msg");
+    $("s-send").disabled = true; msg.textContent = "Sending…";
+    try {
+      await col.add({ psalm: n, passage: n === null ? label : "", note, by: me || "", at: new Date().toISOString(), status: "asked" });
+      $("s-num").value = ""; $("s-text").value = ""; msg.textContent = "Thank you — " + label + " is on the list.";
+    } catch (err) {
+      if (err && err.code === "invalid_argument") { writable = false; setForm(); msg.textContent = ""; }
+      else if (err && err.code === "quota_exceeded") msg.textContent = "The suggestion list is full right now.";
+      else msg.textContent = "That didn't send. Please try again in a moment.";
+    } finally { $("s-send").disabled = false; }
+  });
+})();
+</script>
+
+<script>
+/* Tabs. Revelation and Judges are their own pages (revelation/ and judges/, same artifact), each shown in a frame below
+   the tab bar, so each keeps its own look and player. Switching pauses whichever player you leave. The choice is
+   remembered per viewer. */
+(() => {
+  const root = document.documentElement, bar = document.querySelector(".tabs");
+  const TABS = {
+    psalter: { btn: "tab-psalter", hash: "#psalter" },
+    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/index.html" },
+    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/index.html" },
+    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/index.html" },
+    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/index.html" },
+    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/index.html" },
+    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/index.html" },
+    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/index.html" },
+  };
+  const ORDER = ["psalter", "rev", "judges", "mighty", "prayers", "matthew", "proverbs", "prophets"];
+  let cur = null;
+  const fr = k => TABS[k].frame && document.getElementById(TABS[k].frame);
+  const fit = () => { const h = bar.getBoundingClientRect().height;
+    for (const k of ORDER) { const f = fr(k); if (f) { f.style.top = h + "px"; f.style.height = "calc(100dvh - " + h + "px)"; } } };
+  function pauseTab(k) {
+    if (k === "psalter") { try { if (typeof playing !== "undefined" && (playing || loading)) pause(); } catch (e) {} return; }
+    try { const w = fr(k).contentWindow; if (w && typeof w.pause === "function") w.pause(); } catch (e) {}
+  }
+  function show(which, remember = true) {
+    if (!TABS[which]) which = "psalter";
+    for (const k of ORDER) if (k !== which) pauseTab(k);
+    const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
+    root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers"); root.classList.toggle("matthew", which === "matthew"); root.classList.toggle("proverbs", which === "proverbs"); root.classList.toggle("prophets", which === "prophets"); root.classList.toggle("mighty", which === "mighty");
+    for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
+    cur = which; fit();
+    if (remember) { try { localStorage.setItem("tab", which); } catch (e) {} }
+    try { history.replaceState(null, "", TABS[which].hash); } catch (e) {}
+  }
+  for (const k of ORDER) {
+    document.getElementById(TABS[k].btn).addEventListener("click", () => show(k));
+    const f = fr(k);
+    if (f) f.addEventListener("load", () => {
+      try { const t = root.getAttribute("data-theme"); if (t) f.contentDocument.documentElement.setAttribute("data-theme", t); } catch (e) {}
+    });
+  }
+  bar.addEventListener("keydown", e => {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    const i = (ORDER.indexOf(cur) + (e.key === "ArrowRight" ? 1 : ORDER.length - 1)) % ORDER.length;
+    show(ORDER[i]); document.getElementById(TABS[ORDER[i]].btn).focus();
+  });
+  // while another collection is showing, this page's own keyboard shortcuts must not drive the hidden Psalter player
+  document.addEventListener("keydown", e => { if (cur !== "psalter" && !bar.contains(e.target)) e.stopImmediatePropagation(); }, true);
+  addEventListener("resize", fit);
+  let start = "psalter";
+  try { start = localStorage.getItem("tab") || start; } catch (e) {}
+  for (const k of ORDER) if (location.hash === TABS[k].hash) start = k;
+  show(start, false);
+})();
+</script>
+<script>/* mp4-muxer 5.2.2, MIT licence, (c) Vanilagy: builds the MP4 for the clip maker */
+"use strict";var Mp4Muxer=(()=>{var e=Object.defineProperty,t=Object.getOwnPropertyDescriptor,i=Object.getOwnPropertyNames,s=Object.prototype.hasOwnProperty,a=(e,t,i)=>{if(!t.has(e))throw TypeError("Cannot "+i)},r=(e,t,i)=>(a(e,t,"read from private field"),i?i.call(e):t.get(e)),n=(e,t,i)=>{if(t.has(e))throw TypeError("Cannot add the same private member more than once");t instanceof WeakSet?t.add(e):t.set(e,i)},o=(e,t,i,s)=>(a(e,t,"write to private field"),s?s.call(e,i):t.set(e,i),i),h=(e,t,i)=>(a(e,t,"access private method"),i),l={};((t,i)=>{for(var s in i)e(t,s,{get:i[s],enumerable:!0})})(l,{ArrayBufferTarget:()=>Me,FileSystemWritableFileStreamTarget:()=>Oe,Muxer:()=>Rt,StreamTarget:()=>We});var d,f,u,m,p,c,w,g,b=new Uint8Array(8),y=new DataView(b.buffer),k=e=>[(e%256+256)%256],T=e=>(y.setUint16(0,e,!1),[b[0],b[1]]),C=e=>(y.setUint32(0,e,!1),[b[1],b[2],b[3]]),v=e=>(y.setUint32(0,e,!1),[b[0],b[1],b[2],b[3]]),S=e=>(y.setUint32(0,Math.floor(e/2**32),!1),y.setUint32(4,e,!1),[b[0],b[1],b[2],b[3],b[4],b[5],b[6],b[7]]),x=e=>(y.setInt16(0,256*e,!1),[b[0],b[1]]),z=e=>(y.setInt32(0,65536*e,!1),[b[0],b[1],b[2],b[3]]),E=e=>(y.setInt32(0,2**30*e,!1),[b[0],b[1],b[2],b[3]]),A=(e,t=!1)=>{let i=Array(e.length).fill(null).map(((t,i)=>e.charCodeAt(i)));return t&&i.push(0),i},M=e=>e&&e[e.length-1],W=e=>{let t;for(let i of e)(!t||i.presentationTimestamp>t.presentationTimestamp)&&(t=i);return t},O=(e,t,i=!0)=>{let s=e*t;return i?Math.round(s):s},B=e=>{let t=e*(Math.PI/180),i=Math.cos(t),s=Math.sin(t);return[i,s,0,-s,i,0,0,0,1]},U=B(0),D=e=>[z(e[0]),z(e[1]),E(e[2]),z(e[3]),z(e[4]),E(e[5]),z(e[6]),z(e[7]),E(e[8])],j=e=>e?"object"!=typeof e?e:Array.isArray(e)?e.map(j):Object.fromEntries(Object.entries(e).map((([e,t])=>[e,j(t)]))):e,R=e=>e>=0&&e<2**32,I=(e,t,i)=>({type:e,contents:t&&new Uint8Array(t.flat(10)),children:i}),N=(e,t,i,s,a)=>I(e,[k(t),C(i),s??[]],a),V=e=>({type:"mdat",largeSize:e}),F=(e,t,i=!1)=>I("moov",null,[L(t,e),...e.map((e=>$(e,t))),i?me(e):null]),L=(e,t)=>{let i=O(Math.max(0,...t.filter((e=>e.samples.length>0)).map((e=>{const t=W(e.samples);return t.presentationTimestamp+t.duration}))),Bt),s=Math.max(...t.map((e=>e.id)))+1,a=!R(e)||!R(i),r=a?S:v;return N("mvhd",+a,0,[r(e),r(e),v(Bt),r(i),z(1),x(1),Array(10).fill(0),D(U),Array(24).fill(0),v(s)])},$=(e,t)=>I("trak",null,[P(e,t),H(e,t)]),P=(e,t)=>{let i,s=W(e.samples),a=O(s?s.presentationTimestamp+s.duration:0,Bt),r=!R(t)||!R(a),n=r?S:v;return i="video"===e.info.type?"number"==typeof e.info.rotation?B(e.info.rotation):e.info.rotation:U,N("tkhd",+r,3,[n(t),n(t),v(e.id),v(0),n(a),Array(8).fill(0),T(0),T(0),x("audio"===e.info.type?1:0),T(0),D(i),z("video"===e.info.type?e.info.width:0),z("video"===e.info.type?e.info.height:0)])},H=(e,t)=>I("mdia",null,[_(e,t),q("video"===e.info.type?"vide":"soun"),G(e)]),_=(e,t)=>{let i=W(e.samples),s=O(i?i.presentationTimestamp+i.duration:0,e.timescale),a=!R(t)||!R(s),r=a?S:v;return N("mdhd",+a,0,[r(t),r(t),v(e.timescale),r(s),T(21956),T(0)])},q=e=>N("hdlr",0,0,[A("mhlr"),A(e),v(0),v(0),v(0),A("mp4-muxer-hdlr",!0)]),G=e=>I("minf",null,["video"===e.info.type?J():K(),Q(),Z(e)]),J=()=>N("vmhd",0,1,[T(0),T(0),T(0),T(0)]),K=()=>N("smhd",0,0,[T(0),T(0)]),Q=()=>I("dinf",null,[X()]),X=()=>N("dref",0,0,[v(1)],[Y()]),Y=()=>N("url ",0,1),Z=e=>{const t=e.compositionTimeOffsetTable.length>1||e.compositionTimeOffsetTable.some((e=>0!==e.sampleCompositionTimeOffset));return I("stbl",null,[ee(e),oe(e),he(e),le(e),de(e),fe(e),t?ue(e):null])},ee=e=>N("stsd",0,0,[v(1)],["video"===e.info.type?te(Se[e.info.codec],e):ne(ze[e.info.codec],e)]),te=(e,t)=>{return I(e,[Array(6).fill(0),T(1),T(0),T(0),Array(12).fill(0),T(t.info.width),T(t.info.height),v(4718592),v(4718592),v(0),T(1),Array(32).fill(0),T(24),(i=65535,y.setInt16(0,i,!1),[b[0],b[1]])],[xe[t.info.codec](t),t.info.decoderConfig.colorSpace?re(t):null]);var i},ie={bt709:1,bt470bg:5,smpte170m:6},se={bt709:1,smpte170m:6,"iec61966-2-1":13},ae={rgb:0,bt709:1,bt470bg:5,smpte170m:6},re=e=>I("colr",[A("nclx"),T(ie[e.info.decoderConfig.colorSpace.primaries]),T(se[e.info.decoderConfig.colorSpace.transfer]),T(ae[e.info.decoderConfig.colorSpace.matrix]),k((e.info.decoderConfig.colorSpace.fullRange?1:0)<<7)]),ne=(e,t)=>I(e,[Array(6).fill(0),T(1),T(0),T(0),v(0),T(t.info.numberOfChannels),T(16),T(0),T(0),z(t.info.sampleRate)],[Ee[t.info.codec](t)]),oe=e=>N("stts",0,0,[v(e.timeToSampleTable.length),e.timeToSampleTable.map((e=>[v(e.sampleCount),v(e.sampleDelta)]))]),he=e=>{if(e.samples.every((e=>"key"===e.type)))return null;let t=[...e.samples.entries()].filter((([,e])=>"key"===e.type));return N("stss",0,0,[v(t.length),t.map((([e])=>v(e+1)))])},le=e=>N("stsc",0,0,[v(e.compactlyCodedChunkTable.length),e.compactlyCodedChunkTable.map((e=>[v(e.firstChunk),v(e.samplesPerChunk),v(1)]))]),de=e=>N("stsz",0,0,[v(0),v(e.samples.length),e.samples.map((e=>v(e.size)))]),fe=e=>e.finalizedChunks.length>0&&M(e.finalizedChunks).offset>=2**32?N("co64",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map((e=>S(e.offset)))]):N("stco",0,0,[v(e.finalizedChunks.length),e.finalizedChunks.map((e=>v(e.offset)))]),ue=e=>N("ctts",0,0,[v(e.compositionTimeOffsetTable.length),e.compositionTimeOffsetTable.map((e=>[v(e.sampleCount),v(e.sampleCompositionTimeOffset)]))]),me=e=>I("mvex",null,e.map(pe)),pe=e=>N("trex",0,0,[v(e.id),v(1),v(0),v(0),v(0)]),ce=(e,t)=>I("moof",null,[we(e),...t.map(be)]),we=e=>N("mfhd",0,0,[v(e)]),ge=e=>{let t=0,i=0,s="delta"===e.type;return i|=+s,t|=s?1:2,t<<24|i<<16},be=e=>I("traf",null,[ye(e),ke(e),Te(e)]),ye=e=>{let t=0;t|=8,t|=16,t|=32,t|=131072;let i=e.currentChunk.samples[1]??e.currentChunk.samples[0],s={duration:i.timescaleUnitsToNextSample,size:i.size,flags:ge(i)};return N("tfhd",0,131128,[v(e.id),v(s.duration),v(s.size),v(s.flags)])},ke=e=>N("tfdt",1,0,[S(O(e.currentChunk.startTimestamp,e.timescale))]),Te=e=>{let t=e.currentChunk.samples.map((e=>e.timescaleUnitsToNextSample)),i=e.currentChunk.samples.map((e=>e.size)),s=e.currentChunk.samples.map(ge),a=e.currentChunk.samples.map((t=>O(t.presentationTimestamp-t.decodeTimestamp,e.timescale))),r=new Set(t),n=new Set(i),o=new Set(s),h=new Set(a),l=2===o.size&&s[0]!==s[1],d=r.size>1,f=n.size>1,u=!l&&o.size>1,m=h.size>1||[...h].some((e=>0!==e)),p=0;return p|=1,p|=4*+l,p|=256*+d,p|=512*+f,p|=1024*+u,p|=2048*+m,N("trun",1,p,[v(e.currentChunk.samples.length),v(e.currentChunk.offset-e.currentChunk.moofOffset||0),l?v(s[0]):[],e.currentChunk.samples.map(((e,r)=>{return[d?v(t[r]):[],f?v(i[r]):[],u?v(s[r]):[],m?(n=a[r],y.setInt32(0,n,!1),[b[0],b[1],b[2],b[3]]):[]];var n}))])},Ce=(e,t)=>N("tfra",1,0,[v(e.id),v(63),v(e.finalizedChunks.length),e.finalizedChunks.map((i=>[S(O(i.startTimestamp,e.timescale)),S(i.moofOffset),v(t+1),v(1),v(1)]))]),ve=()=>N("mfro",0,0,[v(0)]),Se={avc:"avc1",hevc:"hvc1",vp9:"vp09",av1:"av01"},xe={avc:e=>e.info.decoderConfig&&I("avcC",[...new Uint8Array(e.info.decoderConfig.description)]),hevc:e=>e.info.decoderConfig&&I("hvcC",[...new Uint8Array(e.info.decoderConfig.description)]),vp9:e=>{if(!e.info.decoderConfig)return null;let t=e.info.decoderConfig;if(!t.colorSpace)throw new Error("'colorSpace' is required in the decoder config for VP9.");let i=t.codec.split("."),s=Number(i[1]),a=Number(i[2]),r=0+(Number(i[3])<<4)+Number(t.colorSpace.fullRange);return N("vpcC",1,0,[k(s),k(a),k(r),k(2),k(2),k(2),T(0)])},av1:()=>I("av1C",[129,0,0,0])},ze={aac:"mp4a",opus:"Opus"},Ee={aac:e=>{let t=new Uint8Array(e.info.decoderConfig.description);return N("esds",0,0,[v(58753152),k(32+t.byteLength),T(1),k(0),v(75530368),k(18+t.byteLength),k(64),k(21),C(0),v(130071),v(130071),v(92307584),k(t.byteLength),...t,v(109084800),k(1),k(2)])},opus:e=>{let t=3840,i=0;const s=e.info.decoderConfig?.description;if(s){if(s.byteLength<18)throw new TypeError("Invalid decoder description provided for Opus; must be at least 18 bytes long.");const e=ArrayBuffer.isView(s)?new DataView(s.buffer,s.byteOffset,s.byteLength):new DataView(s);t=e.getUint16(10,!0),i=e.getInt16(14,!0)}return I("dOps",[k(0),k(e.info.numberOfChannels),T(t),v(e.info.sampleRate),x(i),k(0)])}},Ae=(Symbol("isTarget"),class{}),Me=class extends Ae{constructor(){super(...arguments),this.buffer=null}},We=class extends Ae{constructor(e){if(super(),this.options=e,"object"!=typeof e)throw new TypeError("StreamTarget requires an options object to be passed to its constructor.");if(e.onData){if("function"!=typeof e.onData)throw new TypeError("options.onData, when provided, must be a function.");if(e.onData.length<2)throw new TypeError("options.onData, when provided, must be a function that takes in at least two arguments (data and position). Ignoring the position argument, which specifies the byte offset at which the data is to be written, can lead to broken outputs.")}if(void 0!==e.chunked&&"boolean"!=typeof e.chunked)throw new TypeError("options.chunked, when provided, must be a boolean.");if(void 0!==e.chunkSize&&(!Number.isInteger(e.chunkSize)||e.chunkSize<1024))throw new TypeError("options.chunkSize, when provided, must be an integer and not smaller than 1024.")}},Oe=class extends Ae{constructor(e,t){if(super(),this.stream=e,this.options=t,!(e instanceof FileSystemWritableFileStream))throw new TypeError("FileSystemWritableFileStreamTarget requires a FileSystemWritableFileStream instance.");if(void 0!==t&&"object"!=typeof t)throw new TypeError("FileSystemWritableFileStreamTarget's options, when provided, must be an object.");if(t&&void 0!==t.chunkSize&&(!Number.isInteger(t.chunkSize)||t.chunkSize<=0))throw new TypeError("options.chunkSize, when provided, must be a positive integer")}},Be=class{constructor(){this.pos=0,n(this,d,new Uint8Array(8)),n(this,f,new DataView(r(this,d).buffer)),this.offsets=new WeakMap}seek(e){this.pos=e}writeU32(e){r(this,f).setUint32(0,e,!1),this.write(r(this,d).subarray(0,4))}writeU64(e){r(this,f).setUint32(0,Math.floor(e/2**32),!1),r(this,f).setUint32(4,e,!1),this.write(r(this,d).subarray(0,8))}writeAscii(e){for(let t=0;t<e.length;t++)r(this,f).setUint8(t%8,e.charCodeAt(t)),t%8==7&&this.write(r(this,d));e.length%8!=0&&this.write(r(this,d).subarray(0,e.length%8))}writeBox(e){if(this.offsets.set(e,this.pos),e.contents&&!e.children)this.writeBoxHeader(e,e.size??e.contents.byteLength+8),this.write(e.contents);else{let t=this.pos;if(this.writeBoxHeader(e,0),e.contents&&this.write(e.contents),e.children)for(let t of e.children)t&&this.writeBox(t);let i=this.pos,s=e.size??i-t;this.seek(t),this.writeBoxHeader(e,s),this.seek(i)}}writeBoxHeader(e,t){this.writeU32(e.largeSize?1:t),this.writeAscii(e.type),e.largeSize&&this.writeU64(t)}measureBoxHeader(e){return 8+(e.largeSize?8:0)}patchBox(e){let t=this.pos;this.seek(this.offsets.get(e)),this.writeBox(e),this.seek(t)}measureBox(e){if(e.contents&&!e.children){return this.measureBoxHeader(e)+e.contents.byteLength}{let t=this.measureBoxHeader(e);if(e.contents&&(t+=e.contents.byteLength),e.children)for(let i of e.children)i&&(t+=this.measureBox(i));return t}}};d=new WeakMap,f=new WeakMap;var Ue=class extends Be{constructor(e){super(),n(this,w),n(this,u,void 0),n(this,m,new ArrayBuffer(65536)),n(this,p,new Uint8Array(r(this,m))),n(this,c,0),o(this,u,e)}write(e){h(this,w,g).call(this,this.pos+e.byteLength),r(this,p).set(e,this.pos),this.pos+=e.byteLength,o(this,c,Math.max(r(this,c),this.pos))}finalize(){h(this,w,g).call(this,this.pos),r(this,u).buffer=r(this,m).slice(0,Math.max(r(this,c),this.pos))}};u=new WeakMap,m=new WeakMap,p=new WeakMap,c=new WeakMap,w=new WeakSet,g=function(e){let t=r(this,m).byteLength;for(;t<e;)t*=2;if(t===r(this,m).byteLength)return;let i=new ArrayBuffer(t),s=new Uint8Array(i);s.set(r(this,p),0),o(this,m,i),o(this,p,s)};var De,je,Re,Ie,Ne,Ve,Fe,Le,$e,Pe,He,_e,qe,Ge=class extends Be{constructor(e){super(),n(this,Ve),n(this,Le),n(this,Pe),n(this,_e),n(this,De,void 0),n(this,je,[]),n(this,Re,void 0),n(this,Ie,void 0),n(this,Ne,[]),o(this,De,e),o(this,Re,e.options?.chunked??!1),o(this,Ie,e.options?.chunkSize??16777216)}write(e){r(this,je).push({data:e.slice(),start:this.pos}),this.pos+=e.byteLength}flush(){if(0===r(this,je).length)return;let e=[],t=[...r(this,je)].sort(((e,t)=>e.start-t.start));e.push({start:t[0].start,size:t[0].data.byteLength});for(let i=1;i<t.length;i++){let s=e[e.length-1],a=t[i];a.start<=s.start+s.size?s.size=Math.max(s.size,a.start+a.data.byteLength-s.start):e.push({start:a.start,size:a.data.byteLength})}for(let t of e){t.data=new Uint8Array(t.size);for(let e of r(this,je))t.start<=e.start&&e.start<t.start+t.size&&t.data.set(e.data,e.start-t.start);r(this,Re)?(h(this,Ve,Fe).call(this,t.data,t.start),h(this,_e,qe).call(this)):r(this,De).options.onData?.(t.data,t.start)}r(this,je).length=0}finalize(){r(this,Re)&&h(this,_e,qe).call(this,!0)}};De=new WeakMap,je=new WeakMap,Re=new WeakMap,Ie=new WeakMap,Ne=new WeakMap,Ve=new WeakSet,Fe=function(e,t){let i=r(this,Ne).findIndex((e=>e.start<=t&&t<e.start+r(this,Ie)));-1===i&&(i=h(this,Pe,He).call(this,t));let s=r(this,Ne)[i],a=t-s.start,n=e.subarray(0,Math.min(r(this,Ie)-a,e.byteLength));s.data.set(n,a);let o={start:a,end:a+n.byteLength};if(h(this,Le,$e).call(this,s,o),0===s.written[0].start&&s.written[0].end===r(this,Ie)&&(s.shouldFlush=!0),r(this,Ne).length>2){for(let e=0;e<r(this,Ne).length-1;e++)r(this,Ne)[e].shouldFlush=!0;h(this,_e,qe).call(this)}n.byteLength<e.byteLength&&h(this,Ve,Fe).call(this,e.subarray(n.byteLength),t+n.byteLength)},Le=new WeakSet,$e=function(e,t){let i=0,s=e.written.length-1,a=-1;for(;i<=s;){let r=Math.floor(i+(s-i+1)/2);e.written[r].start<=t.start?(i=r+1,a=r):s=r-1}for(e.written.splice(a+1,0,t),(-1===a||e.written[a].end<t.start)&&a++;a<e.written.length-1&&e.written[a].end>=e.written[a+1].start;)e.written[a].end=Math.max(e.written[a].end,e.written[a+1].end),e.written.splice(a+1,1)},Pe=new WeakSet,He=function(e){let t={start:Math.floor(e/r(this,Ie))*r(this,Ie),data:new Uint8Array(r(this,Ie)),written:[],shouldFlush:!1};return r(this,Ne).push(t),r(this,Ne).sort(((e,t)=>e.start-t.start)),r(this,Ne).indexOf(t)},_e=new WeakSet,qe=function(e=!1){for(let t=0;t<r(this,Ne).length;t++){let i=r(this,Ne)[t];if(i.shouldFlush||e){for(let e of i.written)r(this,De).options.onData?.(i.data.subarray(e.start,e.end),i.start+e.start);r(this,Ne).splice(t--,1)}}};var Je,Ke,Qe,Xe,Ye,Ze,et,tt,it,st,at,rt,nt,ot,ht,lt,dt,ft,ut,mt,pt,ct,wt,gt,bt,yt,kt,Tt,Ct,vt,St,xt,zt,Et,At,Mt,Wt,Ot=class extends Ge{constructor(e){super(new We({onData:(t,i)=>e.stream.write({type:"write",data:t,position:i}),chunked:!0,chunkSize:e.options?.chunkSize}))}},Bt=1e3,Ut=["avc","hevc","vp9","av1"],Dt=["aac","opus"],jt=["strict","offset","cross-track-offset"],Rt=class{constructor(e){if(n(this,nt),n(this,ht),n(this,dt),n(this,ut),n(this,pt),n(this,wt),n(this,bt),n(this,kt),n(this,Ct),n(this,St),n(this,zt),n(this,At),n(this,Je,void 0),n(this,Ke,void 0),n(this,Qe,void 0),n(this,Xe,void 0),n(this,Ye,null),n(this,Ze,null),n(this,et,Math.floor(Date.now()/1e3)+2082844800),n(this,tt,[]),n(this,it,1),n(this,st,[]),n(this,at,[]),n(this,rt,!1),h(this,nt,ot).call(this,e),e.video=j(e.video),e.audio=j(e.audio),e.fastStart=j(e.fastStart),this.target=e.target,o(this,Je,{firstTimestampBehavior:"strict",...e}),e.target instanceof Me)o(this,Ke,new Ue(e.target));else if(e.target instanceof We)o(this,Ke,new Ge(e.target));else{if(!(e.target instanceof Oe))throw new Error(`Invalid target: ${e.target}`);o(this,Ke,new Ot(e.target))}h(this,ut,mt).call(this),h(this,ht,lt).call(this)}addVideoChunk(e,t,i,s){if(!(e instanceof EncodedVideoChunk))throw new TypeError("addVideoChunk's first argument (sample) must be of type EncodedVideoChunk.");if(t&&"object"!=typeof t)throw new TypeError("addVideoChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addVideoChunk's third argument (timestamp), when provided, must be a non-negative real number.");if(void 0!==s&&!Number.isFinite(s))throw new TypeError("addVideoChunk's fourth argument (compositionTimeOffset), when provided, must be a real number.");let a=new Uint8Array(e.byteLength);e.copyTo(a),this.addVideoChunkRaw(a,e.type,i??e.timestamp,e.duration,t,s)}addVideoChunkRaw(e,t,i,s,a,n){if(!(e instanceof Uint8Array))throw new TypeError("addVideoChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addVideoChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addVideoChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addVideoChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addVideoChunkRaw's fifth argument (meta), when provided, must be an object.");if(void 0!==n&&!Number.isFinite(n))throw new TypeError("addVideoChunkRaw's sixth argument (compositionTimeOffset), when provided, must be a real number.");if(h(this,At,Mt).call(this),!r(this,Je).video)throw new Error("No video track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ye).samples.length===r(this,Je).fastStart.expectedVideoChunks)throw new Error(`Cannot add more video chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedVideoChunks}).`);let o=h(this,wt,gt).call(this,r(this,Ye),e,t,i,s,a,n);if("fragmented"===r(this,Je).fastStart&&r(this,Ze)){for(;r(this,at).length>0&&r(this,at)[0].decodeTimestamp<=o.decodeTimestamp;){let e=r(this,at).shift();h(this,bt,yt).call(this,r(this,Ze),e)}o.decodeTimestamp<=r(this,Ze).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ye),o):r(this,st).push(o)}else h(this,bt,yt).call(this,r(this,Ye),o)}addAudioChunk(e,t,i){if(!(e instanceof EncodedAudioChunk))throw new TypeError("addAudioChunk's first argument (sample) must be of type EncodedAudioChunk.");if(t&&"object"!=typeof t)throw new TypeError("addAudioChunk's second argument (meta), when provided, must be an object.");if(void 0!==i&&(!Number.isFinite(i)||i<0))throw new TypeError("addAudioChunk's third argument (timestamp), when provided, must be a non-negative real number.");let s=new Uint8Array(e.byteLength);e.copyTo(s),this.addAudioChunkRaw(s,e.type,i??e.timestamp,e.duration,t)}addAudioChunkRaw(e,t,i,s,a){if(!(e instanceof Uint8Array))throw new TypeError("addAudioChunkRaw's first argument (data) must be an instance of Uint8Array.");if("key"!==t&&"delta"!==t)throw new TypeError("addAudioChunkRaw's second argument (type) must be either 'key' or 'delta'.");if(!Number.isFinite(i)||i<0)throw new TypeError("addAudioChunkRaw's third argument (timestamp) must be a non-negative real number.");if(!Number.isFinite(s)||s<0)throw new TypeError("addAudioChunkRaw's fourth argument (duration) must be a non-negative real number.");if(a&&"object"!=typeof a)throw new TypeError("addAudioChunkRaw's fifth argument (meta), when provided, must be an object.");if(h(this,At,Mt).call(this),!r(this,Je).audio)throw new Error("No audio track declared.");if("object"==typeof r(this,Je).fastStart&&r(this,Ze).samples.length===r(this,Je).fastStart.expectedAudioChunks)throw new Error(`Cannot add more audio chunks than specified in 'fastStart' (${r(this,Je).fastStart.expectedAudioChunks}).`);let n=h(this,wt,gt).call(this,r(this,Ze),e,t,i,s,a);if("fragmented"===r(this,Je).fastStart&&r(this,Ye)){for(;r(this,st).length>0&&r(this,st)[0].decodeTimestamp<=n.decodeTimestamp;){let e=r(this,st).shift();h(this,bt,yt).call(this,r(this,Ye),e)}n.decodeTimestamp<=r(this,Ye).lastDecodeTimestamp?h(this,bt,yt).call(this,r(this,Ze),n):r(this,at).push(n)}else h(this,bt,yt).call(this,r(this,Ze),n)}finalize(){if(r(this,rt))throw new Error("Cannot finalize a muxer more than once.");if("fragmented"===r(this,Je).fastStart){for(let e of r(this,st))h(this,bt,yt).call(this,r(this,Ye),e);for(let e of r(this,at))h(this,bt,yt).call(this,r(this,Ze),e);h(this,St,xt).call(this,!1)}else r(this,Ye)&&h(this,Ct,vt).call(this,r(this,Ye)),r(this,Ze)&&h(this,Ct,vt).call(this,r(this,Ze));let e=[r(this,Ye),r(this,Ze)].filter(Boolean);if("in-memory"===r(this,Je).fastStart){let t;for(let i=0;i<2;i++){let i=F(e,r(this,et)),s=r(this,Ke).measureBox(i);t=r(this,Ke).measureBox(r(this,Xe));let a=r(this,Ke).pos+s+t;for(let e of r(this,tt)){e.offset=a;for(let{data:i}of e.samples)a+=i.byteLength,t+=i.byteLength}if(a<2**32)break;t>=2**32&&(r(this,Xe).largeSize=!0)}let i=F(e,r(this,et));r(this,Ke).writeBox(i),r(this,Xe).size=t,r(this,Ke).writeBox(r(this,Xe));for(let e of r(this,tt))for(let t of e.samples)r(this,Ke).write(t.data),t.data=null}else if("fragmented"===r(this,Je).fastStart){let t=r(this,Ke).pos,i=(e=>I("mfra",null,[...e.map(Ce),ve()]))(e);r(this,Ke).writeBox(i);let s=r(this,Ke).pos-t;r(this,Ke).seek(r(this,Ke).pos-4),r(this,Ke).writeU32(s)}else{let t=r(this,Ke).offsets.get(r(this,Xe)),i=r(this,Ke).pos-t;r(this,Xe).size=i,r(this,Xe).largeSize=i>=2**32,r(this,Ke).patchBox(r(this,Xe));let s=F(e,r(this,et));if("object"==typeof r(this,Je).fastStart){r(this,Ke).seek(r(this,Qe)),r(this,Ke).writeBox(s);let e=t-r(this,Ke).pos;r(this,Ke).writeBox({type:"free",size:e})}else r(this,Ke).writeBox(s)}h(this,zt,Et).call(this),r(this,Ke).finalize(),o(this,rt,!0)}};return Je=new WeakMap,Ke=new WeakMap,Qe=new WeakMap,Xe=new WeakMap,Ye=new WeakMap,Ze=new WeakMap,et=new WeakMap,tt=new WeakMap,it=new WeakMap,st=new WeakMap,at=new WeakMap,rt=new WeakMap,nt=new WeakSet,ot=function(e){if("object"!=typeof e)throw new TypeError("The muxer requires an options object to be passed to its constructor.");if(!(e.target instanceof Ae))throw new TypeError("The target must be provided and an instance of Target.");if(e.video){if(!Ut.includes(e.video.codec))throw new TypeError(`Unsupported video codec: ${e.video.codec}`);if(!Number.isInteger(e.video.width)||e.video.width<=0)throw new TypeError(`Invalid video width: ${e.video.width}. Must be a positive integer.`);if(!Number.isInteger(e.video.height)||e.video.height<=0)throw new TypeError(`Invalid video height: ${e.video.height}. Must be a positive integer.`);const t=e.video.rotation;if("number"==typeof t&&![0,90,180,270].includes(t))throw new TypeError(`Invalid video rotation: ${t}. Has to be 0, 90, 180 or 270.`);if(Array.isArray(t)&&(9!==t.length||t.some((e=>"number"!=typeof e))))throw new TypeError(`Invalid video transformation matrix: ${t.join()}`);if(void 0!==e.video.frameRate&&(!Number.isInteger(e.video.frameRate)||e.video.frameRate<=0))throw new TypeError(`Invalid video frame rate: ${e.video.frameRate}. Must be a positive integer.`)}if(e.audio){if(!Dt.includes(e.audio.codec))throw new TypeError(`Unsupported audio codec: ${e.audio.codec}`);if(!Number.isInteger(e.audio.numberOfChannels)||e.audio.numberOfChannels<=0)throw new TypeError(`Invalid number of audio channels: ${e.audio.numberOfChannels}. Must be a positive integer.`);if(!Number.isInteger(e.audio.sampleRate)||e.audio.sampleRate<=0)throw new TypeError(`Invalid audio sample rate: ${e.audio.sampleRate}. Must be a positive integer.`)}if(e.firstTimestampBehavior&&!jt.includes(e.firstTimestampBehavior))throw new TypeError(`Invalid first timestamp behavior: ${e.firstTimestampBehavior}`);if("object"==typeof e.fastStart){if(e.video){if(void 0===e.fastStart.expectedVideoChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedVideoChunks'.");if(!Number.isInteger(e.fastStart.expectedVideoChunks)||e.fastStart.expectedVideoChunks<0)throw new TypeError("'expectedVideoChunks' must be a non-negative integer.")}if(e.audio){if(void 0===e.fastStart.expectedAudioChunks)throw new TypeError("'fastStart' is an object but is missing property 'expectedAudioChunks'.");if(!Number.isInteger(e.fastStart.expectedAudioChunks)||e.fastStart.expectedAudioChunks<0)throw new TypeError("'expectedAudioChunks' must be a non-negative integer.")}}else if(![!1,"in-memory","fragmented"].includes(e.fastStart))throw new TypeError("'fastStart' option must be false, 'in-memory', 'fragmented' or an object.");if(void 0!==e.minFragmentDuration&&(!Number.isFinite(e.minFragmentDuration)||e.minFragmentDuration<0))throw new TypeError("'minFragmentDuration' must be a non-negative number.")},ht=new WeakSet,lt=function(){var e;if(r(this,Ke).writeBox((e={holdsAvc:"avc"===r(this,Je).video?.codec,fragmented:"fragmented"===r(this,Je).fastStart}).fragmented?I("ftyp",[A("iso5"),v(512),A("iso5"),A("iso6"),A("mp41")]):I("ftyp",[A("isom"),v(512),A("isom"),e.holdsAvc?A("avc1"):[],A("mp41")])),o(this,Qe,r(this,Ke).pos),"in-memory"===r(this,Je).fastStart)o(this,Xe,V(!1));else if("fragmented"===r(this,Je).fastStart);else{if("object"==typeof r(this,Je).fastStart){let e=h(this,dt,ft).call(this);r(this,Ke).seek(r(this,Ke).pos+e)}o(this,Xe,V(!0)),r(this,Ke).writeBox(r(this,Xe))}h(this,zt,Et).call(this)},dt=new WeakSet,ft=function(){if("object"!=typeof r(this,Je).fastStart)return;let e=0,t=[r(this,Je).fastStart.expectedVideoChunks,r(this,Je).fastStart.expectedAudioChunks];for(let i of t)i&&(e+=8*Math.ceil(2/3*i),e+=4*i,e+=12*Math.ceil(2/3*i),e+=4*i,e+=8*i);return e+=4096,e},ut=new WeakSet,mt=function(){if(r(this,Je).video&&o(this,Ye,{id:1,info:{type:"video",codec:r(this,Je).video.codec,width:r(this,Je).video.width,height:r(this,Je).video.height,rotation:r(this,Je).video.rotation??0,decoderConfig:null},timescale:r(this,Je).video.frameRate??57600,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),r(this,Je).audio&&(o(this,Ze,{id:r(this,Je).video?2:1,info:{type:"audio",codec:r(this,Je).audio.codec,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate,decoderConfig:null},timescale:r(this,Je).audio.sampleRate,samples:[],finalizedChunks:[],currentChunk:null,firstDecodeTimestamp:void 0,lastDecodeTimestamp:-1,timeToSampleTable:[],compositionTimeOffsetTable:[],lastTimescaleUnits:null,lastSample:null,compactlyCodedChunkTable:[]}),"aac"===r(this,Je).audio.codec)){let e=h(this,pt,ct).call(this,2,r(this,Je).audio.sampleRate,r(this,Je).audio.numberOfChannels);r(this,Ze).info.decoderConfig={codec:r(this,Je).audio.codec,description:e,numberOfChannels:r(this,Je).audio.numberOfChannels,sampleRate:r(this,Je).audio.sampleRate}}},pt=new WeakSet,ct=function(e,t,i){let s=[96e3,88200,64e3,48e3,44100,32e3,24e3,22050,16e3,12e3,11025,8e3,7350].indexOf(t),a=i,r="";r+=e.toString(2).padStart(5,"0"),r+=s.toString(2).padStart(4,"0"),15===s&&(r+=t.toString(2).padStart(24,"0")),r+=a.toString(2).padStart(4,"0");let n=8*Math.ceil(r.length/8);r=r.padEnd(n,"0");let o=new Uint8Array(r.length/8);for(let e=0;e<r.length;e+=8)o[e/8]=parseInt(r.slice(e,e+8),2);return o},wt=new WeakSet,gt=function(e,t,i,s,a,r,n){let o=s/1e6,l=(s-(n??0))/1e6,d=a/1e6,f=h(this,kt,Tt).call(this,o,l,e);return o=f.presentationTimestamp,l=f.decodeTimestamp,r?.decoderConfig&&(null===e.info.decoderConfig?e.info.decoderConfig=r.decoderConfig:Object.assign(e.info.decoderConfig,r.decoderConfig)),{presentationTimestamp:o,decodeTimestamp:l,duration:d,data:t,size:t.byteLength,type:i,timescaleUnitsToNextSample:O(d,e.timescale)}},bt=new WeakSet,yt=function(e,t){"fragmented"!==r(this,Je).fastStart&&e.samples.push(t);const i=O(t.presentationTimestamp-t.decodeTimestamp,e.timescale);if(null!==e.lastTimescaleUnits){let s=O(t.decodeTimestamp,e.timescale,!1),a=Math.round(s-e.lastTimescaleUnits);if(e.lastTimescaleUnits+=a,e.lastSample.timescaleUnitsToNextSample=a,"fragmented"!==r(this,Je).fastStart){let t=M(e.timeToSampleTable);1===t.sampleCount?(t.sampleDelta=a,t.sampleCount++):t.sampleDelta===a?t.sampleCount++:(t.sampleCount--,e.timeToSampleTable.push({sampleCount:2,sampleDelta:a}));const s=M(e.compositionTimeOffsetTable);s.sampleCompositionTimeOffset===i?s.sampleCount++:e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i})}}else e.lastTimescaleUnits=0,"fragmented"!==r(this,Je).fastStart&&(e.timeToSampleTable.push({sampleCount:1,sampleDelta:O(t.duration,e.timescale)}),e.compositionTimeOffsetTable.push({sampleCount:1,sampleCompositionTimeOffset:i}));e.lastSample=t;let s=!1;if(e.currentChunk){let i=t.presentationTimestamp-e.currentChunk.startTimestamp;if("fragmented"===r(this,Je).fastStart){let a=r(this,Ye)??r(this,Ze);const n=r(this,Je).minFragmentDuration??1;e===a&&"key"===t.type&&i>=n&&(s=!0,h(this,St,xt).call(this))}else s=i>=.5}else s=!0;s&&(e.currentChunk&&h(this,Ct,vt).call(this,e),e.currentChunk={startTimestamp:t.presentationTimestamp,samples:[]}),e.currentChunk.samples.push(t)},kt=new WeakSet,Tt=function(e,t,i){const s="strict"===r(this,Je).firstTimestampBehavior,a=-1===i.lastDecodeTimestamp;if(s&&a&&0!==t)throw new Error(`The first chunk for your media track must have a timestamp of 0 (received DTS=${t}).Non-zero first timestamps are often caused by directly piping frames or audio data from a MediaStreamTrack into the encoder. Their timestamps are typically relative to the age of thedocument, which is probably what you want.\n\nIf you want to offset all timestamps of a track such that the first one is zero, set firstTimestampBehavior: 'offset' in the options.\n`);if("offset"===r(this,Je).firstTimestampBehavior||"cross-track-offset"===r(this,Je).firstTimestampBehavior){let s;void 0===i.firstDecodeTimestamp&&(i.firstDecodeTimestamp=t),s="offset"===r(this,Je).firstTimestampBehavior?i.firstDecodeTimestamp:Math.min(r(this,Ye)?.firstDecodeTimestamp??1/0,r(this,Ze)?.firstDecodeTimestamp??1/0),t-=s,e-=s}if(t<i.lastDecodeTimestamp)throw new Error(`Timestamps must be monotonically increasing (DTS went from ${1e6*i.lastDecodeTimestamp} to ${1e6*t}).`);return i.lastDecodeTimestamp=t,{presentationTimestamp:e,decodeTimestamp:t}},Ct=new WeakSet,vt=function(e){if("fragmented"===r(this,Je).fastStart)throw new Error("Can't finalize individual chunks if 'fastStart' is set to 'fragmented'.");if(e.currentChunk)if(e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),0!==e.compactlyCodedChunkTable.length&&M(e.compactlyCodedChunkTable).samplesPerChunk===e.currentChunk.samples.length||e.compactlyCodedChunkTable.push({firstChunk:e.finalizedChunks.length,samplesPerChunk:e.currentChunk.samples.length}),"in-memory"!==r(this,Je).fastStart){e.currentChunk.offset=r(this,Ke).pos;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null;h(this,zt,Et).call(this)}else e.currentChunk.offset=0},St=new WeakSet,xt=function(e=!0){if("fragmented"!==r(this,Je).fastStart)throw new Error("Can't finalize a fragment unless 'fastStart' is set to 'fragmented'.");let t=[r(this,Ye),r(this,Ze)].filter((e=>e&&e.currentChunk));if(0===t.length)return;let i=(s=this,a=it,{set _(e){o(s,a,e,n)},get _(){return r(s,a,l)}})._++;var s,a,n,l;if(1===i){let e=F(t,r(this,et),!0);r(this,Ke).writeBox(e)}let d=r(this,Ke).pos,f=ce(i,t);r(this,Ke).writeBox(f);{let e=V(!1),i=0;for(let e of t)for(let t of e.currentChunk.samples)i+=t.size;let s=r(this,Ke).measureBox(e)+i;s>=2**32&&(e.largeSize=!0,s=r(this,Ke).measureBox(e)+i),e.size=s,r(this,Ke).writeBox(e)}for(let e of t){e.currentChunk.offset=r(this,Ke).pos,e.currentChunk.moofOffset=d;for(let t of e.currentChunk.samples)r(this,Ke).write(t.data),t.data=null}let u=r(this,Ke).pos;r(this,Ke).seek(r(this,Ke).offsets.get(f));let m=ce(i,t);r(this,Ke).writeBox(m),r(this,Ke).seek(u);for(let e of t)e.finalizedChunks.push(e.currentChunk),r(this,tt).push(e.currentChunk),e.currentChunk=null;e&&h(this,zt,Et).call(this)},zt=new WeakSet,Et=function(){r(this,Ke)instanceof Ge&&r(this,Ke).flush()},At=new WeakSet,Mt=function(){if(r(this,rt))throw new Error("Cannot add new video or audio chunks after the file has been finalized.")},Wt=l,((a,r,n,o)=>{if(r&&"object"==typeof r||"function"==typeof r)for(let h of i(r))s.call(a,h)||h===n||e(a,h,{get:()=>r[h],enumerable:!(o=t(r,h))||o.enumerable});return a})(e({},"__esModule",{value:!0}),Wt)})();"object"==typeof module&&"object"==typeof module.exports&&Object.assign(module.exports,Mp4Muxer);
+</script>
+<script>
+/* the clip maker, built into the page (a separate file did not load on some phones) */
+/* Clip maker for the Psalter page: pick a reading and a span of verses, and the phone makes a short video of it
+   (the recording, the words on screen as they are spoken, a still background) to save and post. Everything runs on
+   the viewer's own device: the audio is the page's own published file, the frames are drawn on a canvas, and the
+   browser's MediaRecorder joins them in real time. clips.json gives each spoken piece's start, end, verse and words.
+   Lives in the top page (the one that can save files); the Revelation and Judges tabs open it with
+   parent.ClipMaker.open(file). */
+(() => {
+  const $ = id => document.getElementById(id);
+  const COL = {
+    psalter: { name: 'THE PSALTER', mark: '\u05ea\u05d4\u05dc\u05d9\u05dd', top: '#18201b', bottom: '#2b382f', glow: '#d7a447', ink: '#f1ecdf', accent: '#e0b25a', soft: '#a9b3a9' },
+    revelation: { name: 'REVELATION', mark: '\u1f08\u03c0\u03bf\u03ba\u03ac\u03bb\u03c5\u03c8\u03b9\u03c2', top: '#120a09', bottom: '#341611', glow: '#e0674a', ink: '#f3e7e1', accent: '#ef8a6c', soft: '#b39f96' },
+    mighty: { name: 'THE MIGHTY MEN OF DAVID', mark: '\u05d4\u05d2\u05d1\u05d5\u05e8\u05d9\u05dd', top: '#0b0b0c', bottom: '#2c2416', glow: '#d6a85a', ink: '#f2ede2', accent: '#e2b86e', soft: '#a9a294' },
+    judges: { name: 'JUDGES BY THE FIRE', mark: '\u05e9\u05d5\u05e4\u05d8\u05d9\u05dd', top: '#110a05', bottom: '#38200d', glow: '#f0a04b', ink: '#f6ead6', accent: '#f6b465', soft: '#b8a389' },
+    matthew: { name: 'MATTHEW', mark: '\u05de\u05ea\u05d9', top: '#0e120b', bottom: '#2a331c', glow: '#c3cf86', ink: '#eef0e2', accent: '#d2dc98', soft: '#a7ad97' },
+    prophets: { name: 'THE PROPHETS', mark: '\u05e0\u05d1\u05d9\u05d0\u05d9\u05dd', top: '#140a0d', bottom: '#3a1a23', glow: '#e08a9f', ink: '#f6e9ec', accent: '#eaa3b4', soft: '#b39aa1' },
+    proverbs: { name: 'PROVERBS', mark: '\u05de\u05e9\u05dc\u05d9', top: '#0a1312', bottom: '#183330', glow: '#8fcbc1', ink: '#e9f3f1', accent: '#a6d8cf', soft: '#9fb3af' },
+    prayers: { name: 'PRAYERS', mark: '\u05ea\u05e4\u05d9\u05dc\u05d5\u05ea', top: '#0e1120', bottom: '#232b4a', glow: '#9fb2ec', ink: '#eef0f8', accent: '#b9c7f2', soft: '#a3a9bd' },
+  };
+  const colOf = f => f.startsWith('revelation/') ? 'revelation' : f.startsWith('judges/') ? 'judges' : f.startsWith('prayers/') ? 'prayers' : f.startsWith('matthew/') ? 'matthew' : f.startsWith('proverbs/') ? 'proverbs' : f.startsWith('prophets/') ? 'prophets' : f.startsWith('mighty/') ? 'mighty' : 'psalter';
+  let DATA = null, file = null, units = [], shape = 'square', busy = false, stopFn = null, lastBlob = null, lastExt = 'mp4';
+  const bytesCache = new Map();
+  // paintings (ART / TRACKS live in the page's main script): the reading's painting, loaded before any frame is drawn
+  const tall0 = (W, H) => H > W;
+  let artImg = null;
+  function artFor(f, t0) {   // the painting for this reading where the clip starts (psalms with several scenes)
+    try { if (DATA && typeof CLIPV !== 'undefined' && !CLIPV) CLIPV = DATA;
+      const t = TRACKS.find(x => x.file === f);
+      if (!t) { const m = /^([a-z]+)\/audio\/([^/]+)\.mp3$/.exec(f); return m ? m[1] + '/art/' + m[2] + '.jpg' : null; }   // other books: <book>/art/<audio name>.jpg, if it exists
+      return typeof ART !== 'undefined' ? (t0 != null && typeof sceneAt === 'function' ? sceneAt(t, t0, 0) : ART[t.n] || null) : null; } catch (e) { return null; }
+  }
+  function loadArt(f, t0) {
+    const src = artFor(f, t0);
+    if (!src) { artImg = null; return Promise.resolve(); }
+    if (artImg && artImg.dataset.for === f && artImg.dataset.src === src) return artImg.complete ? Promise.resolve() : new Promise(r => { artImg.addEventListener('load', r, { once: true }); artImg.addEventListener('error', r, { once: true }); });
+    const im = new Image(); im.dataset.for = f; im.dataset.src = src; artImg = im;
+    return new Promise(r => { im.onload = () => { r(); if (!busy && file === f) drawStill(); }; im.onerror = () => r(); im.src = src; });
+  }
+
+  // ------------------------------------------------------------------ data
+  async function data() {
+    if (!DATA) { const r = await fetch('clip/clips.json'); if (!r.ok) throw new Error('clips ' + r.status); DATA = await r.json(); }
+    return DATA;
+  }
+  function unitsOf(f) {
+    const segs = DATA[f].segs, out = [], idx = new Map();
+    for (const [s, e, v, t] of segs) {
+      if (!idx.has(v)) { idx.set(v, out.length); out.push({ v, s, e, text: t }); }
+      else { const u = out[idx.get(v)]; u.s = Math.min(u.s, s); u.e = Math.max(u.e, e); }
+    }
+    return out;
+  }
+  function unitLabel(f, u) {
+    const t = u.text.length > 46 ? u.text.slice(0, 44).replace(/\s+\S*$/, '') + '\u2026' : u.text;
+    if (u.v === 'title') return 'Opening \u00b7 ' + t;
+    if (DATA[f].unit === 'line') return 'Part ' + u.v + ' \u00b7 ' + t;
+    if (u.v.includes(':')) { const [c, v] = u.v.split(':'); return (f.startsWith('matthew/') ? 'Matthew ' + c + ':' + v : 'Psalm ' + c + ', verse ' + v) + ' \u00b7 ' + t; }
+    return 'Verse ' + u.v + ' \u00b7 ' + t;
+  }
+  function reference(f, a, b) {           // the heading on the video
+    const d = DATA[f], ua = units[a], ub = units[b];
+    if (d.unit === 'line') return d.title.split(' \u00b7 ').pop();
+    const vs = units.slice(a, b + 1).filter(u => u.v !== 'title');
+    if (!vs.length) return d.title;
+    const all = a === 0 && b === units.length - 1;
+    if (f.startsWith('matthew/')) {                     // labels are chapter:verse and can cross chapters
+      const [c1, v1] = vs[0].v.split(':'), [c2, v2] = vs[vs.length - 1].v.split(':');
+      if (c1 === c2) return 'Matthew ' + c1 + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+      return 'Matthew ' + c1 + ':' + v1 + '\u2013' + c2 + ':' + v2;
+    }
+    if (f.includes('042-043')) {
+      if (all) return 'Psalms 42\u201343';
+      const [c1, v1] = vs[0].v.split(':'), [c2, v2] = vs[vs.length - 1].v.split(':');
+      if (c1 === c2) return 'Psalm ' + c1 + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);
+      return 'Psalms ' + c1 + ':' + v1 + '\u2013' + c2 + ':' + v2;
+    }
+    const v1 = vs[0].v, v2 = vs[vs.length - 1].v;
+    if (all && !d.ref) return d.title;
+    return (d.ref || d.title) + ':' + v1 + (v1 === v2 ? '' : '\u2013' + v2);   // d.ref: a passage outside the Psalms ("Matthew 6")
+  }
+  function span(a, b) {                    // the clip's time range in the track
+    const segs = DATA[file].segs, s0 = units[a].s, e0 = units[b].e;
+    const nextStart = segs.map(x => x[0]).filter(x => x > e0 + 0.05).sort((x, y) => x - y)[0];
+    const tail = nextStart === undefined ? 2.2 : Math.max(0.5, Math.min(2.2, nextStart - e0 - 0.15));
+    return { t0: Math.max(0, s0 - 0.6), t1: e0 + tail };
+  }
+
+  // ------------------------------------------------------------------ audio: decode only the frames around the clip
+  async function fileBytes(f) {
+    if (!bytesCache.has(f)) {
+      const r = await fetch(f); if (!r.ok) throw new Error('audio ' + r.status);
+      bytesCache.clear(); bytesCache.set(f, await r.arrayBuffer());
+    }
+    return bytesCache.get(f);
+  }
+  const BR = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320], SRS = [44100, 48000, 32000];
+  function frames(buf) {                   // byte offset of every MPEG-1 Layer III frame
+    const u = new Uint8Array(buf); let p = 0;
+    if (u[0] === 0x49 && u[1] === 0x44 && u[2] === 0x33) p = 10 + ((u[6] << 21) | (u[7] << 14) | (u[8] << 7) | u[9]);
+    const offs = []; let sr = 44100;
+    while (p + 4 <= u.length) {
+      if (u[p] === 0xff && (u[p + 1] & 0xfe) === 0xfa) {
+        const bi = u[p + 2] >> 4, si = (u[p + 2] >> 2) & 3, pad = (u[p + 2] >> 1) & 1;
+        if (bi > 0 && bi < 15 && si < 3) { sr = SRS[si]; const len = Math.floor(144000 * BR[bi] / sr) + pad; offs.push(p); p += len; continue; }
+      }
+      p++;
+    }
+    return { offs, sr };
+  }
+  async function decodeSpan(ctx, f, t0, t1) {
+    const buf = await fileBytes(f);
+    try {
+      const { offs, sr } = frames(buf);
+      const fd = 1152 / sr, delay = 1105 / sr;            // LAME's encoder delay; frame 0 is its info frame
+      const j0 = Math.max(1, Math.floor((t0 + delay) / fd) + 1 - 4), j1 = Math.min(offs.length - 1, Math.ceil((t1 + delay) / fd) + 1 + 2);
+      if (offs.length < 50 || j1 <= j0) throw new Error('frames');
+      const slice = buf.slice(offs[j0], j1 + 1 < offs.length ? offs[j1 + 1] : buf.byteLength);
+      const ab = await new Promise((ok, bad) => ctx.decodeAudioData(slice, ok, bad));
+      return { ab, at: (j0 - 1) * fd - delay };          // track time of the slice's first sample
+    } catch (e) {
+      const ab = await new Promise((ok, bad) => ctx.decodeAudioData(buf.slice(0), ok, bad));
+      return { ab, at: 0 };
+    }
+  }
+
+  // ------------------------------------------------------------------ drawing
+  function wrap(g, text, maxW) {
+    const words = text.split(/\s+/), lines = []; let line = '';
+    for (const w of words) { const t = line ? line + ' ' + w : w; if (g.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+    if (line) lines.push(line); return lines;
+  }
+  function spaced(s) { return s.split('').join('\u200a'); }
+  function drawFrame(g, W, H, col, ref, segs, t, t0, t1) {
+    const C = COL[col], k = W / 1080;
+    const bg = g.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, C.top); bg.addColorStop(1, C.bottom);
+    g.fillStyle = bg; g.fillRect(0, 0, W, H);
+    const art = artImg && artImg.complete && artImg.naturalWidth && artImg.dataset.for === file ? artImg : null;
+    if (art) {   // the psalm's painting: cover-cropped, a slow drift and zoom, darkened under the words
+      const iw = art.naturalWidth, ih = art.naturalHeight, z = 1.04 + 0.05 * Math.min(1, Math.max(0, (t - t0) / Math.max(1, t1 - t0)));
+      const sc = Math.max(W / iw, H / ih) * z, dw = iw * sc, dh = ih * sc;
+      g.drawImage(art, (W - dw) / 2, (H - dh) * (tall0(W, H) ? 0.5 : 0.62), dw, dh);
+      const sh = g.createLinearGradient(0, 0, 0, H);
+      sh.addColorStop(0, C.top + 'b0'); sh.addColorStop(0.35, C.top + '94'); sh.addColorStop(0.7, C.top + 'a0'); sh.addColorStop(1, C.top + 'd0');
+      g.fillStyle = sh; g.fillRect(0, 0, W, H);
+    }
+    const gx = W * (0.5 + 0.08 * Math.sin((t - t0) * 0.11)), gy = H * (0.58 + 0.04 * Math.cos((t - t0) * 0.07));
+    const gl = g.createRadialGradient(gx, gy, 0, gx, gy, W * 0.75);
+    gl.addColorStop(0, C.glow + '30'); gl.addColorStop(1, C.glow + '00'); g.fillStyle = gl; g.fillRect(0, 0, W, H);
+    const tall = H > W, top = tall ? H * 0.13 : H * 0.11;
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    g.fillStyle = C.soft; g.font = `700 ${Math.round((tall ? 34 : 28) * k)}px "Alegreya Sans", "Segoe UI", sans-serif`;
+    g.fillText(spaced(C.name), W / 2, top);
+    g.fillStyle = C.accent; g.font = `${Math.round((tall ? 84 : 76) * k)}px Bellefair, "Times New Roman", serif`;
+    g.fillText(ref, W / 2, top + 92 * k);
+    g.strokeStyle = C.accent + '66'; g.lineWidth = 2 * k; g.beginPath(); g.moveTo(W / 2 - 60 * k, top + 128 * k); g.lineTo(W / 2 + 60 * k, top + 128 * k); g.stroke();
+    // the words being spoken: the latest piece that has begun, held through short pauses, crossfaded
+    let cur = -1;
+    for (let i = 0; i < segs.length; i++) if (segs[i][0] <= t + 0.12) cur = i;
+    const show = i => {
+      if (i < 0) return 0;
+      const [s, e] = segs[i], next = segs[i + 1] ? segs[i + 1][0] : Infinity;
+      const end = Math.min(next - 0.12, e + 3.0);
+      const a = Math.min(1, (t - (s - 0.12)) / 0.3), b = Math.min(1, (end - t) / 0.35);
+      return Math.max(0, Math.min(a, b));
+    };
+    const area = { x: W * 0.09, w: W * 0.82, cy: tall ? H * 0.52 : H * 0.56, h: tall ? H * 0.5 : H * 0.52 };
+    for (const i of [cur - 1, cur]) {
+      const al = show(i); if (al <= 0.01) continue;
+      let size = (tall ? 74 : 58) * k, lines;
+      for (;;) {
+        g.font = `${Math.round(size)}px Alegreya, Georgia, serif`;
+        lines = wrap(g, segs[i][3], area.w);
+        if (lines.length * size * 1.34 <= area.h || size < 34 * k) break;
+        size *= 0.92;
+      }
+      g.globalAlpha = al; g.fillStyle = C.ink;
+      const lh = size * 1.34, y0 = area.cy - (lines.length - 1) * lh / 2 + size * 0.35;
+      lines.forEach((ln, j) => g.fillText(ln, W / 2, y0 + j * lh));
+      g.globalAlpha = 1;
+    }
+    const by = H - (tall ? 150 : 96) * k, bw = W * 0.6, bx = (W - bw) / 2, p = Math.max(0, Math.min(1, (t - t0) / (t1 - t0)));
+    g.fillStyle = C.soft + '40'; g.fillRect(bx, by, bw, 3 * k); g.fillStyle = C.accent; g.fillRect(bx, by, bw * p, 3 * k);
+    g.fillStyle = C.soft; g.font = `${Math.round(40 * k)}px Bellefair, "Times New Roman", serif`;
+    g.fillText(C.mark, W / 2, by + 62 * k);
+  }
+
+  // ------------------------------------------------------------------ the dialog
+  const fmt = s => { s = Math.max(0, Math.round(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  function fillReadings() {
+    const sel = $('cm-reading'); sel.innerHTML = '';
+    const groups = { psalter: 'The Psalter', revelation: 'Revelation', judges: 'Judges by the Fire', prayers: 'Prayers', matthew: 'Matthew', proverbs: 'Proverbs', prophets: 'The Prophets', mighty: 'The Mighty Men of David' };
+    for (const [key, label] of Object.entries(groups)) {
+      const og = document.createElement('optgroup'); og.label = label;
+      for (const f of Object.keys(DATA)) if (colOf(f) === key) { const o = document.createElement('option'); o.value = f; o.textContent = DATA[f].title; og.appendChild(o); }
+      sel.appendChild(og);
+    }
+  }
+  function fillUnits(keepA, keepB) {
+    units = unitsOf(file);
+    for (const id of ['cm-from', 'cm-to']) {
+      const sel = $(id); sel.innerHTML = '';
+      units.forEach((u, i) => { const o = document.createElement('option'); o.value = i; o.textContent = unitLabel(file, u); sel.appendChild(o); });
+    }
+    const first = Math.min(units.length - 1, units[0].v === 'title' ? 1 : 0);
+    const a = keepA != null ? keepA : first;
+    let b = keepB != null ? keepB : a;
+    if (keepB == null) while (b + 1 < units.length && units[b + 1].e - units[a].s < 28) b++;
+    $('cm-from').value = a; $('cm-to').value = b; refresh();
+  }
+  function sel() { const a = +$('cm-from').value, b = Math.max(a, +$('cm-to').value); return { a, b }; }
+  function refresh() {
+    const { a, b } = sel(); $('cm-to').value = b;
+    const { t0, t1 } = span(a, b);
+    $('cm-len').textContent = 'Clip length ' + fmt(t1 - t0) + '';
+    showResult(false); drawStill();
+  }
+  function canvasFor() {
+    const c = $('cm-canvas'), W = 1080, H = shape === 'tall' ? 1920 : 1080;
+    if (c.width !== W || c.height !== H) { c.width = W; c.height = H; }
+    c.classList.toggle('tall', shape === 'tall'); return c;
+  }
+  function segsIn(t0, t1) { return DATA[file].segs.filter(s => s[1] > t0 && s[0] < t1).sort((x, y) => x[0] - y[0]); }
+  function drawStill() {
+    const { a, b } = sel(), { t0, t1 } = span(a, b), c = canvasFor(), segs = segsIn(t0, t1);
+    const t = segs.length ? segs[0][0] + 0.5 : t0;
+    drawFrame(c.getContext('2d'), c.width, c.height, colOf(file), reference(file, a, b), segs, t, t0, t1);
+  }
+  function setBusy(on, label) {
+    busy = on; for (const id of ['cm-reading', 'cm-from', 'cm-to', 'cm-square', 'cm-tall', 'cm-make', 'cm-listen']) $(id).disabled = on;
+    $('cm-stop').hidden = !on; $('cm-progress').hidden = !on; if (label) $('cm-status').textContent = label;
+  }
+  function showResult(on) { $('cm-result').hidden = !on; if (!on) { $('cm-saved').textContent = ''; } }
+
+  // Picture bitrate: 4 Mbps for short clips; long ones are capped so the whole file stays near 40 MB. A full chapter at
+  // 4 Mbps came to about 120 MB, which Facebook's iPhone share sheet takes and then silently never posts. The picture is
+  // mostly still text, so it stays sharp at the lower rate.
+  function vbr(dur) { return Math.round(Math.max(1000000, Math.min(4000000, 40 * 8e6 / Math.max(1, dur) - 192000))); }
+  // Fast path: build the MP4 directly with the phone's own video and audio encoders (WebCodecs) instead of
+  // recording it while it plays. Same picture (1080 wide, 30 fps, 4 Mbps H.264) and sound (AAC 192 kbps),
+  // usually several times faster than real time, and silent.
+  async function fastConfig(W, H, sr) {
+    if (!(window.VideoEncoder && window.AudioEncoder && window.VideoFrame && window.AudioData && window.OfflineAudioContext && window.Mp4Muxer)) return null;
+    let v = null;
+    for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42E028']) {
+      try { const r = await VideoEncoder.isConfigSupported({ codec, width: W, height: H, bitrate: 4000000, framerate: 30 }); if (r.supported) { v = r.config; break; } } catch (e) {}
+    }
+    if (!v && window.__clipTestOpus) {
+      try { const r = await VideoEncoder.isConfigSupported({ codec: 'vp09.00.40.08', width: W, height: H, bitrate: 4000000, framerate: 30 }); if (r.supported) v = r.config; } catch (e) {}
+    }
+    if (!v) return null;
+    let a = null;
+    for (const rate of [sr, 48000, 44100]) {
+      try { const r = await AudioEncoder.isConfigSupported({ codec: 'mp4a.40.2', sampleRate: rate, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) { a = r.config; break; } } catch (e) {}
+    }
+    if (a && a.codec.startsWith('mp4a')) a = { ...a, aac: { format: 'aac' } };
+    if (!a && window.__clipTestOpus) {
+      try { const r = await AudioEncoder.isConfigSupported({ codec: 'opus', sampleRate: 48000, numberOfChannels: 2, bitrate: 192000 }); if (r.supported) a = r.config; } catch (e) {}
+    }
+    return a ? { v, a } : null;
+  }
+  async function fastMake(cfg, ab, at, t0, t1, c, col, ref, segs, isStopped) {
+    const dur = t1 - t0, sr = cfg.a.sampleRate, W = c.width, H = c.height, g = c.getContext('2d');
+    // the sound: the clip with its fades, rendered offline (resampled to the encoder's rate if needed)
+    const off = new OfflineAudioContext(2, Math.ceil(dur * sr), sr);
+    const src = off.createBufferSource(); src.buffer = ab; const gn = off.createGain(); src.connect(gn); gn.connect(off.destination);
+    const fin = 0.35, fout = Math.min(1.6, dur * 0.25);
+    gn.gain.setValueAtTime(0, 0); gn.gain.linearRampToValueAtTime(1, fin); gn.gain.setValueAtTime(1, Math.max(fin, dur - fout)); gn.gain.linearRampToValueAtTime(0, dur);
+    src.start(0, Math.max(0, t0 - at), dur);
+    const pcm = await off.startRendering();
+    const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), fastStart: 'in-memory', firstTimestampBehavior: 'offset',
+      video: { codec: cfg.v.codec.startsWith('vp09') ? 'vp9' : 'avc', width: W, height: H, frameRate: 30 },
+      audio: { codec: cfg.a.codec === 'opus' ? 'opus' : 'aac', numberOfChannels: 2, sampleRate: sr } });
+    let fail = null;
+    const ve = new VideoEncoder({ output: (ch, m) => muxer.addVideoChunk(ch, m), error: e => { fail = e; } });
+    ve.configure({ ...cfg.v, bitrate: vbr(dur), framerate: 30 });
+    const isAac = cfg.a.codec.startsWith('mp4a'), RATES = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350];
+    let audioN = 0, metaSent = false;
+    const ascFor = () => { const fi = Math.max(0, RATES.indexOf(sr)); return new Uint8Array([(2 << 3) | (fi >> 1), ((fi & 1) << 7) | (2 << 3)]); };   // AAC-LC, stereo
+    const ae = new AudioEncoder({ output: (ch, m) => {
+      let data = new Uint8Array(ch.byteLength); ch.copyTo(data);
+      if (isAac && data.length > 7 && data[0] === 0xFF && (data[1] & 0xF6) === 0xF0) data = data.subarray((data[1] & 1) ? 7 : 9);   // ADTS header off
+      let meta;
+      if (!metaSent) {
+        const dc = (m && m.decoderConfig) || {}, desc = dc.description, ok = desc && desc.byteLength >= 2;
+        meta = { decoderConfig: { codec: cfg.a.codec, sampleRate: sr, numberOfChannels: 2, ...dc, description: isAac ? (ok ? desc : ascFor()) : desc } };
+        if (!isAac && !desc) meta = undefined;
+        metaSent = true;
+      }
+      audioN++;
+      muxer.addAudioChunkRaw(data, ch.type, ch.timestamp, ch.duration || Math.round(1024 / sr * 1e6), meta);
+    }, error: e => { fail = e; } });
+    ae.configure(cfg.a);
+    const L = pcm.getChannelData(0), R = pcm.numberOfChannels > 1 ? pcm.getChannelData(1) : pcm.getChannelData(0), N = pcm.length, B = 4096;
+    for (let i = 0; i < N; i += B) {
+      const n = Math.min(B, N - i), buf = new Float32Array(n * 2); buf.set(L.subarray(i, i + n), 0); buf.set(R.subarray(i, i + n), n);
+      const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: 2, timestamp: Math.round(i / sr * 1e6), data: buf });
+      ae.encode(ad); ad.close();
+    }
+    const F = Math.ceil(dur * 30), us = 1e6 / 30;
+    for (let n = 0; n < F; n++) {
+      if (isStopped()) { try { ve.close(); ae.close(); } catch (e) {} return null; }
+      if (fail) throw fail;
+      drawFrame(g, W, H, col, ref, segs, t0 + n / 30, t0, t1);
+      const fr = new VideoFrame(c, { timestamp: Math.round(n * us), duration: Math.round(us) });
+      ve.encode(fr, { keyFrame: n % 60 === 0 }); fr.close();
+      while (ve.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 4));
+      if (n % 6 === 0) { $('cm-bar').value = n / F; $('cm-time').textContent = fmt(n / 30) + ' of ' + fmt(dur); await new Promise(r => setTimeout(r, 0)); }
+    }
+    await ve.flush(); await ae.flush(); if (fail) throw fail;
+    if (!audioN) throw new Error('no audio chunks');
+    muxer.finalize();
+    return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+  }
+
+  // Does the finished video really carry the sound? Decode it back and look.
+  async function hasSound(blob) {
+    if (window.__clipTestSilent) return false;
+    let ctx = null;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; ctx = new AC();
+      const buf = await Promise.race([ctx.decodeAudioData(await blob.arrayBuffer()), new Promise((_, no) => setTimeout(() => no(new Error('timeout')), 20000))]);
+      const d = buf.getChannelData(0); let pk = 0;
+      for (let i = 0; i < d.length; i += 37) { const v = Math.abs(d[i]); if (v > pk) pk = v; }
+      return pk > 0.003;
+    } catch (e) { console.log('[clip sound check]', e); return null; }
+    finally { try { ctx && ctx.close(); } catch (e) {} }
+  }
+
+  async function run(record) {
+    if (busy) return;
+    const { a, b } = sel(), { t0, t1 } = span(a, b), dur = t1 - t0, col = colOf(file), ref = reference(file, a, b), segs = segsIn(t0, t1);
+    showResult(false);
+    if (record && !window.VideoEncoder && !(window.MediaRecorder && HTMLCanvasElement.prototype.captureStream)) {
+      $('cm-status').textContent = 'This phone can\u2019t make videos in this view. Open the Psalter in Safari or Chrome and try again.'; return;
+    }
+    pauseAll();
+    const AC = window.AudioContext || window.webkitAudioContext, ctx = new AC();
+    try { await ctx.resume(); } catch (e) {}
+    setBusy(true, 'Getting the recording ready\u2026');
+    let wake = null; try { wake = await navigator.wakeLock?.request('screen'); } catch (e) {}
+    try {
+      await Promise.all(['76px Bellefair', '58px Alegreya', '700 26px "Alegreya Sans"'].map(f => document.fonts?.load(f).catch(() => {})));
+      await loadArt(file, t0);
+      const { ab, at } = await decodeSpan(ctx, file, t0, t1);
+      const c = canvasFor(), g = c.getContext('2d');
+      if (record) {
+        const cfg = await fastConfig(c.width, c.height, ab.sampleRate);
+        if (cfg) {
+          let stopped = false; stopFn = () => { stopped = true; };
+          $('cm-status').textContent = 'Making the video\u2026 Keep this screen open until it finishes.';
+          let blob;
+          try { blob = await fastMake(cfg, ab, at, t0, t1, c, col, ref, segs, () => stopped); }
+          catch (e) { console.log('[clip fast]', e); blob = undefined; }
+          stopFn = null;
+          if (blob === null) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; return; }
+          if (blob) { $('cm-status').textContent = 'Checking the sound\u2026'; const ok = await hasSound(blob); if (ok !== true) { console.log('[clip fast] silent, recording instead'); blob = undefined; } }
+          if (blob) {
+            window.__clipPath = 'fast';
+            lastBlob = blob; lastExt = 'mp4';
+            const v = $('cm-video'); if (v.src) URL.revokeObjectURL(v.src); v.src = URL.createObjectURL(blob);
+            $('cm-status').textContent = 'Your video is ready (' + fmt(dur) + ', ' + (blob.size / 1048576).toFixed(1) + ' MB).';
+            showResult(true); return;
+          }
+          // the fast way failed on this phone: fall through and record it as it plays, silently
+        }
+        window.__clipPath = 'record';
+      }
+      const src = ctx.createBufferSource(); src.buffer = ab;
+      const gain = ctx.createGain(); src.connect(gain);
+      const dest = ctx.createMediaStreamDestination(); gain.connect(dest);
+      if (record) { const hush = ctx.createGain(); hush.gain.value = 0; gain.connect(hush); hush.connect(ctx.destination); }   // making the video: silent
+      else gain.connect(ctx.destination);
+      let rec = null, chunks = [], mime = '';
+      if (record) {
+        const types = ['video/mp4;codecs=avc1.42E01E,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+        mime = types.find(t => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+        const stream = new MediaStream([...c.captureStream(30).getVideoTracks(), ...dest.stream.getAudioTracks()]);
+        rec = new MediaRecorder(stream, { ...(mime ? { mimeType: mime } : {}), videoBitsPerSecond: vbr(dur), audioBitsPerSecond: 192000 });
+        rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+        drawFrame(g, c.width, c.height, col, ref, segs, t0, t0, t1);
+        rec.start(500);
+      }
+      const T0 = ctx.currentTime + (record ? 0.35 : 0.1), fin = 0.35, fout = Math.min(1.6, dur * 0.25);
+      gain.gain.setValueAtTime(0, T0); gain.gain.linearRampToValueAtTime(1, T0 + fin);
+      gain.gain.setValueAtTime(1, T0 + dur - fout); gain.gain.linearRampToValueAtTime(0, T0 + dur);
+      src.start(T0, Math.max(0, t0 - at), dur + 0.05);
+      $('cm-status').textContent = record ? 'Making the video (quietly). Keep this screen open until it finishes.' : 'Playing the clip.';
+      let stopped = false;
+      await new Promise(done => {
+        stopFn = () => { stopped = true; done(); };
+        const step = () => {
+          if (stopped) return;
+          const el = Math.max(0, ctx.currentTime - T0), t = t0 + Math.min(el, dur);
+          drawFrame(g, c.width, c.height, col, ref, segs, t, t0, t1);
+          $('cm-bar').value = Math.min(1, el / dur); $('cm-time').textContent = fmt(el) + ' of ' + fmt(dur);
+          if (el >= dur + 0.25) { done(); return; }
+          requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+      stopFn = null; try { src.stop(); } catch (e) {}
+      if (record) {
+        const blob = await new Promise(ok => { rec.onstop = () => ok(new Blob(chunks, { type: (mime || 'video/webm').split(';')[0] })); rec.stop(); });
+        if (stopped) { $('cm-status').textContent = 'Stopped. Nothing was saved.'; }
+        else {
+          if (await hasSound(blob) === false) { $('cm-status').textContent = 'That video came out without sound, so it wasn\u2019t kept. Close the clip maker, then try again. If it happens again, tell Aaron.'; return; }
+          lastBlob = blob; lastExt = (mime || 'video/webm').includes('mp4') ? 'mp4' : 'webm';
+          const v = $('cm-video'); if (v.src) URL.revokeObjectURL(v.src); v.src = URL.createObjectURL(blob);
+          $('cm-status').textContent = 'Your video is ready (' + fmt(dur) + ', ' + (blob.size / 1048576).toFixed(1) + ' MB).';
+          showResult(true);
+        }
+      } else $('cm-status').textContent = stopped ? '' : 'That\u2019s the clip. Press \u201cMake the video\u201d when it sounds right.';
+    } catch (e) {
+      console.log('[clip]', e);
+      $('cm-status').textContent = 'That didn\u2019t work: the recording couldn\u2019t be loaded. Check the connection and try again.';
+    } finally {
+      try { wake && wake.release(); } catch (e) {}
+      try { ctx.close(); } catch (e) {}
+      setBusy(false); drawStill();
+    }
+  }
+  function fileName() {
+    const { a, b } = sel(); return reference(file, a, b).replace(/[:\u2013]/g, m => m === ':' ? '.' : '-').replace(/[^\w .\-]/g, '') + (shape === 'tall' ? ' (tall)' : '') + '.' + lastExt;
+  }
+  async function save() {
+    if (!lastBlob) return;
+    const msg = $('cm-saved'); msg.textContent = '';
+    const name = fileName(), type = lastExt === 'mp4' ? 'video/mp4' : 'video/webm';
+    // 1. The phone's own Share menu (on an iPhone: Save Video, Facebook...). It must come first, straight from the tap.
+    try {
+      const f = new File([lastBlob], name, { type });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f] });
+        msg.textContent = 'Done. If you chose Save Video, the clip is in your Photos. If you chose Facebook, finish your post there. If Facebook doesn\u2019t post it, choose Save Video instead, then open the Facebook app and post it from your Photos.';
+        return;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') { msg.textContent = 'Not saved. Press “Save video” again whenever you’re ready.'; return; }
+    }
+    // 2. Saving through Claude (the Claude app, or signed in on claude.ai)
+    let dl = null; try { dl = await window.claude?.use?.('downloads'); } catch (e) {}
+    if (dl) {
+      try {
+        await dl.save({ filename: name, data: lastBlob });
+        msg.textContent = 'Saved. In Safari it goes to your Downloads: open the Files app, tap Downloads, tap the video, tap the Share button, then choose Save Video (to put it in Photos) or Facebook. In the Claude app, Save video opens that Share menu straight away.';
+        return;
+      } catch (e) {
+        const c = e && e.code;
+        if (c === 'declined') { msg.textContent = 'Not saved. Press “Save video” again whenever you’re ready.'; return; }
+        if (c === 'rate_limited') { msg.textContent = 'Wait a moment, then press “Save video” again.'; return; }
+      }
+    }
+    // 3. A plain download
+    try {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(lastBlob); a.download = name;
+      document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 60000);
+      msg.textContent = 'Saving to your Downloads. To post it, open the Files app, tap Downloads, tap the video, tap the Share button, and choose Save Video or Facebook.';
+    } catch (e) {
+      msg.textContent = 'Saving didn’t work on this phone. Tell Aaron which clip you wanted and he can send it to you.';
+    }
+  }
+  function pauseAll() {
+    try { if (typeof window.pause === 'function') window.pause(); } catch (e) {}
+    for (const f of document.querySelectorAll('iframe')) { try { const w = f.contentWindow; if (w && typeof w.pause === 'function') w.pause(); } catch (e) {} }
+  }
+  function setShape(s) { shape = s; $('cm-square').setAttribute('aria-pressed', String(s === 'square')); $('cm-tall').setAttribute('aria-pressed', String(s === 'tall')); showResult(false); drawStill(); }
+
+  async function open(f) {
+    const dlg = $('cm'); dlg.hidden = false; document.documentElement.classList.add('cm-open');
+    $('cm-status').textContent = 'Loading\u2026';
+    try { await data(); } catch (e) { $('cm-status').textContent = 'The verse list couldn\u2019t load. Check the connection and try again.'; return; }
+    if (!$('cm-reading').options.length) fillReadings();
+    file = (f && DATA[f]) ? f : (file || Object.keys(DATA)[0]);
+    $('cm-reading').value = file; loadArt(file); fillUnits(); $('cm-status').textContent = '';
+    $('cm-close').focus();
+  }
+  function close() { if (stopFn) stopFn(); $('cm').hidden = true; document.documentElement.classList.remove('cm-open'); }
+
+  function wire() {
+    $('cm-reading').addEventListener('change', e => { file = e.target.value; loadArt(file); fillUnits(); });
+    $('cm-from').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-to').value = $('cm-from').value; refresh(); });
+    $('cm-to').addEventListener('change', () => { if (+$('cm-to').value < +$('cm-from').value) $('cm-from').value = $('cm-to').value; refresh(); });
+    $('cm-square').addEventListener('click', () => setShape('square'));
+    $('cm-tall').addEventListener('click', () => setShape('tall'));
+    $('cm-listen').addEventListener('click', () => run(false));
+    $('cm-make').addEventListener('click', () => run(true));
+    $('cm-stop').addEventListener('click', () => stopFn && stopFn());
+    $('cm-save').addEventListener('click', save);
+    $('cm-again').addEventListener('click', () => { showResult(false); $('cm-status').textContent = ''; });
+    $('cm-close').addEventListener('click', close);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('cm').hidden && !busy) close(); });
+  }
+  window.ClipMaker = { open, close, _test: { last: () => lastBlob, ext: () => lastExt, data, unitsOf, frames, decodeSpan, span: (f, a, b) => { file = f; units = unitsOf(f); return span(a, b); }, reference: (f, a, b) => { file = f; units = unitsOf(f); return reference(f, a, b); } } };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+})();
+</script>
+<script>
+/* Listen offline. The app is installable (manifest.webmanifest) and has a service worker (sw.js) that keeps the pages
+   and plays any recording saved here straight from the phone. This sheet lists every collection, read from each
+   tab's own track list, so newly published readings appear here by themselves. Saved files live in the
+   "psalter-audio" cache, under each recording's full address. */
+(() => {
+  const $ = id => document.getElementById(id);
+  const AUDIO = 'psalter-audio';
+  const COLS = [
+    { key: 'psalter', name: 'The Psalter', page: 'index.html' },
+    { key: 'rev', name: 'Revelation', page: 'revelation/index.html' },
+    { key: 'judges', name: 'Judges by the Fire', page: 'judges/index.html' },
+    { key: 'mighty', name: 'The Mighty Men of David', page: 'mighty/index.html' },
+    { key: 'prayers', name: 'Prayers', page: 'prayers/index.html' },
+    { key: 'matthew', name: 'Matthew', page: 'matthew/index.html' },
+    { key: 'proverbs', name: 'Proverbs', page: 'proverbs/index.html' },
+    { key: 'prophets', name: 'The Prophets', page: 'prophets/index.html' },
+  ];
+  const standalone = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const canCache = 'caches' in window;
+
+  // ------------------------------------------------------------ the service worker
+  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    try { navigator.serviceWorker.register('sw.js').catch(() => {}); } catch (e) {}   // fails quietly where it isn't allowed (inside claude.ai)
+  }
+  let installEvt = null;
+  addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; paintInstall(); });
+  addEventListener('appinstalled', () => { installEvt = null; paintInstall(); });
+
+  // ------------------------------------------------------------ what there is to save
+  let cols = null;                       // [{ ...COLS[i], tracks: [{ title, url, dur }] }]
+  const unq = s => s.replace(/\\(.)/g, '$1');
+  function parseTracks(html, base) {
+    const a = html.indexOf('const TRACKS = ['); if (a < 0) return [];
+    const b = html.indexOf('\n];', a), body = html.slice(a, b < 0 ? undefined : b), out = [];
+    for (const m of body.matchAll(/\{[^\n]*?file:\s*"([^"]+)"[^\n]*\}/g)) {
+      const line = m[0], t = /title:\s*"((?:[^"\\]|\\.)*)"/.exec(line), d = /dur:\s*(\d+)/.exec(line);
+      out.push({ title: t ? unq(t[1]) : m[1], url: new URL(m[1], base).href, dur: d ? +d[1] : 0 });
+    }
+    return out;
+  }
+  async function load() {
+    if (cols) return cols;
+    const out = [];
+    for (const c of COLS) {
+      const base = new URL(c.page, location.href);
+      let html = '';
+      try { const r = await fetch(base.href); if (r.ok) html = await r.text(); } catch (e) {}
+      out.push({ ...c, tracks: parseTracks(html, base) });
+    }
+    return (cols = out);
+  }
+
+  // sizes: exact once known (from the server, or from the saved copy), otherwise an estimate from the length
+  let sizes = {}; try { sizes = JSON.parse(localStorage.getItem('of-sizes') || '{}'); } catch (e) {}
+  const keepSizes = () => { try { localStorage.setItem('of-sizes', JSON.stringify(sizes)); } catch (e) {} };
+  const sizeOf = t => sizes[t.url] || t.dur * 24000;
+  const mb = n => n >= 1e9 ? (n / 1e9).toFixed(1) + ' GB' : Math.max(1, Math.round(n / 1e6)) + ' MB';
+  let saved = new Set();
+  async function readSaved() {
+    saved = new Set();
+    if (!canCache) return;
+    try { const c = await caches.open(AUDIO); for (const r of await c.keys()) saved.add(r.url); } catch (e) {}
+  }
+  async function learnSizes() {             // one quick HEAD per recording, only while online and only once
+    if (!navigator.onLine) return;
+    const todo = cols.flatMap(c => c.tracks).filter(t => !sizes[t.url]);
+    let i = 0;
+    const worker = async () => { while (i < todo.length) { const t = todo[i++];
+      try { const r = await fetch(t.url, { method: 'HEAD', cache: 'no-store' }); const n = +r.headers.get('content-length'); if (r.ok && n) sizes[t.url] = n; } catch (e) {} } };
+    await Promise.all([1, 2, 3, 4].map(worker)); keepSizes(); paint();
+  }
+
+  // ------------------------------------------------------------ saving and removing
+  let busy = false, stopNow = false;
+  async function saveOne(t, onBytes) {
+    const r = await fetch(t.url, { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const total = +r.headers.get('content-length') || sizeOf(t), parts = [];
+    let got = 0;
+    if (r.body && r.body.getReader) {
+      const rd = r.body.getReader();
+      for (;;) { if (stopNow) { try { rd.cancel(); } catch (e) {} throw new Error('stopped'); }
+        const { done, value } = await rd.read(); if (done) break; parts.push(value); got += value.length; onBytes(got, total); }
+    } else { const b = new Uint8Array(await r.arrayBuffer()); parts.push(b); got = b.length; onBytes(got, total); }
+    const blob = new Blob(parts, { type: 'audio/mpeg' });
+    const h = { 'Content-Type': 'audio/mpeg', 'Content-Length': String(blob.size), 'Accept-Ranges': 'bytes' };
+    for (const k of ['etag', 'last-modified']) { const v = r.headers.get(k); if (v) h[k] = v; }
+    const c = await caches.open(AUDIO); await c.put(t.url, new Response(blob, { headers: h }));
+    sizes[t.url] = blob.size; saved.add(t.url);
+  }
+  async function saveMany(list, label) {
+    if (busy || !list.length) return;
+    if (!navigator.onLine) { say('There’s no internet connection right now. Connect to Wi-Fi, then try again.'); return; }
+    busy = true; stopNow = false; paint();
+    try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch (e) {}
+    const total = list.reduce((s, t) => s + sizeOf(t), 0); let done = 0, failed = 0, n = 0;
+    $('of-progress').hidden = false; say('Saving ' + label + '. Keep this page open until it finishes.');
+    for (const t of list) {
+      if (stopNow) break;
+      n++;
+      try {
+        await saveOne(t, (got) => { $('of-bar').value = Math.min(1, (done + got) / total); $('of-ptext').textContent = n + ' of ' + list.length; });
+      } catch (e) { if (stopNow) break; failed++; console.log('[offline]', t.url, e); }
+      done += sizeOf(t); paint();
+    }
+    $('of-progress').hidden = true; busy = false; keepSizes();
+    if (stopNow) say('Stopped. What finished saving is kept.');
+    else if (failed) say(failed + (failed === 1 ? ' recording' : ' recordings') + ' couldn’t be saved. Check the connection and press Save again; the rest are saved.');
+    else say('Saved. ' + label.charAt(0).toUpperCase() + label.slice(1) + ' will now play with no internet.');
+    if (isQuotaLow()) say('This phone is running out of room. Remove a collection you’ve finished with to make space.');
+    paint();
+  }
+  let lastEst = null;
+  const isQuotaLow = () => lastEst && lastEst.quota && lastEst.usage / lastEst.quota > 0.95;
+  async function removeMany(list) {
+    if (busy) return;
+    const c = await caches.open(AUDIO);
+    for (const t of list) { await c.delete(t.url); saved.delete(t.url); }
+    say(list.length === 1 ? 'Removed from this phone.' : 'Removed ' + list.length + ' recordings from this phone.');
+    paint();
+  }
+  // a reading that was re-recorded since it was saved: compare the saved copy's tag with the site's
+  async function findUpdated() {
+    if (!navigator.onLine || !canCache) return [];
+    const c = await caches.open(AUDIO), out = [];
+    for (const t of cols.flatMap(x => x.tracks).filter(t => saved.has(t.url))) {
+      try {
+        const old = await c.match(t.url), oe = old && old.headers.get('etag');
+        if (!oe) continue;
+        const r = await fetch(t.url, { method: 'HEAD', cache: 'no-store' }), ne = r.headers.get('etag');
+        if (r.ok && ne && ne !== oe) out.push(t);
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  // ------------------------------------------------------------ drawing the sheet
+  const say = m => { $('of-status').textContent = m; };
+  function paintInstall() {
+    const box = $('of-install'); if (!box) return;
+    const show = !standalone() && (installEvt || isIOS);
+    box.hidden = !show;
+    $('of-install-android').hidden = !installEvt;
+    $('of-install-ios').hidden = !(isIOS && !installEvt);
+  }
+  function paintNet() {
+    const el = $('of-net');
+    if (!canCache) { el.className = 'of-net off'; el.textContent = 'This browser can’t save recordings. Open the Psalter in Safari or Chrome.'; return; }
+    el.className = navigator.onLine ? 'of-net' : 'of-net off';
+    el.textContent = navigator.onLine ? '' : 'You’re offline now. Recordings marked Saved will play.';
+  }
+  function btn(text, cls, on) { const b = document.createElement('button'); b.type = 'button'; b.className = cls; b.textContent = text; b.addEventListener('click', on); return b; }
+  async function paint() {
+    paintNet(); paintInstall();
+    if (!cols) return;
+    const all = cols.flatMap(c => c.tracks), have = all.filter(t => saved.has(t.url));
+    let line = have.length ? 'Saved on this phone: ' + have.length + ' of ' + all.length + ' recordings, ' + mb(have.reduce((s, t) => s + sizeOf(t), 0)) + '.'
+      : 'Nothing saved yet. Everything together is about ' + mb(all.reduce((s, t) => s + sizeOf(t), 0)) + '.';
+    try { if (navigator.storage && navigator.storage.estimate) { lastEst = await navigator.storage.estimate(); if (lastEst.quota) line += ' Room left for about ' + mb(Math.max(0, lastEst.quota - lastEst.usage)) + ' more.'; } } catch (e) {}
+    $('of-sum').textContent = line;
+    const ul = $('of-list'), openKeys = new Set([...ul.querySelectorAll('details[open]')].map(d => d.dataset.key));
+    ul.innerHTML = '';
+    for (const c of cols) {
+      if (!c.tracks.length) continue;
+      const mine = c.tracks.filter(t => saved.has(t.url)), rest = c.tracks.filter(t => !saved.has(t.url));
+      const li = document.createElement('li'); li.className = 'of-col';
+      const top = document.createElement('div'); top.className = 'of-top';
+      const nm = document.createElement('div'); nm.className = 'of-name';
+      const b = document.createElement('b'); b.textContent = c.name;
+      const sp = document.createElement('span');
+      sp.textContent = !mine.length ? c.tracks.length + (c.tracks.length === 1 ? ' recording' : ' recordings') + ' · ' + mb(c.tracks.reduce((s, t) => s + sizeOf(t), 0))
+        : !rest.length ? 'All ' + c.tracks.length + ' saved · ' + mb(mine.reduce((s, t) => s + sizeOf(t), 0))
+        : mine.length + ' of ' + c.tracks.length + ' saved · ' + mb(rest.reduce((s, t) => s + sizeOf(t), 0)) + ' more to save';
+      nm.append(b, sp); top.append(nm);
+      if (rest.length) { const s = btn(mine.length ? 'Save the rest' : 'Save all', 'cm-btn go', () => saveMany(rest, c.name)); s.disabled = busy; top.append(s); }
+      if (mine.length) { const r = btn(rest.length ? 'Remove saved' : 'Remove all', 'cm-btn', () => removeMany(mine)); r.disabled = busy; top.append(r); }
+      li.append(top);
+      const det = document.createElement('details'); det.dataset.key = c.key; if (openKeys.has(c.key)) det.open = true;
+      const sum = document.createElement('summary'); sum.textContent = 'Choose recordings one by one'; det.append(sum);
+      const tl = document.createElement('ul'); tl.className = 'of-tracks';
+      for (const t of c.tracks) {
+        const r = document.createElement('li'), name = document.createElement('span'), sz = document.createElement('small');
+        name.textContent = t.title; sz.textContent = mb(sizeOf(t));
+        const on = saved.has(t.url);
+        const tb = btn(on ? 'Saved ✓' : 'Save', on ? 'of-tbtn saved' : 'of-tbtn', () => on ? removeMany([t]) : saveMany([t], '“' + t.title + '”'));
+        tb.disabled = busy; if (on) tb.setAttribute('aria-label', 'Saved. Remove ' + t.title + ' from this phone');
+        r.append(name, sz, tb); tl.append(r);
+      }
+      det.append(tl); li.append(det); ul.append(li);
+    }
+  }
+
+  async function open() {
+    $('of').hidden = false; document.documentElement.classList.add('cm-open');
+    say(''); paintNet(); paintInstall();
+    if (!canCache) return;
+    if (!cols) $('of-sum').textContent = 'Loading…';
+    await load(); await readSaved(); await paint();
+    $('of-close').focus();
+    learnSizes();
+    const upd = await findUpdated();
+    if (upd.length && !busy) {
+      say(upd.length === 1 ? 'One of your saved recordings has been improved since you saved it.' : upd.length + ' of your saved recordings have been improved since you saved them.');
+      const b = btn('Get the new version' + (upd.length === 1 ? '' : 's'), 'cm-btn go', () => { b.remove(); saveMany(upd, 'the improved recordings'); });
+      $('of-status').append(' ', b);
+    }
+  }
+  function close() { if (busy) { say('Still saving. Press Stop first, or wait until it finishes.'); return; } $('of').hidden = true; document.documentElement.classList.remove('cm-open'); }
+  function wire() {
+    $('of-open').addEventListener('click', open);
+    $('of-close').addEventListener('click', close);
+    $('of-stop').addEventListener('click', () => { stopNow = true; });
+    $('of-install-btn').addEventListener('click', async () => { if (!installEvt) return; installEvt.prompt(); try { await installEvt.userChoice; } catch (e) {} installEvt = null; paintInstall(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('of').hidden) close(); });
+    addEventListener('online', () => { if (!$('of').hidden) paint(); });
+    addEventListener('offline', () => { if (!$('of').hidden) paint(); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire); else wire();
+  window.OfflineSheet = { open, close };
+})();
+</script>
+
+<script src="miniplayer.js"></script>
+
+<script>
+/* The Library: the top bar's "Library" button opens it; tapping a book or scroll lifts it and opens that collection
+   by pressing its (hidden) tab button, so the existing tab code does the switching. */
+(() => {
+  const root = document.documentElement, lib = document.getElementById("library"), now = document.getElementById("lib-now");
+  const NAMES = {"judges": "Judges by the Fire", "mighty": "The Mighty Men", "psalter": "The Psalter", "proverbs": "Proverbs", "prophets": "The Prophets", "matthew": "Matthew", "rev": "Revelation", "prayers": "Prayers"};
+  const cur = () => ["rev", "judges", "mighty", "prayers", "matthew", "proverbs", "prophets"].find(k => root.classList.contains(k)) || "psalter";
+  let back = null;
+  function fitTitles() {   // shrink a spine's title until it fits its label, so nothing on a spine is ever cut off
+    lib.querySelectorAll(".book .ttl").forEach(t => {
+      const box = t.parentElement; let fs = 21; t.style.fontSize = fs + "px";
+      while (fs > 12 && (t.scrollHeight > box.clientHeight - 10 || t.offsetHeight > box.clientHeight - 10)) { fs -= 0.5; t.style.fontSize = fs + "px"; }
+    });
+  }
+  function mark() {
+    const c = cur();
+    lib.querySelectorAll(".pick").forEach(b => b.classList.toggle("current", b.dataset.tab === c));
+    now.textContent = NAMES[c];
+    now.style.fontFamily = c === "judges" ? "'IM Fell English', Georgia, serif" : "";
+  }
+  function open() {
+    mark(); back = document.activeElement;
+    lib.classList.add("on"); lib.setAttribute("aria-hidden", "false"); lib.scrollTop = 0;
+    requestAnimationFrame(fitTitles); if (document.fonts) document.fonts.ready.then(fitTitles);
+    setTimeout(() => { const b = lib.querySelector(".pick.current") || lib.querySelector(".pick"); try { b.focus({ preventScroll: true }); } catch (e) {} }, 60);
+  }
+  function close() {
+    lib.classList.remove("on"); lib.setAttribute("aria-hidden", "true");
+    try { (back || document.getElementById("lib-open")).focus({ preventScroll: true }); } catch (e) {}
+  }
+  document.getElementById("lib-open").addEventListener("click", open);
+  document.getElementById("lib-close").addEventListener("click", close);
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && lib.classList.contains("on")) { e.stopPropagation(); close(); } }, true);
+  addEventListener("resize", () => { if (lib.classList.contains("on")) fitTitles(); });
+  lib.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
+    if (lib.classList.contains("busy")) return;
+    lib.classList.add("busy"); b.classList.add("pull");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeout(() => {
+      const t = document.getElementById("tab-" + b.dataset.tab); if (t) t.click();
+      close(); b.classList.remove("pull"); lib.classList.remove("busy"); mark();
+      try { scrollTo(0, 0); } catch (e) {}
+    }, reduce ? 0 : 450);
+  }));
+  new MutationObserver(mark).observe(root, { attributes: true, attributeFilter: ["class"] });
+  mark();
+})();
+</script>
