@@ -342,6 +342,8 @@ body.art-dark .art-bg::after {
 body.has-art { background: var(--bg); }
 body.has-art .art-bg { z-index: 0; }
 body.has-art .wrap { position: relative; z-index: 1; }
+/* the Psalter's painting belongs to the Psalter tab only; it must never cover another tab's page */
+html.rev .art-bg, html.judges .art-bg, html.mighty .art-bg, html.prayers .art-bg, html.matthew .art-bg, html.proverbs .art-bg, html.prophets .art-bg { display: none; }
 body.has-art header { text-shadow: 0 0 10px var(--bg), 0 0 4px var(--bg), 0 0 2px var(--bg); }
 body.has-art .sub { color: var(--fg); }
 body.has-art .player, body.has-art .wrap > section[aria-label="Psalms"], body.has-art .suggest, body.has-art footer {
