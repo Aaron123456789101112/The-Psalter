@@ -635,13 +635,20 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-mood { m
 .fl-leaf { left: 0; top: 1.5%; width: 98.5%; height: 97%; }
 .fl-leaf .lf { inset: 0; padding: 12% 11% 12% 13%; }
 .fl-leaf .lf.b { transform: rotateY(180deg); padding: 12% 13% 12% 11%; }
-.fl-leaf .lf::after { content: ""; position: absolute; inset: 13% 12% 12% 13%;
-  background: repeating-linear-gradient(transparent 0 .42em, rgba(70,45,20,.32) .42em .5em, transparent .5em .68em); }
-.fl-leaf .lf::before { content: ""; position: absolute; left: 13%; top: 13%; width: 18%; aspect-ratio: 1; z-index: 1; border-radius: 1px;
-  background: radial-gradient(circle, var(--gilt) 0 30%, transparent 32%), linear-gradient(135deg, var(--mid), var(--dark)); box-shadow: 0 0 0 1.5px var(--gilt); }
-.fl-leaf .lf.b::before { left: auto; right: 13%; }
-.fl-leaf .lf.g { background: linear-gradient(90deg, rgba(40,22,6,.28), transparent 18%), radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(110,70,25,.25)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), #efe2bf; }
-.fl-leaf .lf.b.g { background: linear-gradient(270deg, rgba(40,22,6,.28), transparent 18%), radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(110,70,25,.25)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), #efe2bf; }
+/* the page's text lines and its illuminated initial are painted onto the page itself (no separate layers), so in Safari they
+   turn with the page instead of floating flat above it */
+.fl-leaf .lf.g { background:
+    radial-gradient(circle, var(--gilt) 0 .28em, transparent .3em) left 1.35em top 1.75em / 1.8em 1.8em no-repeat,
+    linear-gradient(135deg, var(--mid), var(--dark)) left 1.45em top 1.85em / 1.6em 1.6em no-repeat,
+    linear-gradient(var(--gilt), var(--gilt)) left 1.35em top 1.75em / 1.8em 1.8em no-repeat,
+    repeating-linear-gradient(transparent 0 .42em, rgba(70,45,20,.32) .42em .5em, transparent .5em .68em) left 1.3em top 1.85em / calc(100% - 2.5em) calc(100% - 3.6em) no-repeat,
+    linear-gradient(90deg, rgba(40,22,6,.28), transparent 18%), radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(110,70,25,.25)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), #efe2bf; }
+.fl-leaf .lf.b.g { background:
+    radial-gradient(circle, var(--gilt) 0 .28em, transparent .3em) right 1.35em top 1.75em / 1.8em 1.8em no-repeat,
+    linear-gradient(135deg, var(--mid), var(--dark)) right 1.45em top 1.85em / 1.6em 1.6em no-repeat,
+    linear-gradient(var(--gilt), var(--gilt)) right 1.35em top 1.75em / 1.8em 1.8em no-repeat,
+    repeating-linear-gradient(transparent 0 .42em, rgba(70,45,20,.32) .42em .5em, transparent .5em .68em) right 1.3em top 1.85em / calc(100% - 2.5em) calc(100% - 3.6em) no-repeat,
+    linear-gradient(270deg, rgba(40,22,6,.28), transparent 18%), radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(110,70,25,.25)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), #efe2bf; }
 .fl-title { left: 0; top: 1.5%; width: 98.5%; height: 97%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .3em; color: #2b1f12; text-align: center;
   background: linear-gradient(90deg, rgba(40,22,6,.3), transparent 12%), radial-gradient(130% 100% at 50% 50%, transparent 60%, rgba(110,70,25,.25)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), #efe2bf; }
 .fl-title::before { content: ""; position: absolute; inset: 5% 5% 5% 7%; border: 2px double rgba(155,104,30,.6); }
