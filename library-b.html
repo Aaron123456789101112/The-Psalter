@@ -2013,15 +2013,19 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   document.getElementById("lib-close").addEventListener("click", close);
   document.addEventListener("keydown", e => { if (e.key === "Escape" && lib.classList.contains("on")) { e.stopPropagation(); close(); } }, true);
   addEventListener("resize", () => { if (lib.classList.contains("on")) fitTitles(); });
+  function choose(b) {
+    const t = document.getElementById("tab-" + b.dataset.tab); if (t) t.click();
+    close(); mark();
+    try { scrollTo(0, 0); } catch (e) {}
+  }
   lib.querySelectorAll(".pick").forEach(b => b.addEventListener("click", () => {
     if (lib.classList.contains("busy")) return;
-    lib.classList.add("busy"); b.classList.add("pull");
+    lib.classList.add("busy");
+    const done = () => { b.classList.remove("pull"); lib.classList.remove("busy"); };
+    if (window.libFlight) { window.libFlight(b, () => choose(b), done); return; }   // the book-opening animation, when present
+    b.classList.add("pull");
     const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setTimeout(() => {
-      const t = document.getElementById("tab-" + b.dataset.tab); if (t) t.click();
-      close(); b.classList.remove("pull"); lib.classList.remove("busy"); mark();
-      try { scrollTo(0, 0); } catch (e) {}
-    }, reduce ? 0 : 450);
+    setTimeout(() => { choose(b); done(); }, reduce ? 0 : 450);
   }));
   new MutationObserver(mark).observe(root, { attributes: true, attributeFilter: ["class"] });
   mark();
