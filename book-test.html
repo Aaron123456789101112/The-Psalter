@@ -719,6 +719,13 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl .fs
 .fl-edge.h { background: repeating-linear-gradient(0deg, #f6e3a2 0 1px, #b8892f 1px 2px, #e8c76c 2px 3px); }
 .fl-spine.book { position: absolute; flex: none; min-width: 0; margin: 0; transition: none; border-radius: 3px; box-shadow: none; }
 .flight .fl-skip { position: absolute; left: 0; right: 0; bottom: calc(22px + env(safe-area-inset-bottom)); text-align: center; font: 14px var(--ui); color: rgba(241,217,168,.7); opacity: 0; letter-spacing: .04em; }
+
+/* =================== keep playing across books =================== */
+/* while another book is open, the Psalter's own page is put away (it sits under the other book anyway) */
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { display: none; }
+.mini.rbar .mini-text { cursor: pointer; }
+.mini.rbar .mini-book { color: var(--accent); }
+html.fs-child .mini.rbar { display: none !important; }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -1537,7 +1544,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   }
   function show(which, remember = true) {
     if (!TABS[which]) which = "psalter";
-    for (const k of ORDER) if (k !== which) pauseTab(k);
+    if (!window.keepPlaying) for (const k of ORDER) if (k !== which) pauseTab(k);
     const f = fr(which); if (f && !f.getAttribute("src")) f.setAttribute("src", TABS[which].src);
     root.classList.toggle("rev", which === "rev"); root.classList.toggle("judges", which === "judges"); root.classList.toggle("prayers", which === "prayers"); root.classList.toggle("matthew", which === "matthew"); root.classList.toggle("proverbs", which === "proverbs"); root.classList.toggle("prophets", which === "prophets"); root.classList.toggle("mighty", which === "mighty");
     for (const k of ORDER) document.getElementById(TABS[k].btn).setAttribute("aria-selected", String(k === which));
@@ -1564,6 +1571,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   try { start = localStorage.getItem("tab") || start; } catch (e) {}
   for (const k of ORDER) if (location.hash === TABS[k].hash) start = k;
   show(start, false);
+  window.__tabs = { show, fr, TABS, ORDER, get cur() { return cur; } };
 })();
 </script>
 <script>/* mp4-muxer 5.2.2, MIT licence, (c) Vanilagy: builds the MP4 for the clip maker */
@@ -2350,9 +2358,9 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
    riffle, and the title page grows until it fills the screen, then the collection fades in. Tap anywhere to skip. */
 (() => {
   const N_LEAVES = 6;
-  window.libFlight = async (b, choose, done) => {
+  window.libFlight = async (b, choose, done, from) => {
     if (matchMedia("(prefers-reduced-motion: reduce)").matches || !Element.prototype.animate) { choose(); done(); return; }
-    const r = b.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
+    const r = from || b.getBoundingClientRect(), vw = innerWidth, vh = innerHeight;
     const W = Math.round(Math.min(vw * 0.44, 260, (vh * 0.5) / 1.42)), H = Math.round(W * 1.42);
     const T = Math.round(Math.max(16, Math.min(W * 0.36, H * r.width / r.height)));
     const vars = ["--dark", "--mid", "--gilt", "--glow", "--gem"].map(v => v + ":" + b.style.getPropertyValue(v)).join(";");
@@ -2469,5 +2477,126 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   });
   new MutationObserver(sync).observe(bg, { subtree: true, attributes: true, attributeFilter: ["src", "class"] });
   sync();
+})();
+</script>
+
+<script>
+/* Keep playing across books. Starting a reading in one book and then opening another no longer pauses it: it plays on,
+   and a bar at the bottom of the screen keeps its controls (play/pause, previous/next, 15-second jumps, the seek bar,
+   full screen) and says which book it's from. Pressing play in the book you've opened stops the other one, and the bar
+   becomes that book's own. Tapping the bar's title flies you back to the book it's playing from.
+   Every book is its own page with its own player; this works through each page's own controls, so their playing logic
+   is untouched. */
+(() => {
+  const T = window.__tabs; if (!T) return;
+  window.keepPlaying = true;
+  const lib = document.getElementById("library");
+  const NAME = k => { const b = lib && lib.querySelector(`.pick[data-tab="${k}"]`); return b ? b.getAttribute("aria-label") : k; };
+  const docOf = k => {
+    if (k === "psalter") return document;
+    try { const f = T.fr(k); return f && f.getAttribute("src") && f.contentDocument && f.contentDocument.getElementById("play") ? f.contentDocument : null; } catch (e) { return null; }
+  };
+  const label = d => ((d && d.getElementById("now-label")) || {}).textContent || "";
+  const isOn = d => /playing|loading/i.test(label(d));
+  const isActive = d => !!d && (/playing|loading|paused/i.test(label(d)) || (((d.getElementById("play-icon") || {}).innerHTML || "").includes("h4.5")));
+  function pauseBook(k) {
+    if (k === "psalter") { try { if (typeof playing !== "undefined" && (playing || loading)) pause(); } catch (e) {} return; }
+    try { const w = T.fr(k).contentWindow; if (w && typeof w.pause === "function") w.pause(); } catch (e) {}
+  }
+  const secs = t => { const m = String(t || "").trim().split(":").map(Number); return m.length === 2 ? m[0] * 60 + m[1] : m.length === 3 ? m[0] * 3600 + m[1] * 60 + m[2] : NaN; };
+
+  // the bar: a copy of this page's own bar, wired to whichever book is playing
+  let rbar = null, rseek = null, dragging = false;
+  function build() {
+    const native = document.querySelector("body > .mini:not(.rbar)"); if (!native) return false;
+    rbar = native.cloneNode(true); rbar.classList.add("rbar"); rbar.classList.remove("on"); rbar.hidden = true;
+    rbar.setAttribute("aria-label", "Now playing in another book");
+    rbar.querySelector(".mini-text").title = "Go back to this book";
+    document.body.appendChild(rbar);
+    rseek = rbar.querySelector(".mini-seek");
+    const od = () => docOf(owner), ev = (d, n) => new d.defaultView.Event(n, { bubbles: true });
+    rbar.querySelector(".mini-play").addEventListener("click", () => { const d = od(); d && d.getElementById("play").click(); });
+    rbar.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { const d = od(), t = d && d.getElementById(b.dataset.go); if (t) t.click(); }));
+    rbar.querySelectorAll("[data-jump]").forEach(b => b.addEventListener("click", () => {
+      const d = od(); if (!d) return; const sk = d.getElementById("seek"), dur = secs((d.getElementById("t-dur") || {}).textContent);
+      if (!(dur > 0)) return;
+      const to = Math.max(0, Math.min(dur - 0.5, sk.value / 100 * dur + 15 * +b.dataset.jump));
+      sk.value = (to / dur * 100).toFixed(3); sk.dispatchEvent(ev(d, "input")); sk.dispatchEvent(ev(d, "change"));
+    }));
+    rseek.addEventListener("input", () => { dragging = true; rseek.style.setProperty("--p", rseek.value + "%");
+      const d = od(); if (d) { const sk = d.getElementById("seek"); sk.value = rseek.value; sk.dispatchEvent(ev(d, "input")); } });
+    rseek.addEventListener("change", () => { const d = od(); if (d) { const sk = d.getElementById("seek"); sk.value = rseek.value; sk.dispatchEvent(ev(d, "change")); } dragging = false; });
+    rbar.querySelector(".mini-fs").addEventListener("click", () => {
+      const k = owner, d = od(); if (!d) return;
+      goTo(k, false);   // open the playing book, then its own full-screen view
+      setTimeout(() => { const b = k === "psalter" ? document.querySelector("body > .mini:not(.rbar) .mini-fs") : d.querySelector(".mini-fs"); if (b) b.click(); }, 60);
+    });
+    rbar.querySelector(".mini-text").addEventListener("click", () => {
+      const k = owner; if (!k) return;
+      const spine = lib && lib.querySelector(`.pick[data-tab="${k}"]`), t = rbar.querySelector(".mini-title").getBoundingClientRect();
+      const from = { left: t.left + 8, top: t.top - 70, width: 34, height: 120 };
+      if (spine && window.libFlight && !matchMedia("(prefers-reduced-motion: reduce)").matches) window.libFlight(spine, () => goTo(k, true), () => {}, from);
+      else goTo(k, true);
+    });
+    return true;
+  }
+  function goTo(k, toPlayer) {   // open book k (by pressing its tab), and show its player
+    const b = document.getElementById(T.TABS[k].btn); if (b) b.click();
+    if (!toPlayer) return;
+    requestAnimationFrame(() => { const d = docOf(k), p = d && d.querySelector(".player");
+      try { if (p) p.scrollIntoView({ block: "start" }); if (k === "psalter") scrollBy(0, -80); } catch (e) {} });
+  }
+
+  // a style sheet in each book's page: hides that page's own bar when it isn't the one to show, and leaves room for ours
+  function setStyle(d, css) {
+    let st = d.getElementById("kp-style");
+    if (!st) { st = d.createElement("style"); st.id = "kp-style"; (d.head || d.documentElement).appendChild(st); }
+    if (st.textContent !== css) st.textContent = css;
+  }
+
+  let owner = null; const was = {};
+  function tick() {
+    if (!rbar && !build()) return;
+    const cur = T.cur;
+    // who is playing: whichever book most recently started; starting one stops the others
+    for (const k of T.ORDER) {
+      const d = docOf(k), on = isOn(d);
+      if (d && !d.__kp) { d.__kp = true; d.addEventListener("play", () => setTimeout(tick, 0), true); }
+      if (on && (!was[k] || !owner) && owner !== k) {
+        owner = k;
+        for (const j of T.ORDER) if (j !== k && isOn(docOf(j))) pauseBook(j);
+      }
+      was[k] = on;
+    }
+    // a book you've left must not keep its full-screen view open behind the one you're in
+    for (const k of T.ORDER) {
+      if (k === cur || k === "psalter") continue;
+      const d = docOf(k), x = d && d.querySelector(".fs.on .fs-x"); if (x) x.click();
+    }
+    if (cur === "psalter" || !(docOf(cur) && docOf(cur).querySelector(".fs.on"))) document.documentElement.classList.remove("fs-child");
+    const od = owner && docOf(owner), showR = !!od && owner !== cur && isActive(od) && !document.documentElement.classList.contains("fs-child");
+    rbar.hidden = !showR; rbar.classList.toggle("on", showR);
+    const pad = showR ? `body { padding-bottom: ${rbar.offsetHeight + 24}px !important; }` : "";
+    for (const k of T.ORDER) {
+      const d = docOf(k); if (!d) continue;
+      const hideOwn = k !== cur || (owner && owner !== k);
+      const sel = k === "psalter" ? "body > .mini:not(.rbar)" : ".mini";
+      setStyle(d, (hideOwn ? `${sel} { display: none !important; }` : "") + (k === cur ? pad : ""));
+    }
+    if (!showR) return;
+    const pi = od.getElementById("play-icon"), mi = rbar.querySelector(".mini-play svg");
+    if (pi && mi.innerHTML !== pi.innerHTML) mi.innerHTML = pi.innerHTML;
+    const tt = (od.getElementById("now-title") || {}).textContent || "";
+    const ti = rbar.querySelector(".mini-title"); if (ti.textContent !== tt) ti.textContent = tt;
+    const lab = label(od), state = /loading/i.test(lab) ? "Loading" : /paused/i.test(lab) || !/playing/i.test(lab) ? "Paused" : "";
+    const nm = od.querySelector(".mini.on .mini-meta"), verse = nm ? ((nm.textContent.match(/Verse [^·]+/) || [""])[0]).trim() : "";
+    const time = ((od.getElementById("t-cur") || {}).textContent || "0:00") + " / " + ((od.getElementById("t-dur") || {}).textContent || "");
+    const meta = (state ? `<b>${state}</b> · ` : "") + `<span class="mini-book">${NAME(owner)}</span>` + (verse ? " · " + verse : "") + " · " + time;
+    const mm = rbar.querySelector(".mini-meta"); if (mm.innerHTML !== meta) mm.innerHTML = meta;
+    const sk = od.getElementById("seek"); if (sk && !dragging) { rseek.value = sk.value; rseek.style.setProperty("--p", rseek.value + "%"); }
+  }
+  setInterval(tick, 200);
+  document.addEventListener("play", () => setTimeout(tick, 0), true);
+  tick();
 })();
 </script>
