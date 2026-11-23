@@ -614,7 +614,7 @@ KEEP_JS = r"""
     }
     if (cur === "psalter" || !(docOf(cur) && docOf(cur).querySelector(".fs.on"))) document.documentElement.classList.remove("fs-child");
     const od = owner && docOf(owner), showR = !!od && owner !== cur && isActive(od) && !document.documentElement.classList.contains("fs-child");
-    rbar.hidden = !showR; rbar.classList.toggle("on", showR); if (owner && rbar.dataset.from !== owner) rbar.dataset.from = owner;
+    if (rbar.hidden !== !showR) { rbar.hidden = !showR; rbar.classList.toggle("on", showR); } if (owner && rbar.dataset.from !== owner) rbar.dataset.from = owner;
     const pad = showR ? `body { padding-bottom: ${rbar.offsetHeight + 24}px !important; }` : "";
     for (const k of T.ORDER) {
       const d = docOf(k); if (!d) continue;
@@ -702,6 +702,17 @@ html[data-theme="dark"] .bk { __LAMPPAPER__ }
 .bk-cast.on-top { z-index: 4; }
 .bk-flap .bk-cast { z-index: 1; overflow: visible; }
 .bk-bar { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.bk-stack { contain: layout paint style; }
+/* the humming bars on the playing row moved by height, which re-lays out the whole page every frame; scale them instead,
+   and rest them while the book is open over them */
+.track.current.playing .hum i { height: 13px; transform-origin: 50% 100%; animation-name: humS; will-change: transform; }
+@keyframes humS { 0%,100% { transform: scaleY(.31) } 50% { transform: scaleY(1) } }
+html:has(.fs.on) .track.current.playing .hum i { animation-play-state: paused; }
+.bk-clip { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; pointer-events: none; will-change: transform; }
+.bk-clip.front { z-index: 3; }
+.bk-clip.flap { z-index: 5; }
+.bk-clip > .bk-face, .bk-bar { will-change: transform; }
+.bk-clip .bk-cast.on-top { position: absolute; }
 .bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 0 4px 4px 0;
   background: linear-gradient(90deg, rgba(50,28,8,.32), rgba(50,28,8,.09) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.12)), __PAPER__;
   background-blend-mode: normal, __PAPERBLEND__; }
@@ -763,10 +774,10 @@ BOOKPAGE_JS = r"""
     function verses(t) {
       const e = CL && CL[(DIR ? DIR + "/" : "") + t.file], segs = e && e.segs;
       const vs = [], sup = [];
-      if (segs) for (const [a, , lab, text] of segs) {
+      if (segs) for (const [a, b, lab, text] of segs) {
         if (lab === "title") { if (!/^psalm\s+[\w-]+\.?$/i.test(text.trim())) sup.push({ text, start: a }); continue; }
         const last = vs[vs.length - 1];
-        if (last && last.label === lab) last.text += " " + text; else vs.push({ label: lab, key: vKey(lab), text, start: a });
+        vs.push({ label: lab, key: vKey(lab), text, start: a, end: b, first: !last || last.label !== lab });
       }
       return { vs, sup, ok: !!segs, lines: !!e && e.unit === "line" };
     }
@@ -778,8 +789,9 @@ BOOKPAGE_JS = r"""
       if (pg.pic) h += `<figure class="bk-pl"><span class="im" style="background-image:url('${pg.pic}')"></span>${pg.cap ? `<figcaption class="cap">${esc(pg.cap)}</figcaption>` : ""}</figure>`;
       h += `<div class="bk-tx">` + (pg.verses.length ? pg.verses.map((v, i) => {
         let tx = esc(v.text);
-        if (pg.head && i === 0 && /^[A-Za-z]/.test(v.text)) tx = `<span class="bk-dc">${esc(v.text[0])}</span>` + esc(v.text.slice(1));
-        return `<span class="bk-v" data-v="${esc(v.label)}">${(pg.head && i === 0) || book_lines ? "" : `<span class="bk-n">${esc(v.label.replace(/^\d+:/, ""))}</span>`}${tx} </span>`;
+        const dc = pg.head && i === 0 && v.first;
+        if (dc && /^[A-Za-z]/.test(v.text)) tx = `<span class="bk-dc">${esc(v.text[0])}</span>` + esc(v.text.slice(1));
+        return `<span class="bk-v" data-v="${esc(v.label)}">${dc || !v.first || book_lines ? "" : `<span class="bk-n">${esc(v.label.replace(/^\d+:/, ""))}</span>`}${tx} </span>`;
       }).join("") : (pg.line ? `<span class="bk-v now">${esc(pg.line)}</span>` : "")) + `</div><div class="bk-fo">${idx + 1}</div>`;
       return h;
     }
@@ -796,9 +808,22 @@ BOOKPAGE_JS = r"""
         const a = c.vs[0], b = c.vs[c.vs.length - 1];
         let pg = { head: ci === 0, sup: ci === 0 ? sup.map(x => x.text).join(" ") : "", pic: c.img,
                    cap: a && !lines ? (DIR ? `${BOOKNAME} ` + (/:/.test(a.label) ? "" : `${t.n}:`) : `${t.title}:`) + `${a.label}${b && b.label !== a.label ? "–" + b.label.replace(/^\d+:/, "") : ""}` : "", verses: [], line: ok ? "" : t.line };
-        for (const v of c.vs) {
-          pg.verses.push(v); measure.innerHTML = pageHTML(t, pg, pages.length);
-          if (!fits() && pg.verses.length > 1) { pg.verses.pop(); pages.push(pg); pg = { head: false, pic: null, verses: [v] }; }
+        const render = () => { measure.innerHTML = pageHTML(t, pg, pages.length); };
+        const flush = () => { pages.push(pg); pg = { head: false, pic: null, verses: [] }; };
+        for (const piece of c.vs) {
+          pg.verses.push(piece); render(); if (fits()) continue;
+          pg.verses.pop();
+          if (pg.verses.length || pg.pic || pg.head) flush();          // carry on at the top of the next page
+          pg.verses.push(piece); render(); if (fits()) continue;
+          pg.verses.pop();                                             // longer than a whole page: break it between words
+          const words = piece.text.split(/\s+/), dur = Math.max(.1, (piece.end || piece.start + 1) - piece.start);
+          let w = 0, first = piece.first;
+          while (w < words.length) {
+            const part = Object.assign({}, piece, { first, text: words[w], start: piece.start + dur * w / words.length });
+            pg.verses.push(part); w++;
+            while (w < words.length) { const prev = part.text; part.text = prev + " " + words[w]; render(); if (!fits()) { part.text = prev; break; } w++; }
+            if (w < words.length) { flush(); first = false; }
+          }
         }
         pages.push(pg);
       });
@@ -809,10 +834,8 @@ BOOKPAGE_JS = r"""
     // ---- which page the reading is on, and which verse is being read ----
     function where() {
       const now = position();
-      let lab = null;
-      for (const pg of book.pages) for (const v of pg.verses) if (v.start <= now + 0.12) lab = v.label;
-      let pi = 0;
-      if (lab !== null) book.pages.forEach((pg, i) => { if (pg.verses.some(v => v.label === lab)) pi = i; });
+      let lab = null, pi = 0;
+      book.pages.forEach((pg, i) => pg.verses.forEach(v => { if (v.start <= now + 0.12) { lab = v.label; pi = i; } }));
       return { pi, lab, inSup: lab === null && book.sup.some(s => s.start <= now + 0.12) };
     }
     // ---- a printed page ----
@@ -840,45 +863,76 @@ BOOKPAGE_JS = r"""
       el.style.width = L + "px"; el.style.height = h + "px";
       el.style.transform = `translate(${M[0]}px, ${M[1]}px) rotate(${phi}rad) translate(${-L / 2}px, ${side > 0 ? 0 : -h}px)`;
     }
+    // Each frame only moves things (translate/rotate/reflect), never re-cuts or repaints them: the pages are painted
+    // once, and the phone's graphics chip slides them. The page's visible part sits in a huge box whose edge lies on
+    // the crease; turning just rotates and slides that box, and moves the page inside it the opposite way.
+    function edgeBox(box, inner, M, n, S, reflect) {
+      const phi = Math.atan2(n[1], n[0]);
+      box.style.transform = `translate(${M[0]}px, ${M[1]}px) rotate(${phi}rad) translate(${-S}px, ${-S / 2}px)`;   // its right edge is the crease
+      const k = M[0] * n[0] + M[1] * n[1];
+      inner.style.transform = `translate(${S}px, ${S / 2}px) rotate(${-phi}rad) translate(${-M[0]}px, ${-M[1]}px)` +
+        (reflect ? ` matrix(${1 - 2 * n[0] * n[0]}, ${-2 * n[0] * n[1]}, ${-2 * n[0] * n[1]}, ${1 - 2 * n[1] * n[1]}, ${2 * k * n[0]}, ${2 * k * n[1]})` : "");
+    }
     function setTurn(T, t) {
-      const W = T.W, H = T.H;
-      if (t <= 0.001) { T.front.style.clipPath = ""; T.flap.style.visibility = "hidden"; T.cast.style.visibility = T.cast2.style.visibility = "hidden"; return; }
-      T.flap.style.visibility = T.cast.style.visibility = T.cast2.style.visibility = "visible";
-      const C = [W, H], P = [W - 2 * W * t, H - 0.26 * H * Math.sin(Math.PI * t)];
+      const W = T.W, H = T.H, S = T.S;
+      const C = [W, H], P = [W - 2 * W * Math.max(t, 0.0005), H - 0.26 * H * Math.sin(Math.PI * t)];
       let n = [C[0] - P[0], C[1] - P[1]]; const len = Math.hypot(n[0], n[1]) || 1; n = [n[0] / len, n[1] / len];
-      const M = [(C[0] + P[0]) / 2, (C[1] + P[1]) / 2], k = M[0] * n[0] + M[1] * n[1];
-      T.front.style.clipPath = poly(half(W, H, M, n, 1));
-      T.flap.style.clipPath = poly(half(W, H, M, n, -1));
-      T.flap.style.transform = `matrix(${1 - 2 * n[0] * n[0]}, ${-2 * n[0] * n[1]}, ${-2 * n[0] * n[1]}, ${1 - 2 * n[1] * n[1]}, ${2 * k * n[0]}, ${2 * k * n[1]})`;
+      const M = [(C[0] + P[0]) / 2, (C[1] + P[1]) / 2];
+      edgeBox(T.frontBox, T.front, M, n, S, false);
+      edgeBox(T.flapBox, T.flap, M, n, S, true);
       const L = 3 * (W + H), s = Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.15)), 1.6);
       bar(T.castBar, M, n, L, 70, 1);  T.castBar.style.opacity = s;          // on the page being uncovered
       bar(T.cast2Bar, M, n, L, 26, -1); T.cast2Bar.style.opacity = s * .8;  // on the page itself, under the lifted part
       bar(T.flapBar, M, n, L, Math.max(40, W * .35), 1);                     // the curve of the sheet near the fold
     }
     function startTurn(front, under, forward, done) {
-      const W = box.clientWidth, H = box.clientHeight;
-      const flap = document.createElement("div"); flap.className = "bk-face bk-flap";
+      const W = box.clientWidth, H = box.clientHeight, S = 2.5 * (W + H);
+      const sized = el => { el.style.inset = "auto"; el.style.left = el.style.top = "0px"; el.style.width = W + "px"; el.style.height = H + "px"; el.style.transformOrigin = "0 0"; };
+      const clipBox = cls => { const b = document.createElement("div"); b.className = "bk-clip " + cls; b.style.width = b.style.height = S + "px"; return b; };
+      // the page being turned, in its box
+      const frontBox = clipBox("front"); stack.appendChild(frontBox); frontBox.appendChild(front); sized(front);
+      // the back of the sheet: the page mirrored across the crease, print faintly showing through
+      const flap = document.createElement("div"); flap.className = "bk-face bk-flap"; sized(flap);
       const ghost = front.querySelector(".bk-in").cloneNode(true); ghost.classList.add("ghost"); flap.appendChild(ghost);
       const mk = (cls, grad) => { const c = document.createElement("div"); c.className = "bk-cast " + cls; const b = document.createElement("div"); b.className = "bk-bar"; b.style.background = grad; c.appendChild(b); return [c, b]; };
       const [cast, castBar] = mk("", "linear-gradient(rgba(20,10,2,.30), rgba(20,10,2,.10) 30%, transparent)");
       const [cast2, cast2Bar] = mk("on-top", "linear-gradient(transparent, rgba(20,10,2,.22))");
       const [flapShade, flapBar] = mk("", "linear-gradient(rgba(30,16,4,.30), rgba(255,250,235,.10) 35%, rgba(30,16,4,.10) 80%, transparent)");
       flap.appendChild(flapShade);
-      front.classList.add("top"); stack.appendChild(cast); stack.appendChild(cast2); stack.appendChild(flap);
-      const T = { W, H, front, under, flap, cast, cast2, castBar, cast2Bar, flapBar, raf: 0, done: null };
-      const ms = 1050, t0 = performance.now(), ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
-      T.done = () => { cancelAnimationFrame(T.raf); [flap, cast, cast2].forEach(e => e.remove()); front.classList.remove("top"); front.style.clipPath = ""; done(); turn = null; };
+      const flapBox = clipBox("flap"); flapBox.appendChild(flap);
+      stack.insertBefore(cast, frontBox); frontBox.appendChild(cast2); sized(cast2); stack.appendChild(flapBox);
+      const T = { W, H, S, front, under, flap, frontBox, flapBox, cast, cast2, castBar, cast2Bar, flapBar, raf: 0, done: null };
+      const ms = 1050; let t0 = 0; const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      T.done = () => {
+        cancelAnimationFrame(T.raf);
+        front.style.cssText = ""; stack.insertBefore(front, frontBox);     // the page goes back to an ordinary page
+        [frontBox, flapBox, cast].forEach(e => e.remove()); done(); turn = null;
+      };
       const frame = now => { const u = Math.min(1, (now - t0) / ms), e = ease(u); setTurn(T, forward ? e : 1 - e); if (u < 1) T.raf = requestAnimationFrame(frame); else T.done(); };
-      setTurn(T, forward ? 0 : 1); turn = T; T.raf = requestAnimationFrame(frame);
+      setTurn(T, forward ? 0 : 1); turn = T;
+      T.raf = requestAnimationFrame(() => { T.raf = requestAnimationFrame(now => { t0 = now; frame(now); }); });
     }
     let leaf = null;
+    let ready = null;   // the next page, built ahead of time and lying under the current one
+    const decoded = {};
+    function prepare(i) {
+      if (!book || i >= book.pages.length || (ready && ready.i === i && ready.book === book)) return;
+      if (ready) ready.el.remove();
+      const pic = book.pages[i].pic;
+      if (pic && !decoded[pic]) { const im = new Image(); im.src = pic; decoded[pic] = im.decode ? im.decode().catch(() => {}) : 1; }
+      const el = makePage(i); stack.insertBefore(el, stack.firstChild); ready = { i, el, book };
+    }
     function showPage(i, animate) {
       if (turn) turn.done();
-      const nu = makePage(i), old = leaf, forward = i > shown;
-      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; return; }
+      let nu;
+      if (ready && ready.i === i && ready.book === book) { nu = ready.el; ready = null; } else nu = makePage(i);
+      if (ready) { ready.el.remove(); ready = null; }
+      const old = leaf, forward = i > shown;
+      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; clearTimeout(showPage.tm); showPage.tm = setTimeout(() => prepare(i + 1), 600); return; }
       if (forward) { stack.insertBefore(nu, old); startTurn(old, nu, true, () => old.remove()); }      // the current page curls over, uncovering the next
       else { stack.appendChild(nu); startTurn(nu, old, false, () => old.remove()); }                  // going back: the earlier page curls back over
       leaf = nu; shown = i;
+      clearTimeout(showPage.tm); showPage.tm = setTimeout(() => { if (!turn) prepare(shown + 1); else showPage.tm = setTimeout(() => prepare(shown + 1), 1200); }, 1300);
     }
     function mark(w) {
       if (!leaf) return;
@@ -892,13 +946,19 @@ BOOKPAGE_JS = r"""
       if (!book || book.file !== t.file || sz !== size || (!book.ok && CL)) {
         if (!bk.clientHeight) return;
         const fresh = !book || book.file !== t.file;
-        size = sz; book = layout(t); shown = -1; leaf = null; stack.innerHTML = "";
+        size = sz; book = layout(t); shown = -1; leaf = null; ready = null; stack.innerHTML = "";
         showPage(where().pi, false); if (fresh) bk.dataset.file = t.file;
       }
       const w = where();
       if (w.pi !== shown) showPage(w.pi, true);
       mark(w);
     }
+    if (document.fonts) { document.fonts.addEventListener("loadingdone", () => { size = ""; }); document.fonts.ready.then(() => { size = ""; }); }
+    window.__bkAudit = () => {   // lays out every reading here and reports any page whose text runs off it
+      const bad = [];
+      for (const t of TRACKS) { const b = layout(t); b.pages.forEach((pg, i) => { measure.innerHTML = pageHTML(t, pg, i); if (!fits()) bad.push(t.title + " p" + (i + 1)); }); }
+      return { tracks: TRACKS.length, bad };
+    };
     setInterval(tick, 150);
     new MutationObserver(() => setTimeout(tick, 0)).observe(fs, { attributes: true, attributeFilter: ["class"] });
   };
