@@ -642,6 +642,29 @@ KEEP_JS = r"""
 """
 
 
+
+# ---- paper for the full-screen page ----
+TOOTH = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='t' x='0' y='0' width='100%25' height='100%25'%3E"
+         "%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch' result='n'/%3E"
+         "%3CfeDiffuseLighting in='n' lighting-color='%23fff' surfaceScale='.9' result='l'%3E%3CfeDistantLight azimuth='135' elevation='58'/%3E%3C/feDiffuseLighting%3E"
+         "%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='.4' intercept='.64'/%3E%3CfeFuncG type='linear' slope='.4' intercept='.64'/%3E%3CfeFuncB type='linear' slope='.4' intercept='.64'/%3E%3C/feComponentTransfer%3E"
+         "%3C/filter%3E%3Crect width='260' height='260' filter='url(%23t)'/%3E%3C/svg%3E\")")
+FIBRES = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E"   # the paper's cloudy formation
+          "%3CfeTurbulence type='fractalNoise' baseFrequency='.016' numOctaves='4' seed='11' stitchTiles='stitch'/%3E"
+          "%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .16  0 0 0 1.5 -.62'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23f)' opacity='.3'/%3E%3C/svg%3E\")")
+FLECKS = ("url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='330' height='330'%3E%3Cfilter id='k'%3E"
+          "%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/%3E"
+          "%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 8 -6.1'/%3E%3C/filter%3E%3Crect width='330' height='330' filter='url(%23k)' opacity='.35'/%3E%3C/svg%3E\")")
+PAPER = ("radial-gradient(circle at 61px 143px, rgba(150,95,30,.18) 0 2.5px, rgba(150,95,30,.06) 4.5px, transparent 6px) 0 0 / 370px 530px,"   # foxing: a few age spots
+         " radial-gradient(circle at 203px 37px, rgba(140,90,30,.15) 0 1.5px, transparent 3.5px) 0 0 / 430px 610px,"
+         " radial-gradient(ellipse 8px 6px at 29px 388px, rgba(150,95,30,.11), transparent) 0 0 / 310px 470px,"
+         " radial-gradient(140% 100% at 50% 45%, transparent 48%, rgba(110,68,22,.30)),"                                    # aged edges
+         " radial-gradient(closest-side, rgba(150,100,40,.13), transparent) 0 0 / 430px 380px,"                             # mottling
+         " radial-gradient(closest-side, rgba(150,100,40,.10), transparent) 190px 140px / 520px 470px,"
+         " radial-gradient(closest-side, rgba(255,246,222,.12), transparent) 80px 260px / 330px 360px,"
+         f" {FLECKS}, {FIBRES}, {TOOTH}, var(--page)")
+PAPER_BLEND = "normal, normal, normal, normal, normal, normal, normal, normal, normal, multiply, normal"
+
 BOOKPAGE_CSS = r"""
 /* =================== the full-screen view as a page of the book, turning with the scenes =================== */
 __P__ .fs { background: radial-gradient(120% 50% at 50% 0%, rgba(120,170,130,.16), transparent 70%), __NOISE__, linear-gradient(var(--leather), var(--leather-d)); }
@@ -660,10 +683,11 @@ html[data-theme="dark"] .bk { __LAMPPAPER__ }
     7px 4px 0 #1a1007, 0 14px 30px rgba(0,0,0,.6); }
 .bk-leaf { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 50%; }
 .bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 2px 5px 5px 2px; -webkit-backface-visibility: hidden; backface-visibility: hidden;
-  background: linear-gradient(90deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.10)),
-    radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.24)), __FIBRE__, var(--page); }
+  background: linear-gradient(90deg, rgba(50,28,8,.32), rgba(50,28,8,.09) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.12)), __PAPER__;
+  background-blend-mode: normal, __PAPERBLEND__; }
 .bk-back { transform: rotateY(180deg);
-  background: linear-gradient(270deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%), radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.28)), __FIBRE__, var(--page-2); }
+  background: linear-gradient(270deg, rgba(50,28,8,.32), rgba(50,28,8,.09) 4%, transparent 10%), __PAPER__;
+  background-blend-mode: normal, __PAPERBLEND__; filter: brightness(.93); }
 .bk-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 14px 18px 10px 24px; color: var(--fg); }
 .bk-rh { flex: none; display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
   padding: 2px 2px 7px; border-bottom: 1px solid var(--ink-rule); }
@@ -691,7 +715,7 @@ html[data-theme="dark"] .bk { __LAMPPAPER__ }
 """
 LAMPPAPER = ("--page: #dccaa0; --page-2: #cdb98d; --fg: #2a1d10; --muted: #5f4c32; --rubric: #8f2a1b; --gild: #9a6d22;"
              " --ink-rule: rgba(120,80,25,.55); --edge-a: #e3d3ae; --edge-b: #a58d5c; color-scheme: light;")
-for k, v in {"__P__": P, "__NOISE__": NOISE, "__FIBRE__": FIBRE, "__LAMPPAPER__": LAMPPAPER}.items():
+for k, v in {"__P__": P, "__NOISE__": NOISE, "__FIBRE__": FIBRE, "__LAMPPAPER__": LAMPPAPER, "__PAPER__": PAPER, "__PAPERBLEND__": PAPER_BLEND}.items():
     BOOKPAGE_CSS = BOOKPAGE_CSS.replace(k, v)
 
 BOOKPAGE_JS = r"""
