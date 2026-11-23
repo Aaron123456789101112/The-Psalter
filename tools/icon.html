@@ -133,6 +133,39 @@ function ovalFrame(rx, ry) {
   });
 }
 if (opt === "A") { frame(112, 9); lyre(512, 508, 1.13); }
+function squircle(a, n = 5, steps = 720) {   // the app-icon shape: a superellipse, a units from the centre
+  const pts = [];
+  for (let i = 0; i < steps; i++) { const t = i / steps * 2 * Math.PI, c = Math.cos(t), s = Math.sin(t);
+    pts.push([512 + a * Math.sign(c) * Math.pow(Math.abs(c), 2 / n), 512 + a * Math.sign(s) * Math.pow(Math.abs(s), 2 / n)]); }
+  return pts;
+}
+const pathOf = pts => "M" + pts.map(p => p[0].toFixed(1) + " " + p[1].toFixed(1)).join("L") + "Z";
+function along(pts, gap) {   // points spaced evenly along the shape
+  const out = []; let acc = gap / 2;
+  for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length], L = Math.hypot(q[0] - p[0], q[1] - p[1]);
+    while (acc <= L) { const f = acc / L; out.push([p[0] + (q[0] - p[0]) * f, p[1] + (q[1] - p[1]) * f]); acc += gap; } acc -= L; }
+  return out;
+}
+function iconFrame(a) {
+  el("path", { d: pathOf(squircle(a + 30)), fill: "none", stroke: "#000", "stroke-width": 7 }, blind);
+  el("path", { d: pathOf(squircle(a)), fill: "none", "stroke-width": 10 }, gilt);
+  el("path", { d: pathOf(squircle(a - 22)), fill: "none", "stroke-width": 4.5 }, gilt);
+  for (const [x, y] of along(squircle(a - 11), 22)) el("circle", { cx: x, cy: y, r: 2.6, stroke: "none" }, gilt);
+  for (const [x, y, r] of [[512, 512 - a, 0], [512, 512 + a, 0], [512 - a, 512, 90], [512 + a, 512, 90]]) {
+    const g = el("g", { transform: `translate(${x} ${y}) rotate(${r})`, stroke: "none" }, gilt);
+    el("path", { d: "M0 -20l15 20-15 20-15-20z" }, g);
+    el("circle", { cx: -28, cy: 0, r: 5 }, g); el("circle", { cx: 28, cy: 0, r: 5 }, g);
+  }
+  // a small gilt spray inside each rounded corner
+  const d = (a - 60) * Math.pow(.5, 1 / 5) - 26;   // along the diagonal, just inside the inner rule
+  [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(([sx, sy]) => {
+    const g = el("g", { transform: `translate(${512 - sx * d} ${512 - sy * d}) scale(${sx} ${sy}) rotate(-45) scale(.8)`, stroke: "none" }, gilt);
+    el("path", { d: "M0 -16c8 11 8 22 0 42-8-20-8-31 0-42z" }, g);
+    el("path", { d: "M-6 8c-14-14-36-14-50 0 14 5 32 7 50 0zM6 8c14-14 36-14 50 0-14 5-32 7-50 0z" }, g);
+    el("circle", { cx: 0, cy: -26, r: 4.5 }, g);
+  });
+}
+if (opt === "E") { iconFrame(420); lyre(512, 520, 1.06); }
 if (opt === "L") {}
 if (opt === "D") { ovalFrame(372, 432); lyre(512, 520, 1.0); }
 if (opt === "B") {
