@@ -735,15 +735,35 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-top { o
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-x { position: static; width: 40px; height: 40px; color: var(--gild-l); border-color: color-mix(in srgb, var(--gild) 80%, transparent); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom { --fg: #f2e4c0; --muted: #c8b48c; color: var(--fg); padding-top: 10px; }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom .fs-ctl button { color: var(--fg); }
-.bk { order: 2; position: relative; flex: 1 1 auto; min-height: 0; margin: 0 16px 0 12px; perspective: 2000px; }
+.bk { order: 2; position: relative; flex: 1 1 auto; min-height: 0; margin: 0 10px 20px 8px; }
+/* the open book: leather boards with a tooled gold line, the facing page curving down into the spine, the page block */
+.bk-boards { position: absolute; inset: 0; border-radius: 4px 10px 10px 4px;
+  background: radial-gradient(120% 70% at 30% 20%, rgba(255,255,255,.08), transparent 60%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(165deg, var(--leather-l), var(--leather) 45%, var(--leather-d));
+  box-shadow: 0 18px 36px rgba(0,0,0,.6), 0 2px 4px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.1), inset 0 0 0 1px rgba(0,0,0,.45); }
+.bk-boards::after { content: ""; position: absolute; inset: 4px; border-radius: 3px 8px 8px 3px; border: 1px solid color-mix(in srgb, var(--gild) 75%, transparent);
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,.25), inset 0 0 0 3px color-mix(in srgb, var(--gild) 35%, transparent); }
+.bk-left { position: absolute; top: 10px; bottom: 12px; left: 9px; width: 25px; border-radius: 3px 0 0 3px;
+  background: linear-gradient(90deg, rgba(255,250,235,.10), rgba(60,34,10,.12) 45%, rgba(40,20,5,.55) 92%, rgba(20,10,2,.75)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page-2);
+  box-shadow: -1px 1px 0 var(--edge-a), -2px 1px 0 var(--edge-b), -3px 2px 0 var(--edge-a), -4px 2px 0 var(--edge-b), -5px 3px 0 #1a1007; }
+.bk-ribbon { position: absolute; left: 50px; bottom: -14px; width: 12px; height: 34px;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ribbon) 55%, #000), var(--ribbon) 35%, color-mix(in srgb, var(--ribbon) 72%, #fff) 52%, var(--ribbon) 68%, color-mix(in srgb, var(--ribbon) 55%, #000));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); filter: drop-shadow(1px 2px 1px rgba(0,0,0,.4)); }
 /* the page is always paper: in dark mode, the same parchment a little warmer and dimmer, as if read by lamplight */
 @media (prefers-color-scheme: dark) { html:not([data-theme="light"]) .bk { --page: #c7b287; --page-2: #b9a377; --fg: #221609; --muted: #54422a; --rubric: #852516; --gild: #8a611c; --ink-rule: rgba(105,68,20,.6); --edge-a: #cfbb91; --edge-b: #93794a; color-scheme: light; } }
 html[data-theme="dark"] .bk { --page: #c7b287; --page-2: #b9a377; --fg: #221609; --muted: #54422a; --rubric: #852516; --gild: #8a611c; --ink-rule: rgba(105,68,20,.6); --edge-a: #cfbb91; --edge-b: #93794a; color-scheme: light; }
-.bk-stack { position: absolute; inset: 0; border-radius: 2px 5px 5px 2px;
+.bk-stack { position: absolute; top: 8px; right: 11px; bottom: 12px; left: 34px; border-radius: 0 4px 4px 0;
   box-shadow: 1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
-    7px 4px 0 #1a1007, 0 14px 30px rgba(0,0,0,.6); }
-.bk-leaf { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 50%; }
-.bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 2px 5px 5px 2px; -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    7px 4px 0 #1a1007, -2px 0 6px rgba(0,0,0,.35); }
+.bk-pages { position: absolute; inset: 0; }
+.bk-pg { z-index: 1; }
+.bk-pg.top { z-index: 3; }
+.bk-flap { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 5; transform-origin: 0 0; pointer-events: none; filter: brightness(.95); }
+.bk-flap .ghost { position: absolute; inset: 0; opacity: .12; }
+.bk-cast { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+.bk-cast.on-top { z-index: 4; }
+.bk-flap .bk-cast { z-index: 1; overflow: visible; }
+.bk-bar { position: absolute; left: 0; top: 0; transform-origin: 0 0; pointer-events: none; }
+.bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 0 4px 4px 0;
   background: linear-gradient(90deg, rgba(50,28,8,.32), rgba(50,28,8,.09) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.12)), radial-gradient(circle at 61px 143px, rgba(150,95,30,.18) 0 2.5px, rgba(150,95,30,.06) 4.5px, transparent 6px) 0 0 / 370px 530px, radial-gradient(circle at 203px 37px, rgba(140,90,30,.15) 0 1.5px, transparent 3.5px) 0 0 / 430px 610px, radial-gradient(ellipse 8px 6px at 29px 388px, rgba(150,95,30,.11), transparent) 0 0 / 310px 470px, radial-gradient(140% 100% at 50% 45%, transparent 48%, rgba(110,68,22,.30)), radial-gradient(closest-side, rgba(150,100,40,.13), transparent) 0 0 / 430px 380px, radial-gradient(closest-side, rgba(150,100,40,.10), transparent) 190px 140px / 520px 470px, radial-gradient(closest-side, rgba(255,246,222,.12), transparent) 80px 260px / 330px 360px, url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='330' height='330'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='1' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 8 -6.1'/%3E%3C/filter%3E%3Crect width='330' height='330' filter='url(%23k)' opacity='.35'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.016' numOctaves='4' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .45  0 0 0 0 .32  0 0 0 0 .16  0 0 0 1.5 -.62'/%3E%3C/filter%3E%3Crect width='420' height='420' filter='url(%23f)' opacity='.3'/%3E%3C/svg%3E"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='t' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='%23fff' surfaceScale='.9' result='l'%3E%3CfeDistantLight azimuth='135' elevation='58'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='.4' intercept='.64'/%3E%3CfeFuncG type='linear' slope='.4' intercept='.64'/%3E%3CfeFuncB type='linear' slope='.4' intercept='.64'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23t)'/%3E%3C/svg%3E"), var(--page);
   background-blend-mode: normal, normal, normal, normal, normal, normal, normal, normal, normal, normal, multiply, normal; }
 .bk-back { transform: rotateY(180deg);
@@ -769,8 +789,6 @@ html[data-theme="dark"] .bk { --page: #c7b287; --page-2: #b9a377; --fg: #221609;
 .bk-tx .bk-n { display: inline; font: 700 .58em/1 var(--ui); color: var(--rubric); margin: 0 .22em 0 .1em; vertical-align: .55em; }
 .bk-tx .bk-dc { float: left; font: 400 3.05em/.82 var(--display); color: var(--rubric); margin: .06em .1em 0 0; }
 .bk-fo { flex: none; text-align: center; font: 400 13px/1 var(--display); letter-spacing: .1em; color: var(--muted); padding-top: 6px; }
-.bk-shade { position: absolute; inset: 0; pointer-events: none; border-radius: 2px 5px 5px 2px; opacity: 0;
-  background: linear-gradient(90deg, rgba(20,10,2,.0), rgba(20,10,2,.35)); }
 .bk-measure { visibility: hidden; pointer-events: none; }
 @media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
 
@@ -1601,13 +1619,13 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const root = document.documentElement, bar = document.querySelector(".tabs");
   const TABS = {
     psalter: { btn: "tab-psalter", hash: "#psalter" },
-    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/book-test.html?v=20261123050556" },
-    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/book-test.html?v=20261123050556" },
-    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/book-test.html?v=20261123050556" },
-    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/book-test.html?v=20261123050556" },
-    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/book-test.html?v=20261123050556" },
-    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/book-test.html?v=20261123050556" },
-    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/book-test.html?v=20261123050556" },
+    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/book-test.html?v=20261123051005" },
+    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/book-test.html?v=20261123051005" },
+    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/book-test.html?v=20261123051005" },
+    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/book-test.html?v=20261123051005" },
+    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/book-test.html?v=20261123051005" },
+    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/book-test.html?v=20261123051005" },
+    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/book-test.html?v=20261123051005" },
   };
   const ORDER = ["psalter", "rev", "judges", "mighty", "prayers", "matthew", "proverbs", "prophets"];
   let cur = null;
@@ -2687,9 +2705,10 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     const fs = document.querySelector(".fs"); if (!fs || typeof TRACKS === "undefined") return setTimeout(start, 300);
     const bottom = fs.querySelector(".fs-bottom");
     const bk = document.createElement("div"); bk.className = "bk"; bk.setAttribute("aria-live", "off");
-    bk.innerHTML = '<div class="bk-stack"></div><div class="bk-leaf bk-measure"><div class="bk-face"><div class="bk-in"></div></div></div><div class="bk-shade"></div>';
+    bk.innerHTML = '<div class="bk-boards"></div><div class="bk-ribbon"></div><div class="bk-left"></div>' +
+      '<div class="bk-stack"><div class="bk-face bk-measure"><div class="bk-in"></div></div><div class="bk-pages"></div></div>';
     fs.insertBefore(bk, bottom);
-    const stack = bk.querySelector(".bk-stack"), measure = bk.querySelector(".bk-measure .bk-in"), shade = bk.querySelector(".bk-shade");
+    const stack = bk.querySelector(".bk-pages"), box = bk.querySelector(".bk-stack"), measure = bk.querySelector(".bk-measure .bk-in");
     const BOOKNAME = "The Psalter", DIR = "";
     const vKey = typeof verseKey === "function" ? verseKey : (v => { const m = String(v).match(/^(?:(\d+):)?(\d+)/); return m ? (+(m[1] || 0)) * 1000 + +m[2] : -1; });
     const SCN = typeof SCENES !== "undefined" ? SCENES : {}, ARTS = typeof ART !== "undefined" ? ART : {};
@@ -2697,7 +2716,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    let book = null, shown = -1, leaf = null, size = "";
+    let book = null, shown = -1, size = "";
     // ---- laying the reading out as pages ----
     function verses(t) {
       const e = CL && CL[(DIR ? DIR + "/" : "") + t.file], segs = e && e.segs;
@@ -2754,31 +2773,69 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       if (lab !== null) book.pages.forEach((pg, i) => { if (pg.verses.some(v => v.label === lab)) pi = i; });
       return { pi, lab, inSup: lab === null && book.sup.some(s => s.start <= now + 0.12) };
     }
-    // ---- a page leaf: its printed front, and the blank back you see as it turns ----
-    function makeLeaf(i) {
-      const el = document.createElement("div"); el.className = "bk-leaf";
-      el.innerHTML = `<div class="bk-face bk-front"><div class="bk-in">${pageHTML(book.t, book.pages[i], i)}</div></div><div class="bk-face bk-back"></div>`;
+    // ---- a printed page ----
+    function makePage(i) {
+      const el = document.createElement("div"); el.className = "bk-face bk-pg";
+      el.innerHTML = `<div class="bk-in">${pageHTML(book.t, book.pages[i], i)}</div>`;
       return el;
     }
-    let anims = [];
-    function finishTurns() { anims.forEach(a => { try { a.finish(); } catch (e) {} }); anims = []; }
-    function showPage(i, animate) {
-      finishTurns();
-      const dir = i > shown ? 1 : -1, nu = makeLeaf(i), old = leaf;
-      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; return; }
-      const ms = 1000;
-      if (dir > 0) {   // the new page lies underneath; the old one turns over to the left
-        stack.insertBefore(nu, old);
-        const a = old.animate([{ transform: "rotateY(0deg)", easing: "cubic-bezier(.35,.05,.55,1)" }, { transform: "rotateY(-90deg)", offset: .8 }, { transform: "rotateY(-180deg)" }], { duration: ms, fill: "forwards" });
-        const b = shade.animate([{ opacity: 0 }, { opacity: 1, offset: .45 }, { opacity: 0 }], { duration: ms, easing: "ease" });
-        const c = old.querySelector(".bk-front").animate([{ filter: "brightness(1)" }, { filter: "brightness(.72)", offset: .8 }, { filter: "brightness(.6)" }], { duration: ms, fill: "forwards" });
-        anims = [a, b, c]; a.finished.then(() => old.remove(), () => old.remove());
-      } else {         // going back: the earlier page turns back over from the left
-        stack.appendChild(nu);
-        const a = nu.animate([{ transform: "rotateY(-180deg)" }, { transform: "rotateY(-90deg)", offset: .2, easing: "cubic-bezier(.45,0,.65,.95)" }, { transform: "rotateY(0deg)" }], { duration: ms, fill: "forwards" });
-        const c = nu.querySelector(".bk-front").animate([{ filter: "brightness(.6)" }, { filter: "brightness(.72)", offset: .2 }, { filter: "brightness(1)" }], { duration: ms, fill: "forwards" });
-        anims = [a, c]; a.finished.then(() => { if (old.parentNode) old.remove(); }, () => { if (old.parentNode) old.remove(); });
+    // ---- turning a page: the corner lifts and the page folds over along a crease that sweeps across it. The part past
+    //      the crease is drawn as the back of the sheet, mirrored across the crease (with the print faintly showing
+    //      through), and the fold casts a shadow on the page being uncovered. All flat 2D, so it holds up in Safari. ----
+    let turn = null;
+    const poly = pts => pts.length ? "polygon(" + pts.map(p => p[0].toFixed(1) + "px " + p[1].toFixed(1) + "px").join(",") + ")" : "polygon(0 0, 0 0, 0 0)";
+    function half(W, H, M, n, sign) {   // the part of the page where sign * (X - M)·n <= 0
+      const pts = [[0, 0], [W, 0], [W, H], [0, H]], f = q => sign * ((q[0] - M[0]) * n[0] + (q[1] - M[1]) * n[1]), out = [];
+      for (let k = 0; k < 4; k++) {
+        const a = pts[k], b = pts[(k + 1) % 4], fa = f(a), fb = f(b);
+        if (fa <= 0) out.push(a);
+        if ((fa < 0 && fb > 0) || (fa > 0 && fb < 0)) { const u = fa / (fa - fb); out.push([a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u]); }
       }
+      return out;
+    }
+    function bar(el, M, n, L, h, side) {   // a strip lying along the crease, on the + side of it (side 1) or the - side (side -1)
+      const phi = Math.atan2(-n[0], n[1]);
+      el.style.width = L + "px"; el.style.height = h + "px";
+      el.style.transform = `translate(${M[0]}px, ${M[1]}px) rotate(${phi}rad) translate(${-L / 2}px, ${side > 0 ? 0 : -h}px)`;
+    }
+    function setTurn(T, t) {
+      const W = T.W, H = T.H;
+      if (t <= 0.001) { T.front.style.clipPath = ""; T.flap.style.visibility = "hidden"; T.cast.style.visibility = T.cast2.style.visibility = "hidden"; return; }
+      T.flap.style.visibility = T.cast.style.visibility = T.cast2.style.visibility = "visible";
+      const C = [W, H], P = [W - 2 * W * t, H - 0.26 * H * Math.sin(Math.PI * t)];
+      let n = [C[0] - P[0], C[1] - P[1]]; const len = Math.hypot(n[0], n[1]) || 1; n = [n[0] / len, n[1] / len];
+      const M = [(C[0] + P[0]) / 2, (C[1] + P[1]) / 2], k = M[0] * n[0] + M[1] * n[1];
+      T.front.style.clipPath = poly(half(W, H, M, n, 1));
+      T.flap.style.clipPath = poly(half(W, H, M, n, -1));
+      T.flap.style.transform = `matrix(${1 - 2 * n[0] * n[0]}, ${-2 * n[0] * n[1]}, ${-2 * n[0] * n[1]}, ${1 - 2 * n[1] * n[1]}, ${2 * k * n[0]}, ${2 * k * n[1]})`;
+      const L = 3 * (W + H), s = Math.pow(Math.sin(Math.PI * Math.min(1, t * 1.15)), 1.6);
+      bar(T.castBar, M, n, L, 70, 1);  T.castBar.style.opacity = s;          // on the page being uncovered
+      bar(T.cast2Bar, M, n, L, 26, -1); T.cast2Bar.style.opacity = s * .8;  // on the page itself, under the lifted part
+      bar(T.flapBar, M, n, L, Math.max(40, W * .35), 1);                     // the curve of the sheet near the fold
+    }
+    function startTurn(front, under, forward, done) {
+      const W = box.clientWidth, H = box.clientHeight;
+      const flap = document.createElement("div"); flap.className = "bk-face bk-flap";
+      const ghost = front.querySelector(".bk-in").cloneNode(true); ghost.classList.add("ghost"); flap.appendChild(ghost);
+      const mk = (cls, grad) => { const c = document.createElement("div"); c.className = "bk-cast " + cls; const b = document.createElement("div"); b.className = "bk-bar"; b.style.background = grad; c.appendChild(b); return [c, b]; };
+      const [cast, castBar] = mk("", "linear-gradient(rgba(20,10,2,.30), rgba(20,10,2,.10) 30%, transparent)");
+      const [cast2, cast2Bar] = mk("on-top", "linear-gradient(transparent, rgba(20,10,2,.22))");
+      const [flapShade, flapBar] = mk("", "linear-gradient(rgba(30,16,4,.30), rgba(255,250,235,.10) 35%, rgba(30,16,4,.10) 80%, transparent)");
+      flap.appendChild(flapShade);
+      front.classList.add("top"); stack.appendChild(cast); stack.appendChild(cast2); stack.appendChild(flap);
+      const T = { W, H, front, under, flap, cast, cast2, castBar, cast2Bar, flapBar, raf: 0, done: null };
+      const ms = 1050, t0 = performance.now(), ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+      T.done = () => { cancelAnimationFrame(T.raf); [flap, cast, cast2].forEach(e => e.remove()); front.classList.remove("top"); front.style.clipPath = ""; done(); turn = null; };
+      const frame = now => { const u = Math.min(1, (now - t0) / ms), e = ease(u); setTurn(T, forward ? e : 1 - e); if (u < 1) T.raf = requestAnimationFrame(frame); else T.done(); };
+      setTurn(T, forward ? 0 : 1); turn = T; T.raf = requestAnimationFrame(frame);
+    }
+    let leaf = null;
+    function showPage(i, animate) {
+      if (turn) turn.done();
+      const nu = makePage(i), old = leaf, forward = i > shown;
+      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; return; }
+      if (forward) { stack.insertBefore(nu, old); startTurn(old, nu, true, () => old.remove()); }      // the current page curls over, uncovering the next
+      else { stack.appendChild(nu); startTurn(nu, old, false, () => old.remove()); }                  // going back: the earlier page curls back over
       leaf = nu; shown = i;
     }
     function mark(w) {
