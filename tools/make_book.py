@@ -969,7 +969,87 @@ BOOKPAGE_JS = r"""
 
 once('<div class="sub">Read by Psalm Reader II over a humming choir</div>',
      '<div class="sub">Read by Psalm Reader II over a humming choir</div>\n    <figure class="artplate" id="plate" aria-hidden="true"><span class="pin"><img alt=""><img alt=""></span></figure>')
-once("</style>", BOOK_CSS + FLIGHT_CSS + KEEP_CSS + BOOKPAGE_CSS + TOP_ALL_CSS + "</style>")
+
+# the clip maker (and the Listen offline sheet, which shares its look): a parchment page lying open on the book's leather
+CLIP_CSS = r"""
+/* =================== the clip maker as a page of the book =================== */
+html .cm { --page: #efe2bf; --page-2: #e3d0a3; --fg: #2b1f12; --muted: #6b583e; --rubric: #9b2b1d; --gild: #b8862f; --gild-l: #f0d58c;
+  --ink-rule: rgba(155,104,30,.6); --edge-a: #f1e5c6; --edge-b: #c2a978; --line: rgba(155,104,30,.45); --surface: rgba(255,248,226,.45);
+  --accent: #84520f; --accent-ink: #2a1a0a; color-scheme: light; color: var(--fg);
+  background: radial-gradient(120% 50% at 50% 0%, rgba(255,255,255,.07), transparent 70%), __NOISE__, linear-gradient(var(--leather), var(--leather-d));
+  background-color: var(--leather-d); padding-left: max(10px, env(safe-area-inset-left, 0px)); padding-right: max(10px, env(safe-area-inset-right, 0px)); }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) .cm { __LAMPPAPER__ --line: rgba(105,68,20,.5); --surface: rgba(240,225,190,.3); --accent: #6e430c; } }
+html[data-theme="dark"] .cm { __LAMPPAPER__ --line: rgba(105,68,20,.5); --surface: rgba(240,225,190,.3); --accent: #6e430c; }
+
+html .cm-in { position: relative; margin: 58px auto 10px; padding: 46px 22px 34px 26px; gap: 18px; border-radius: 2px 5px 5px 2px;
+  background: linear-gradient(90deg, rgba(50,28,8,.28), rgba(50,28,8,.07) 4%, transparent 9%, transparent 95%, rgba(50,28,8,.1)), __PAPER__;
+  background-color: var(--page); background-blend-mode: normal, __PAPERBLEND__;
+  box-shadow: inset 0 0 0 1px rgba(110,75,30,.25), 1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b),
+    5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b), 7px 4px 0 #1a1007, 0 14px 34px rgba(0,0,0,.6); }
+html .cm-in::before { content: ""; position: absolute; inset: 9px 8px 9px 11px; border: 3px double var(--ink-rule); pointer-events: none; }
+html .cm-in::after { content: var(--cm-rh, "The Psalter"); position: absolute; left: 26px; right: 22px; top: 22px; text-align: center; padding-bottom: 7px;
+  border-bottom: 1px solid var(--ink-rule); font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+html .cm-in > * { position: relative; }
+html .cm-in > .cm-head { position: static; }
+#cm [hidden] { display: none !important; }   /* the result and progress bar were showing before any video was made */
+
+/* heading: fleuron, title in capitals, gilt rule; the close button a gilt ring on the leather above the page */
+html .cm-head { flex-direction: column; justify-content: center; gap: 0; text-align: center; }
+html .cm-head::before { content: ""; width: 58px; height: 19px; margin-bottom: 4px; background: center / contain no-repeat __FLEURON__; }
+html .cm-head::after { content: ""; width: 170px; height: 11px; margin-top: 9px; background: center / contain no-repeat __RULE__; }
+html .cm-head h2 { font: 400 25px/1.15 var(--display); letter-spacing: .17em; text-transform: uppercase; color: var(--fg); }
+html .cm-x { position: absolute; left: 0; top: -52px; width: 42px; height: 42px; min-height: 0; padding: 0; border-radius: 50%; font-size: 0; color: var(--gild-l);
+  background: rgba(0,0,0,.22); border: 1px solid color-mix(in srgb, var(--gild) 85%, transparent); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px; }
+html .cm-x::before { content: ""; position: absolute; inset: 0; margin: auto; width: 15px; height: 15px;
+  background: linear-gradient(45deg, transparent 45%, currentColor 45% 55%, transparent 55%), linear-gradient(-45deg, transparent 45%, currentColor 45% 55%, transparent 55%); }
+html .cm-lede, html .of-net { margin: -4px 4px 0; text-align: center; font: italic 16px/1.45 var(--body); color: var(--muted); }
+
+/* the choices: small red capitals over a ruled line of ink */
+html .cm-field { font: 700 11px/1.3 var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--rubric); gap: 5px; }
+html .cm-field select { -webkit-appearance: none; appearance: none; font: 400 19px/1.3 var(--body); letter-spacing: 0; text-transform: none; color: var(--fg);
+  border: 0; border-bottom: 1px solid var(--ink-rule); border-radius: 0; padding: 10px 30px 10px 4px; min-height: 46px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%23a07424' stroke-width='1.6'/%3E%3C/svg%3E") right 6px center / 12px 8px no-repeat,
+    linear-gradient(transparent, var(--surface)); }
+html .cm-len { margin: -6px 0 0; text-align: center; font: italic 15px/1.3 var(--body); color: var(--muted); }
+
+/* square or tall: two gilt-framed tabs; the chosen one is a piece of leather with gilt letters */
+html .cm-shape button, html .cm-btn { font: 400 16px/1.2 var(--body); color: var(--fg); border-radius: 6px; background: color-mix(in srgb, var(--page) 55%, transparent);
+  border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px; }
+html .cm-shape button small { font: italic 13px/1.2 var(--body); color: var(--muted); }
+html .cm-shape button[aria-pressed="true"] { background: __NOISE__, linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); color: #f6e5b8;
+  border-color: var(--gild); box-shadow: 0 2px 6px rgba(40,22,6,.35); outline-color: color-mix(in srgb, var(--gild) 70%, transparent); }
+html .cm-shape button[aria-pressed="true"] small { color: #d9c08a; }
+
+/* the preview, set in the page like a plate in a gilt frame */
+html .cm-stage { background: none; border: 0; padding: 0; }
+html #cm-canvas, html .cm-result video { padding: 6px; border-radius: 2px; box-sizing: border-box;
+  background: linear-gradient(135deg, #f7e6a6, #b5862f 28%, #f2d47c 50%, #8c6220 74%, #e4c26c);
+  box-shadow: 0 4px 10px rgba(50,28,6,.4), inset 0 0 0 1px rgba(80,52,12,.7); }
+
+/* buttons: gilt-framed; Make the video, Save video and Save are gold */
+html .cm-acts { justify-content: center; }
+html .cm-btn { min-height: 50px; padding: 12px 22px; font-size: 17px; border-radius: 999px; outline-offset: -6px; }
+html .cm-btn.go { border: 0; outline: 0; color: #2a1a0a; font-weight: 600; text-shadow: 0 1px 0 rgba(255,240,190,.6);
+  background: linear-gradient(180deg, #fff1bf, #ecc76a 32%, #b88830 70%, #d9b25a);
+  box-shadow: 0 0 0 1px #6b4a17, 0 0 0 3px #e3c06a, 0 0 0 4px #5a3d12, 0 4px 10px rgba(50,28,5,.4); }
+html .cm-prog { font: italic 14px/1 var(--body); color: var(--muted); }
+html .cm-prog progress { accent-color: var(--gild); }
+html .cm-status { text-align: center; font: italic 16px/1.4 var(--body); color: var(--rubric); }
+html .cm-result { border-top: 3px double var(--ink-rule); }
+html .cm-saved { font: 16px/1.4 var(--body); text-align: center; }
+html .cm-help { font: 15px/1.5 var(--body); color: var(--muted); }
+
+/* Listen offline uses the same sheet: its boxes become ruled panels on the page */
+html .of-box, html .of-col { background: var(--surface); border: 1px solid var(--ink-rule); border-radius: 3px; }
+html .of-box h3 { font: 400 19px/1.2 var(--display); letter-spacing: .12em; text-transform: uppercase; color: var(--fg); }
+html .of-box p, html .of-box ol, html .of-sum { font-family: var(--body); font-size: 16px; }
+html .of-net.off { color: var(--rubric); font-style: normal; font-weight: 600; }
+"""
+for k, v in {"__NOISE__": NOISE, "__LAMPPAPER__": LAMPPAPER, "__PAPER__": PAPER, "__PAPERBLEND__": PAPER_BLEND, "__FLEURON__": FLEURON, "__RULE__": RULE}.items():
+    CLIP_CSS = CLIP_CSS.replace(k, v)
+CLIP_CSS += "".join(f'html.{k} .cm {{ --cm-rh: "{v[1]}"; }}\n' for k, v in OTHERS.items())
+
+once("</style>", BOOK_CSS + FLIGHT_CSS + KEEP_CSS + BOOKPAGE_CSS + TOP_ALL_CSS + CLIP_CSS + "</style>")
 # switching books no longer pauses what is playing (the keep-playing script decides what pauses, and when)
 once("    for (const k of ORDER) if (k !== which) pauseTab(k);", "    if (!window.keepPlaying) for (const k of ORDER) if (k !== which) pauseTab(k);")
 # let the keep-playing script reach the tabs
