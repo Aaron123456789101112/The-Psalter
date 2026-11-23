@@ -726,6 +726,47 @@ html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { disp
 .mini.rbar .mini-text { cursor: pointer; }
 .mini.rbar .mini-book { color: var(--accent); }
 html.fs-child .mini.rbar { display: none !important; }
+
+/* =================== the full-screen view as a page of the book, turning with the scenes =================== */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs { background: radial-gradient(120% 50% at 50% 0%, rgba(120,170,130,.16), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather), var(--leather-d)); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs::before { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-head, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-bg, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-cap, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-words { display: none !important; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-top { order: 0; min-height: 0; justify-content: flex-start; padding: calc(8px + env(safe-area-inset-top)) 14px 8px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-x { position: static; width: 40px; height: 40px; color: var(--gild-l); border-color: color-mix(in srgb, var(--gild) 80%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom { --fg: #f2e4c0; --muted: #c8b48c; color: var(--fg); padding-top: 10px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom .fs-ctl button { color: var(--fg); }
+.bk { order: 2; position: relative; flex: 1 1 auto; min-height: 0; margin: 0 16px 0 12px; perspective: 2000px; }
+.bk-stack { position: absolute; inset: 0; border-radius: 2px 5px 5px 2px;
+  box-shadow: 1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
+    7px 4px 0 #1a1007, 0 14px 30px rgba(0,0,0,.6); }
+.bk-leaf { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 50%; }
+.bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 2px 5px 5px 2px; -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  background: linear-gradient(90deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.10)),
+    radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.24)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page); }
+.bk-back { transform: rotateY(180deg);
+  background: linear-gradient(270deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%), radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.28)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page-2); }
+.bk-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 14px 18px 10px 24px; color: var(--fg); }
+.bk-rh { flex: none; display: flex; justify-content: space-between; font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+  padding: 2px 2px 7px; border-bottom: 1px solid var(--ink-rule); }
+.bk-hd { flex: none; text-align: center; margin: 12px 0 2px; }
+.bk-hd .he { display: block; font: 400 22px/1 Alegreya, Georgia, serif; color: var(--gild); }
+.bk-hd .ti { display: block; margin-top: 4px; font: 400 24px/1.1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
+.bk-hd .sup { display: block; margin-top: 4px; font: italic 15px/1.35 var(--body); color: var(--muted); transition: color .6s; }
+.bk-hd .sup.now { color: var(--fg); }
+.bk-pl { flex: none; margin: 12px 4px 0; }
+.bk-pl .im { display: block; width: 100%; aspect-ratio: 4 / 3; background: #2a2014 center 60% / cover no-repeat; border: 1px solid #2b1f12; outline: 1px solid var(--ink-rule); outline-offset: 3px; }
+.bk-pl .cap { display: block; margin-top: 8px; text-align: center; font: italic 13.5px/1.3 var(--body); color: var(--muted); }
+.bk-tx { flex: 1 1 auto; min-height: 0; overflow: hidden; margin-top: 12px; font: 400 clamp(16.5px, 4.5vw, 22px)/1.5 Alegreya, Georgia, serif; text-align: justify;
+  -webkit-hyphens: auto; hyphens: auto; color: color-mix(in srgb, var(--fg) 52%, transparent); }
+.bk-tx .bk-v { display: inline; text-align: inherit; transition: color .6s ease; }
+.bk-tx .bk-v.now { color: var(--fg); }
+.bk-tx .bk-n { display: inline; font: 700 .58em/1 var(--ui); color: var(--rubric); margin: 0 .22em 0 .1em; vertical-align: .55em; }
+.bk-tx .bk-dc { float: left; font: 400 3.05em/.82 var(--display); color: var(--rubric); margin: .06em .1em 0 0; }
+.bk-fo { flex: none; text-align: center; font: 400 13px/1 var(--display); letter-spacing: .1em; color: var(--muted); padding-top: 6px; }
+.bk-shade { position: absolute; inset: 0; pointer-events: none; border-radius: 2px 5px 5px 2px; opacity: 0;
+  background: linear-gradient(90deg, rgba(20,10,2,.0), rgba(20,10,2,.35)); }
+.bk-measure { visibility: hidden; pointer-events: none; }
+@media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -2598,5 +2639,129 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   setInterval(tick, 200);
   document.addEventListener("play", () => setTimeout(tick, 0), true);
   tick();
+})();
+</script>
+
+<script>
+/* The full-screen view as a page of the book. The reading is laid out as pages: each scene's painting is printed at
+   the head of the page where that scene begins, with the verses set below it as a paragraph; the verse being read is in
+   full ink, the rest a little lighter. When the reading reaches the next page (a new scene, or the text runs on) the
+   page turns; seeking back turns it back. The view's controls and opening/closing are miniplayer.js's own. */
+(() => {
+  const start = () => {
+    const fs = document.querySelector(".fs"); if (!fs || typeof TRACKS === "undefined") return setTimeout(start, 300);
+    const bottom = fs.querySelector(".fs-bottom");
+    const bk = document.createElement("div"); bk.className = "bk"; bk.setAttribute("aria-live", "off");
+    bk.innerHTML = '<div class="bk-stack"></div><div class="bk-leaf bk-measure"><div class="bk-face"><div class="bk-in"></div></div></div><div class="bk-shade"></div>';
+    fs.insertBefore(bk, bottom);
+    const stack = bk.querySelector(".bk-stack"), measure = bk.querySelector(".bk-measure .bk-in"), shade = bk.querySelector(".bk-shade");
+    const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let book = null, shown = -1, leaf = null, size = "";
+    // ---- laying the reading out as pages ----
+    function verses(t) {
+      const d = typeof clipVerses === "function" ? clipVerses() : null, segs = d && d[t.file] && d[t.file].segs;
+      const vs = [], sup = [];
+      if (segs) for (const [a, , lab, text] of segs) {
+        if (lab === "title") { if (!/^psalm\s+[\w-]+\.?$/i.test(text.trim())) sup.push({ text, start: a }); continue; }
+        const last = vs[vs.length - 1];
+        if (last && last.label === lab) last.text += " " + text; else vs.push({ label: lab, key: verseKey(lab), text, start: a });
+      }
+      return { vs, sup, ok: !!segs };
+    }
+    function pageHTML(t, pg, idx) {
+      let h = `<div class="bk-rh"><span>The Psalter</span><span>${esc(t.title)}</span></div>`;
+      if (pg.head) h += `<div class="bk-hd"><span class="he" lang="he" dir="rtl">${esc(t.he || "")}</span><span class="ti">${esc(t.title)}</span>` +
+        (pg.sup ? `<span class="sup">${esc(pg.sup)}</span>` : "") + `</div>`;
+      if (pg.pic) h += `<figure class="bk-pl"><span class="im" style="background-image:url('${pg.pic}')"></span>${pg.cap ? `<figcaption class="cap">${esc(pg.cap)}</figcaption>` : ""}</figure>`;
+      h += `<div class="bk-tx">` + (pg.verses.length ? pg.verses.map((v, i) => {
+        let tx = esc(v.text);
+        if (pg.head && i === 0 && /^[A-Za-z]/.test(v.text)) tx = `<span class="bk-dc">${esc(v.text[0])}</span>` + esc(v.text.slice(1));
+        return `<span class="bk-v" data-v="${esc(v.label)}">${pg.head && i === 0 ? "" : `<span class="bk-n">${esc(v.label)}</span>`}${tx} </span>`;
+      }).join("") : (pg.line ? `<span class="bk-v now">${esc(pg.line)}</span>` : "")) + `</div><div class="bk-fo">${idx + 1}</div>`;
+      return h;
+    }
+    function fits() { const tx = measure.querySelector(".bk-tx"); return !tx || tx.scrollHeight <= tx.clientHeight + 1; }
+    function layout(t) {
+      const { vs, sup, ok } = verses(t);
+      const seq = (SCENES[t.n] || [["1", ART[t.n] || null]]).map(([from, img]) => ({ key: verseKey(from), img }));
+      const chunks = seq.map(c => ({ img: c.img, vs: [] }));
+      for (const v of vs) { let ci = 0; seq.forEach((c, i) => { if (c.key <= v.key) ci = i; }); chunks[ci].vs.push(v); }
+      const pages = [];
+      chunks.forEach((c, ci) => {
+        if (ci > 0 && !c.vs.length) return;
+        const a = c.vs[0], b = c.vs[c.vs.length - 1];
+        let pg = { head: ci === 0, sup: ci === 0 ? sup.map(x => x.text).join(" ") : "", pic: c.img,
+                   cap: a ? `${t.title}:${a.label}${b && b.label !== a.label ? "–" + b.label : ""}` : "", verses: [], line: ok ? "" : t.line };
+        for (const v of c.vs) {
+          pg.verses.push(v); measure.innerHTML = pageHTML(t, pg, pages.length);
+          if (!fits() && pg.verses.length > 1) { pg.verses.pop(); pages.push(pg); pg = { head: false, pic: null, verses: [v] }; }
+        }
+        pages.push(pg);
+      });
+      if (!pages.length) pages.push({ head: true, pic: ART[t.n] || null, verses: [], line: t.line });
+      pages.forEach(pg => { if (pg.pic) { const im = new Image(); im.src = pg.pic; } });
+      return { file: t.file, t, pages, sup, ok };
+    }
+    // ---- which page the reading is on, and which verse is being read ----
+    function where() {
+      const now = position();
+      let lab = null;
+      for (const pg of book.pages) for (const v of pg.verses) if (v.start <= now + 0.12) lab = v.label;
+      let pi = 0;
+      if (lab !== null) book.pages.forEach((pg, i) => { if (pg.verses.some(v => v.label === lab)) pi = i; });
+      return { pi, lab, inSup: lab === null && book.sup.some(s => s.start <= now + 0.12) };
+    }
+    // ---- a page leaf: its printed front, and the blank back you see as it turns ----
+    function makeLeaf(i) {
+      const el = document.createElement("div"); el.className = "bk-leaf";
+      el.innerHTML = `<div class="bk-face bk-front"><div class="bk-in">${pageHTML(book.t, book.pages[i], i)}</div></div><div class="bk-face bk-back"></div>`;
+      return el;
+    }
+    let anims = [];
+    function finishTurns() { anims.forEach(a => { try { a.finish(); } catch (e) {} }); anims = []; }
+    function showPage(i, animate) {
+      finishTurns();
+      const dir = i > shown ? 1 : -1, nu = makeLeaf(i), old = leaf;
+      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; return; }
+      const ms = 1000;
+      if (dir > 0) {   // the new page lies underneath; the old one turns over to the left
+        stack.insertBefore(nu, old);
+        const a = old.animate([{ transform: "rotateY(0deg)", easing: "cubic-bezier(.35,.05,.55,1)" }, { transform: "rotateY(-90deg)", offset: .8 }, { transform: "rotateY(-180deg)" }], { duration: ms, fill: "forwards" });
+        const b = shade.animate([{ opacity: 0 }, { opacity: 1, offset: .45 }, { opacity: 0 }], { duration: ms, easing: "ease" });
+        const c = old.querySelector(".bk-front").animate([{ filter: "brightness(1)" }, { filter: "brightness(.72)", offset: .8 }, { filter: "brightness(.6)" }], { duration: ms, fill: "forwards" });
+        anims = [a, b, c]; a.finished.then(() => old.remove(), () => old.remove());
+      } else {         // going back: the earlier page turns back over from the left
+        stack.appendChild(nu);
+        const a = nu.animate([{ transform: "rotateY(-180deg)" }, { transform: "rotateY(-90deg)", offset: .2, easing: "cubic-bezier(.45,0,.65,.95)" }, { transform: "rotateY(0deg)" }], { duration: ms, fill: "forwards" });
+        const c = nu.querySelector(".bk-front").animate([{ filter: "brightness(.6)" }, { filter: "brightness(.72)", offset: .2 }, { filter: "brightness(1)" }], { duration: ms, fill: "forwards" });
+        anims = [a, c]; a.finished.then(() => { if (old.parentNode) old.remove(); }, () => { if (old.parentNode) old.remove(); });
+      }
+      leaf = nu; shown = i;
+    }
+    function mark(w) {
+      if (!leaf) return;
+      leaf.querySelectorAll(".bk-tx .bk-v").forEach(v => v.classList.toggle("now", v.dataset.v === w.lab));
+      const sp = leaf.querySelector(".bk-hd .sup"); if (sp) sp.classList.toggle("now", w.inSup);
+    }
+    function tick() {
+      if (!fs.classList.contains("on") || document.documentElement.matches(".rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets")) return;
+      const t = TRACKS[cur()]; if (!t) return;
+      const sz = bk.clientWidth + "x" + bk.clientHeight;
+      if (!book || book.file !== t.file || sz !== size || (!book.ok && clipVerses())) {
+        if (!bk.clientHeight) return;
+        const fresh = !book || book.file !== t.file;
+        size = sz; book = layout(t); shown = -1; leaf = null; stack.innerHTML = "";
+        showPage(where().pi, false); if (fresh) bk.dataset.file = t.file;
+      }
+      const w = where();
+      if (w.pi !== shown) showPage(w.pi, true);
+      mark(w);
+    }
+    setInterval(tick, 150);
+    new MutationObserver(() => setTimeout(tick, 0)).observe(fs, { attributes: true, attributeFilter: ["class"] });
+  };
+  start();
 })();
 </script>
