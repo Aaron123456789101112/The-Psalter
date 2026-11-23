@@ -652,6 +652,9 @@ __P__ .fs-x { position: static; width: 40px; height: 40px; color: var(--gild-l);
 __P__ .fs-bottom { --fg: #f2e4c0; --muted: #c8b48c; color: var(--fg); padding-top: 10px; }
 __P__ .fs-bottom .fs-ctl button { color: var(--fg); }
 .bk { order: 2; position: relative; flex: 1 1 auto; min-height: 0; margin: 0 16px 0 12px; perspective: 2000px; }
+/* the page is always paper: in dark mode, the same parchment a little warmer and dimmer, as if read by lamplight */
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) .bk { __LAMPPAPER__ } }
+html[data-theme="dark"] .bk { __LAMPPAPER__ }
 .bk-stack { position: absolute; inset: 0; border-radius: 2px 5px 5px 2px;
   box-shadow: 1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
     7px 4px 0 #1a1007, 0 14px 30px rgba(0,0,0,.6); }
@@ -686,7 +689,9 @@ __P__ .fs-bottom .fs-ctl button { color: var(--fg); }
 .bk-measure { visibility: hidden; pointer-events: none; }
 @media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
 """
-for k, v in {"__P__": P, "__NOISE__": NOISE, "__FIBRE__": FIBRE}.items():
+LAMPPAPER = ("--page: #dccaa0; --page-2: #cdb98d; --fg: #2a1d10; --muted: #5f4c32; --rubric: #8f2a1b; --gild: #9a6d22;"
+             " --ink-rule: rgba(120,80,25,.55); --edge-a: #e3d3ae; --edge-b: #a58d5c; color-scheme: light;")
+for k, v in {"__P__": P, "__NOISE__": NOISE, "__FIBRE__": FIBRE, "__LAMPPAPER__": LAMPPAPER}.items():
     BOOKPAGE_CSS = BOOKPAGE_CSS.replace(k, v)
 
 BOOKPAGE_JS = r"""
