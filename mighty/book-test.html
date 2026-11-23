@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Mighty Men of David</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bellefair&family=Alegreya:ital,wght@0,400;0,500;1,400&family=Alegreya+Sans:wght@400;500;700&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Bellefair&family=Alegreya:ital,wght@0,400;0,500;0,700;1,400;1,500&family=Alegreya+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: one narrow column like a scroll — the Hebrew name as the masthead, the player, then the psalms in order. */
+:root {
+  --bg: #e6e3dc;        /* field stone */
+  --surface: #f0eee8;
+  --fg: #1b1b1c;        /* iron */
+  --muted: #5c5b58;
+  --line: #cfcbc2;
+  --accent: #7a5a1f;    /* bronze */
+  --accent-ink: #fbf6ec;
+  --display: "Bellefair", "Times New Roman", serif;
+  --body: "Alegreya", Georgia, serif;
+  --ui: "Alegreya Sans", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c0c0d; --surface: #161617; --fg: #ebe7df; --muted: #a19c92; --line: #2a2927;
+    --accent: #d6a85a; --accent-ink: #161006; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c0c0d; --surface: #161617; --fg: #ebe7df; --muted: #a19c92; --line: #2a2927;
+  --accent: #d6a85a; --accent-ink: #161006; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--body); font-size: 17px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; padding-block: 40px 56px; display: flex; flex-direction: column; gap: 32px; }
+
+header { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.hebrew { font-family: var(--display); font-size: clamp(44px, 11vw, 72px); line-height: 1.05; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 400; font-size: 28px; margin: 6px 0 0; letter-spacing: 0.02em; text-wrap: balance; }
+.sub { font-family: var(--ui); color: var(--muted); font-size: 14px; letter-spacing: 0.04em; }
+
+/* player */
+.player { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.now { display: flex; align-items: center; gap: 16px; }
+.now-text { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.now-label { font-family: var(--ui); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.now-title { font-family: var(--display); font-size: 26px; line-height: 1.15; }
+.now-line { font-style: italic; color: var(--muted); overflow-wrap: anywhere; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.play {
+  flex: none; width: 64px; height: 64px; border-radius: 50%; border: none;
+  background: var(--accent); color: var(--accent-ink); display: grid; place-items: center;
+}
+.play svg { width: 26px; height: 26px; fill: currentColor; }
+.play:active { transform: scale(0.96); }
+
+.seek { display: flex; align-items: center; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.seek input { flex: 1; min-width: 0; accent-color: var(--accent); height: 28px; }
+
+.controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.skip { display: flex; gap: 8px; }
+.icon-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: transparent; display: grid; place-items: center; }
+.icon-btn svg { width: 18px; height: 18px; fill: var(--fg); }
+.mode { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; font-family: var(--ui); font-size: 14px; }
+.mode button { border: none; background: transparent; padding: 8px 14px; border-radius: 999px; color: var(--muted); }
+.mode button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.status { font-family: var(--ui); font-size: 14px; color: var(--accent); min-height: 1.2em; margin: 0; }
+
+/* list */
+.list-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--ui); font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.12em; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+ol { list-style: none; margin: 0; padding: 0; }
+.track {
+  width: 100%; text-align: left; border: none; background: transparent; padding: 14px 4px;
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 14px; align-items: center;
+  border-bottom: 1px solid var(--line);
+}
+.track:hover { background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.num { display: flex; flex-direction: column; align-items: flex-start; gap: 0; }
+.num b { font-family: var(--display); font-weight: 400; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; }
+.num span { font-family: var(--display); font-size: 15px; color: var(--muted); }
+.mid { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.t-line { font-style: italic; overflow-wrap: anywhere; }
+.t-mood { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+.dur { font-family: var(--ui); font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 8px; }
+.track.current .num b, .track.current .t-line { color: var(--accent); }
+/* a run of readings that belong together (the Sermon on the Mount) */
+.group-head { padding: 18px 4px 8px 14px; border-left: 3px solid var(--accent); border-bottom: 1px solid var(--line); }
+.group-head .g-title { font-family: var(--display); font-size: 20px; line-height: 1.2; }
+.group-head .g-sub { font-family: var(--ui); font-size: 13px; color: var(--muted); letter-spacing: 0.02em; }
+li.in-group { border-left: 3px solid var(--accent); }
+li.in-group .track { padding-left: 11px; }
+
+/* humming indicator on the playing row */
+.hum { display: none; gap: 2px; align-items: flex-end; height: 14px; }
+.hum i { width: 3px; background: var(--accent); border-radius: 1px; height: 4px; }
+.track.current.playing .hum { display: inline-flex; }
+.track.current.playing .hum i { animation: hum 1.6s ease-in-out infinite; }
+.hum i:nth-child(2) { animation-delay: .25s !important; }
+.hum i:nth-child(3) { animation-delay: .5s !important; }
+@keyframes hum { 0%,100% { height: 4px } 50% { height: 13px } }
+@media (prefers-reduced-motion: reduce) { .track.current.playing .hum i { animation: none; height: 10px; } }
+
+footer { font-family: var(--ui); font-size: 13px; color: var(--muted); line-height: 1.55; display: flex; flex-direction: column; gap: 6px; }
+footer p { margin: 0; max-width: 62ch; }
+
+@media (max-width: 440px) {
+  .wrap { padding-block: 24px 40px; gap: 24px; }
+  .track { grid-template-columns: 44px 1fr auto; gap: 10px; }
+  .now-title { font-size: 22px; }
+}
+
+/* Make a clip: opens the clip maker in the top page */
+.clipbtn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; font-family: var(--ui); font-size: 16px; font-weight: 500;
+  min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--accent); background: transparent; color: var(--accent); cursor: pointer; }
+.clipbtn svg { width: 18px; height: 18px; fill: currentColor; }
+.clipbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* =================== the Psalter as a book =================== */
+:root { --leather: #1f3729; --leather-d: #0e1a12; --leather-l: #2c4a37; --gild: #b8862f; --gild-l: #f0d58c; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) { --bg: #e9dbb6; --surface: #f1e5c5; --fg: #2b1f12; --muted: #6b583e; --line: #cfb88c; --accent: #84520f; --accent-ink: #fbf3df;
+  --page: #efe2bf; --page-2: #e3d0a3; --rubric: #9b2b1d; --ribbon: #8d1d23; --edge-a: #f1e5c6; --edge-b: #c2a978; --ink-rule: rgba(155,104,30,.6); color-scheme: light; }
+@media (prefers-color-scheme: dark) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets):not([data-theme="light"]) { --bg: #2b2115; --surface: #34291b; --fg: #eee1c4; --muted: #bba57e; --line: #57452b; --accent: #e3b65e; --accent-ink: #20160a; --page: #30251a; --page-2: #251c12; --rubric: #e08466; --ribbon: #a3262d; --edge-a: #3d3020; --edge-b: #1c140b; --ink-rule: rgba(227,182,94,.55); color-scheme: dark; } }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets)[data-theme="dark"] { --bg: #2b2115; --surface: #34291b; --fg: #eee1c4; --muted: #bba57e; --line: #57452b; --accent: #e3b65e; --accent-ink: #20160a; --page: #30251a; --page-2: #251c12; --rubric: #e08466; --ribbon: #a3262d; --edge-a: #3d3020; --edge-b: #1c140b; --ink-rule: rgba(227,182,94,.55); color-scheme: dark; }
+
+/* the green leather of the cover, all round the page */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body { background: radial-gradient(120% 50% at 50% 0%, rgba(120,170,130,.16), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather), var(--leather-d)) fixed;
+  background-color: var(--leather-d); padding-left: max(9px, env(safe-area-inset-left, 0px)); padding-right: max(9px, env(safe-area-inset-right, 0px)); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .art-bg { display: none; }
+
+/* the top bar: a band of leather with a gilt edge */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border-bottom: 0;
+  box-shadow: inset 0 -1px 0 #6b4a17, inset 0 -3px 0 var(--gild), inset 0 -4px 0 #4a3210, 0 4px 10px rgba(0,0,0,.45);
+  margin-inline: calc(-1 * max(9px, env(safe-area-inset-left, 0px))); padding-bottom: 11px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab { color: var(--gild-l); background: rgba(0,0,0,.2); border: 1px solid color-mix(in srgb, var(--gild) 75%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open svg { fill: var(--gild-l); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab svg { fill: var(--gild-l); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-now { background: linear-gradient(180deg, #fff1bf, #e8c05e 30%, #9b6b1e 60%, #f0d27a 85%, #b38330); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); letter-spacing: .06em; }
+
+/* the page: parchment, a gilt double rule, the gutter's shadow on the left, the stacked page-edges on the right */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { position: relative; margin: 14px auto 30px; padding: 40px 26px 44px 30px; gap: 30px; border-radius: 2px 5px 5px 2px;
+  background:
+    linear-gradient(90deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 9%, transparent 95%, rgba(50,28,8,.12)),
+    radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.22)),
+    radial-gradient(closest-side, rgba(150,100,40,.10), transparent) 0 0 / 520px 460px,
+    radial-gradient(closest-side, rgba(150,100,40,.08), transparent) 230px 170px / 610px 540px,
+    radial-gradient(closest-side, rgba(255,240,205,.08), transparent) 90px 300px / 380px 420px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page);
+  box-shadow: inset 0 0 0 1px rgba(110,75,30,.25),
+    1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
+    7px 4px 0 #1a1007, 0 14px 34px rgba(0,0,0,.6); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap::before { content: ""; position: absolute; inset: 11px 10px 11px 13px; border: 3px double var(--ink-rule); pointer-events: none; border-radius: 1px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap > * { position: relative; }
+
+/* title page */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) header, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art header { align-items: center; text-align: center; gap: 2px; text-shadow: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) header::before { content: ""; width: 64px; height: 22px; margin-bottom: 6px; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20'%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M30 2c3 4 3 8 0 16-3-8-3-12 0-16z'/%3E%3Cpath d='M28 10C22 4 12 4 6 10c6 2 14 3 22 0zM32 10c6-6 16-6 22 0-6 2-14 3-22 0z' opacity='.85'/%3E%3Ccircle cx='3' cy='10' r='1.6'/%3E%3Ccircle cx='57' cy='10' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .hebrew { font-size: clamp(66px, 19vw, 98px); line-height: 1.05; padding: 0 6px;
+  background: linear-gradient(180deg, #fff1bf, #e8c05e 30%, #9b6b1e 60%, #f0d27a 85%, #b38330); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(90,55,10,.45)); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) h1 { font-size: 27px; letter-spacing: .2em; text-transform: uppercase; margin-top: 4px; color: var(--fg); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) h1::after { content: ""; display: block; width: 180px; height: 12px; margin: 10px auto 2px; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cg fill='none' stroke='%23b8862f' stroke-width='1'%3E%3Cpath d='M2 6H74M106 6H178'/%3E%3Cpath d='M10 8.5H70M110 8.5H170' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M90 1l5 5-5 5-5-5z'/%3E%3Ccircle cx='79' cy='6' r='1.6'/%3E%3Ccircle cx='101' cy='6' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .sub, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .sub { font-family: var(--body); font-style: italic; font-size: 16px; letter-spacing: .01em; color: var(--muted); }
+.artplate { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .artplate { display: block; position: relative; width: 100%; aspect-ratio: 4 / 3; margin-top: 18px; padding: 7px; border-radius: 2px;
+  background: linear-gradient(135deg, #f7e6a6, #b5862f 28%, #f2d47c 50%, #8c6220 74%, #e4c26c);
+  box-shadow: 0 4px 10px rgba(50,28,6,.4), inset 0 0 0 1px rgba(80,52,12,.7), inset 0 0 0 3px rgba(255,240,190,.35); }
+.artplate .pin { position: absolute; inset: 7px; overflow: hidden; background: #2a2014; box-shadow: 0 0 0 1px #4a3210; }
+.artplate img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 60%; opacity: 0; transition: opacity 1.2s ease; }
+.artplate img.on { opacity: 1; }
+.artplate .pin::after { content: ""; position: absolute; inset: 0; box-shadow: inset 0 0 18px rgba(0,0,0,.45); pointer-events: none; }
+
+/* the player: a gilt band, a gold medallion */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .player, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .player { background: linear-gradient(color-mix(in srgb, var(--page-2) 75%, transparent), color-mix(in srgb, var(--page-2) 25%, transparent));
+  -webkit-backdrop-filter: none; backdrop-filter: none; border: 0; border-radius: 0; padding: 20px 6px 18px;
+  border-top: 3px double var(--ink-rule); border-bottom: 3px double var(--ink-rule); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-label { color: var(--rubric); font-weight: 700; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-title { font-size: 28px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play { width: 68px; height: 68px; color: #2a1a0a;
+  background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a);
+  box-shadow: 0 0 0 2px #6b4a17, 0 0 0 4px #e3c06a, 0 0 0 5px #5a3d12, 0 5px 12px rgba(50,28,5,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play svg { filter: drop-shadow(0 1px 0 rgba(255,240,190,.6)); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn { border: 1.5px solid var(--gild); color: var(--fg); background: radial-gradient(circle, transparent 62%, color-mix(in srgb, var(--gild) 18%, transparent));
+  box-shadow: inset 0 0 0 3px transparent, inset 0 0 0 4px color-mix(in srgb, var(--gild) 35%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode { border-color: var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button[aria-pressed="true"] { background: linear-gradient(var(--leather-l), var(--leather-d)); color: var(--gild-l); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn { border: 1px solid var(--gild); color: var(--accent); background: color-mix(in srgb, var(--page) 60%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input { accent-color: var(--gild); }
+
+/* contents: red numerals, dotted leaders, a silk ribbon on the psalm you're on */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap > section[aria-label="Psalms"], html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .wrap > section[aria-label="Psalms"],
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .suggest, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .suggest, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) footer, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art footer {
+  background: none; -webkit-backdrop-filter: none; backdrop-filter: none; border: 0; border-radius: 0; padding: 0; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .list-head { flex-direction: column; align-items: center; gap: 2px; border-bottom: 0; padding-bottom: 6px; text-transform: none; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .list-head > span:first-child { font-family: var(--display); font-size: 30px; letter-spacing: .16em; text-transform: uppercase; color: var(--rubric); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .list-head > span:first-child::before { content: "The "; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) #total { font-family: var(--body); font-style: italic; font-size: 15px; color: var(--muted); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .list-head::after { content: ""; width: 180px; height: 12px; margin-top: 8px; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cg fill='none' stroke='%23b8862f' stroke-width='1'%3E%3Cpath d='M2 6H74M106 6H178'/%3E%3Cpath d='M10 8.5H70M110 8.5H170' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M90 1l5 5-5 5-5-5z'/%3E%3Ccircle cx='79' cy='6' r='1.6'/%3E%3Ccircle cx='101' cy='6' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) #list > li { position: relative; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track { grid-template-columns: 42px 1fr auto; gap: 10px; align-items: start; padding: 13px 2px 12px;
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 75%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track:hover { background: color-mix(in srgb, var(--page-2) 55%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .num b { color: var(--rubric); font-size: 28px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .num span { color: var(--accent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-line { display: flex; align-items: baseline; gap: 6px; font-size: 18px; line-height: 1.35; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-line::after { content: ""; flex: 1 0 14px; height: 0; border-bottom: 2px dotted color-mix(in srgb, var(--muted) 50%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-mood { font-family: var(--body); font-style: normal; letter-spacing: .01em; font-size: 15px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .dur { margin-top: 4px; color: var(--fg); font-family: var(--body); font-size: 16px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current .num b { color: var(--rubric); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current .t-line { color: var(--accent); font-weight: 500; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current::before { content: ""; position: absolute; left: -27px; top: -10px; width: 13px; height: calc(100% + 18px); z-index: 1;
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ribbon) 55%, #000), var(--ribbon) 35%, color-mix(in srgb, var(--ribbon) 72%, #fff) 52%, var(--ribbon) 68%, color-mix(in srgb, var(--ribbon) 55%, #000));
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); filter: drop-shadow(1px 2px 1px rgba(0,0,0,.35)); }
+
+/* suggestions: written on the page */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .suggest h2 { color: var(--rubric); text-align: center; letter-spacing: .06em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .suggest h2::after { content: ""; display: block; width: 180px; height: 12px; margin: 8px auto 0; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cg fill='none' stroke='%23b8862f' stroke-width='1'%3E%3Cpath d='M2 6H74M106 6H178'/%3E%3Cpath d='M10 8.5H70M110 8.5H170' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M90 1l5 5-5 5-5-5z'/%3E%3Ccircle cx='79' cy='6' r='1.6'/%3E%3Ccircle cx='101' cy='6' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .s-form { background: transparent; border: 0; padding: 4px 0 0; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form input, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form textarea { background: transparent; border: 0; border-bottom: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent); border-radius: 0; padding: 6px 2px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form textarea { line-height: 30px; padding-top: 0;
+  background: repeating-linear-gradient(transparent 0 29px, color-mix(in srgb, var(--muted) 38%, transparent) 29px 30px); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send { background: linear-gradient(var(--leather-l), var(--leather-d)); color: var(--gild-l); border: 1px solid var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send.alt { background: transparent; color: var(--accent); }
+
+/* colophon */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) footer { align-items: center; text-align: center; font-family: var(--body); font-style: italic; font-size: 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) footer::before { content: ""; width: 60px; height: 20px; margin-bottom: 4px; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 60 20'%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M30 2c3 4 3 8 0 16-3-8-3-12 0-16z'/%3E%3Cpath d='M28 10C22 4 12 4 6 10c6 2 14 3 22 0zM32 10c6-6 16-6 22 0-6 2-14 3-22 0z' opacity='.85'/%3E%3Ccircle cx='3' cy='10' r='1.6'/%3E%3Ccircle cx='57' cy='10' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+
+/* the bar at the bottom while playing: leather and gold */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini { --fg: #f2e4c0; --muted: #c8b48c; --accent: #e8c064; --accent-ink: #22170a;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border: 1px solid var(--gild);
+  box-shadow: inset 0 0 0 3px rgba(0,0,0,.2), inset 0 0 0 4px color-mix(in srgb, var(--gild) 40%, transparent), 0 10px 30px rgba(0,0,0,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini-play { background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a); color: #2a1a0a; box-shadow: 0 0 0 2px #5a3d12; }
+
+
+/* ---------- finishing: one button style, equal widths, a centred player, a gilt seek bar ---------- */
+/* every button is a small gilt frame: a gold edge with a fine hairline just inside it */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab {
+  border-radius: 5px; border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px;
+  box-shadow: 0 1px 0 rgba(255,240,200,.08) inset, 0 2px 4px rgba(30,16,4,.18); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab { outline-offset: -4px; min-height: 42px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .player, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body.has-art .player { background: none; padding: 26px 4px 22px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now { flex-direction: column; text-align: center; gap: 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-text { align-items: center; gap: 3px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-label { font-family: var(--ui); font-size: 12px; letter-spacing: .2em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-title { font-size: 30px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-line { font-size: 18px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play { width: 78px; height: 78px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play svg { width: 30px; height: 30px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek { gap: 12px; font-size: 14px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input { -webkit-appearance: none; appearance: none; background: transparent; height: 34px; --p: 0%; cursor: pointer; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, #8c6220, var(--gild) calc(var(--p) - 1px), color-mix(in srgb, var(--fg) 16%, transparent) var(--p));
+  box-shadow: inset 0 1px 1px rgba(0,0,0,.25); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%; border: 0;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a);
+  box-shadow: 0 0 0 1.5px #5a3d12, 0 2px 4px rgba(30,16,4,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg) 16%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a); box-shadow: 0 0 0 1.5px #5a3d12; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .controls { flex-direction: column; align-items: stretch; gap: 16px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .skip { justify-content: center; gap: 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn { width: 50px; height: 50px; border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px;
+  background: none; box-shadow: 0 2px 4px rgba(30,16,4,.15); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn svg { width: 22px; height: 22px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode { display: flex; width: 100%; padding: 5px; gap: 4px; background: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button { flex: 1; min-height: 44px; border-radius: 2px; font-family: var(--ui); font-size: 16px; font-weight: 500; letter-spacing: .03em; color: var(--muted); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button[aria-pressed="true"] { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gild) 55%, transparent), 0 1px 3px rgba(0,0,0,.3); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn { align-self: stretch; width: 100%; justify-content: center; min-height: 54px; padding: 12px 18px;
+  font-size: 17px; font-weight: 500; letter-spacing: .03em; color: var(--accent); background: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn svg, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn svg { width: 19px; height: 19px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .player .status { text-align: center; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-title, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .now-line, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-line { text-wrap: pretty; }
+/* suggestions: the two buttons side by side, the same width */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-row:not([hidden]) { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send { min-height: 54px; padding: 12px 10px; border-radius: 5px; text-align: center; display: grid; place-items: center; font-size: 16px; letter-spacing: .02em; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send:only-child { grid-column: 1 / -1; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form label { font-family: var(--body); font-size: 16px; font-weight: 500; }
+/* the contents: numbers centred in their column, a little more air between entries */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .num { align-items: center; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track { padding: 15px 2px 14px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .t-mood { margin-top: 2px; }
+
+/* ---------- the full-screen view as an illustrated page: the painting set as a framed plate, the words printed below ---------- */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs { color: var(--fg); background:
+    linear-gradient(90deg, rgba(50,28,8,.26), transparent 7%, transparent 94%, rgba(50,28,8,.12)),
+    radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.24)),
+    radial-gradient(closest-side, rgba(150,100,40,.10), transparent) 0 0 / 520px 460px,
+    radial-gradient(closest-side, rgba(150,100,40,.08), transparent) 230px 170px / 610px 540px,
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs::before { content: ""; position: absolute; pointer-events: none; border: 3px double var(--ink-rule);
+  inset: calc(9px + env(safe-area-inset-top)) 9px calc(9px + env(safe-area-inset-bottom)) 9px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-top { order: 0; justify-content: center; padding: calc(22px + env(safe-area-inset-top)) 70px 4px; min-height: 64px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-x { position: absolute; left: 20px; top: calc(16px + env(safe-area-inset-top)); width: 42px; height: 42px; color: var(--accent);
+  background: none; border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-x svg { width: 16px; height: 16px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-head { align-items: center; text-align: center; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-label { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-title { font-family: var(--display); font-size: 13px; letter-spacing: .16em; white-space: nowrap; text-transform: uppercase; color: var(--muted); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-title::before { content: "The Psalter  ·  "; white-space: pre; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-title::after { content: ""; display: block; width: 150px; height: 10px; margin: 7px auto 0; background: center / contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 12'%3E%3Cg fill='none' stroke='%23b8862f' stroke-width='1'%3E%3Cpath d='M2 6H74M106 6H178'/%3E%3Cpath d='M10 8.5H70M110 8.5H170' opacity='.55'/%3E%3C/g%3E%3Cg fill='%23b8862f'%3E%3Cpath d='M90 1l5 5-5 5-5-5z'/%3E%3Ccircle cx='79' cy='6' r='1.6'/%3E%3Ccircle cx='101' cy='6' r='1.6'/%3E%3C/g%3E%3C/svg%3E"); }
+/* the plate */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bg { order: 1; position: relative; inset: auto; flex: none; align-self: center; margin-top: 10px;
+  width: min(calc(100% - 48px), calc(42dvh * 4 / 3), 620px); aspect-ratio: 4 / 3; overflow: hidden; border: 7px solid transparent; border-radius: 2px;
+  background: linear-gradient(#2a2014, #2a2014) padding-box, linear-gradient(135deg, #f7e6a6, #b5862f 28%, #f2d47c 50%, #8c6220 74%, #e4c26c) border-box;
+  box-shadow: 0 5px 14px rgba(50,28,6,.4), 0 0 0 1px rgba(80,52,12,.6); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bg:not(.art) { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bg.art::after { background: none; box-shadow: inset 0 0 0 1px #4a3210, inset 0 0 20px rgba(0,0,0,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-cap { order: 2; flex: none; text-align: center; margin-top: 10px; font-family: var(--ui); font-size: 13px; font-weight: 700; letter-spacing: .2em;
+  text-transform: uppercase; color: var(--rubric); min-height: 1.3em; }
+/* the words, printed on the page */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-words { order: 3; padding: 8px max(30px, 8vw) 12px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ref { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-line { font-family: var(--body); font-size: clamp(25px, 6.6vw, 42px); line-height: 1.34; color: var(--fg); text-shadow: none; max-width: 21ch;
+  filter: blur(1.5px); transition: opacity .6s ease, filter .9s ease; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-line.on { filter: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-line.vs::first-letter { color: var(--rubric); font-family: var(--display); font-size: 1.25em; }
+/* the controls, in gold */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom { order: 4; padding: 0 28px calc(26px + env(safe-area-inset-bottom)); gap: 8px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek { color: var(--muted); opacity: 1; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input { -webkit-appearance: none; appearance: none; background: transparent; height: 34px; --p: 0%; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input::-webkit-slider-runnable-track { height: 4px; border-radius: 2px;
+  background: linear-gradient(90deg, #8c6220, var(--gild) calc(var(--p) - 1px), color-mix(in srgb, var(--fg) 16%, transparent) var(--p)); box-shadow: inset 0 1px 1px rgba(0,0,0,.25); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; margin-top: -8px; border-radius: 50%; border: 0;
+  background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a); box-shadow: 0 0 0 1.5px #5a3d12, 0 2px 4px rgba(30,16,4,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input::-moz-range-track { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--fg) 16%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input::-moz-range-progress { height: 4px; border-radius: 2px; background: var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-seek input::-moz-range-thumb { width: 20px; height: 20px; border: 0; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6cf, #ecc76a 32%, #b88830 65%, #77511a); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl { justify-content: center; gap: 12px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl button { width: 50px; height: 50px; color: var(--fg); border: 1px solid var(--gild); outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -5px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl svg { width: 22px; height: 22px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl .jump svg { width: 26px; height: 26px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl .fs-play { width: 74px; height: 74px; margin: 0 4px; border: 0; outline: 0; color: #2a1a0a;
+  background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a);
+  box-shadow: 0 0 0 2px #6b4a17, 0 0 0 4px #e3c06a, 0 0 0 5px #5a3d12, 0 5px 12px rgba(50,28,5,.45); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-ctl .fs-play svg { width: 30px; height: 30px; }
+@media (max-height: 700px) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bg { width: min(calc(100% - 48px), calc(36dvh * 4 / 3)); } html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-line { font-size: clamp(22px, 5.8vw, 36px); } }
+@media (prefers-reduced-motion: reduce) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-line { filter: none; transition: opacity .3s; } }
+@media (max-width: 380px) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .wrap { padding-left: 26px; padding-right: 20px; } html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current::before { left: -23px; } }
+
+html:root:root:root { --leather: #36302a; --leather-d: #121212; --leather-l: #524d48; --ribbon: #8d1d23; }
+
+/* =================== the full-screen view as a page of the book, turning with the scenes =================== */
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs { background: radial-gradient(120% 50% at 50% 0%, rgba(120,170,130,.16), transparent 70%), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather), var(--leather-d)); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs::before { display: none; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-head, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-bg, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-cap, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs .fs-words { display: none !important; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-top { order: 0; min-height: 0; justify-content: flex-start; padding: calc(8px + env(safe-area-inset-top)) 14px 8px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-x { position: static; width: 40px; height: 40px; color: var(--gild-l); border-color: color-mix(in srgb, var(--gild) 80%, transparent); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom { --fg: #f2e4c0; --muted: #c8b48c; color: var(--fg); padding-top: 10px; }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom .fs-ctl button { color: var(--fg); }
+.bk { order: 2; position: relative; flex: 1 1 auto; min-height: 0; margin: 0 16px 0 12px; perspective: 2000px; }
+.bk-stack { position: absolute; inset: 0; border-radius: 2px 5px 5px 2px;
+  box-shadow: 1px 1px 0 var(--edge-a), 2px 1px 0 var(--edge-b), 3px 2px 0 var(--edge-a), 4px 2px 0 var(--edge-b), 5px 3px 0 var(--edge-a), 6px 3px 0 var(--edge-b),
+    7px 4px 0 #1a1007, 0 14px 30px rgba(0,0,0,.6); }
+.bk-leaf { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 0 50%; }
+.bk-face { position: absolute; inset: 0; overflow: hidden; border-radius: 2px 5px 5px 2px; -webkit-backface-visibility: hidden; backface-visibility: hidden;
+  background: linear-gradient(90deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%, transparent 95%, rgba(50,28,8,.10)),
+    radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.24)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page); }
+.bk-back { transform: rotateY(180deg);
+  background: linear-gradient(270deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%), radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.28)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page-2); }
+.bk-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 14px 18px 10px 24px; color: var(--fg); }
+.bk-rh { flex: none; display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+  padding: 2px 2px 7px; border-bottom: 1px solid var(--ink-rule); }
+.bk-rh span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.bk-hd { flex: none; text-align: center; margin: 12px 0 2px; }
+.bk-hd .he { display: block; font: 400 22px/1 Alegreya, Georgia, serif; color: var(--gild); }
+.bk-hd .kick { display: block; font: 700 11px/1.3 var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--rubric); padding: 0 10px; }
+.bk-hd .ti { display: block; margin-top: 4px; font: 400 24px/1.1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
+.bk-hd .sup { display: block; margin-top: 4px; font: italic 15px/1.35 var(--body); color: var(--muted); transition: color .6s; }
+.bk-hd .sup.now { color: var(--fg); }
+.bk-pl { flex: none; margin: 12px 4px 0; }
+.bk-pl .im { display: block; width: 100%; aspect-ratio: 4 / 3; background: #2a2014 center 60% / cover no-repeat; border: 1px solid #2b1f12; outline: 1px solid var(--ink-rule); outline-offset: 3px; }
+.bk-pl .cap { display: block; margin-top: 8px; text-align: center; font: italic 13.5px/1.3 var(--body); color: var(--muted); }
+.bk-tx { flex: 1 1 auto; min-height: 0; overflow: hidden; margin-top: 12px; font: 400 clamp(16.5px, 4.5vw, 22px)/1.5 Alegreya, Georgia, serif; text-align: justify;
+  -webkit-hyphens: auto; hyphens: auto; color: color-mix(in srgb, var(--fg) 52%, transparent); }
+.bk-tx .bk-v { display: inline; text-align: inherit; transition: color .6s ease; }
+.bk-tx .bk-v.now { color: var(--fg); }
+.bk-tx .bk-n { display: inline; font: 700 .58em/1 var(--ui); color: var(--rubric); margin: 0 .22em 0 .1em; vertical-align: .55em; }
+.bk-tx .bk-dc { float: left; font: 400 3.05em/.82 var(--display); color: var(--rubric); margin: .06em .1em 0 0; }
+.bk-fo { flex: none; text-align: center; font: 400 13px/1 var(--display); letter-spacing: .1em; color: var(--muted); padding-top: 6px; }
+.bk-shade { position: absolute; inset: 0; pointer-events: none; border-radius: 2px 5px 5px 2px; opacity: 0;
+  background: linear-gradient(90deg, rgba(20,10,2,.0), rgba(20,10,2,.35)); }
+.bk-measure { visibility: hidden; pointer-events: none; }
+@media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="hebrew" lang="he" dir="rtl">הגבורים</div>
+    <h1>The Mighty Men of David</h1>
+    <div class="sub">Told by a captain of David's army, from the Scriptures</div>
+    <figure class="artplate" id="plate" aria-hidden="true"><span class="pin"><img alt=""><img alt=""></span></figure>
+  </header>
+
+  <section class="player" aria-label="Player">
+    <div class="now">
+      <button class="play" id="play" aria-label="Play">
+        <svg id="play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l13-7.5z"/></svg>
+      </button>
+      <div class="now-text">
+        <span class="now-label" id="now-label">Ready</span>
+        <span class="now-title" id="now-title">The Men Who Came to David</span>
+        <span class="now-line" id="now-line">Before there were mighty men, there was one man running</span>
+      </div>
+    </div>
+    <div class="seek">
+      <span id="t-cur">0:00</span>
+      <input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Position in this episode">
+      <span id="t-dur">4:16</span>
+    </div>
+    <div class="controls">
+      <div class="skip">
+        <button class="icon-btn" id="prev" aria-label="Previous episode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9.5 12z"/></svg></button>
+        <button class="icon-btn" id="next" aria-label="Next episode"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l10.5-7z"/></svg></button>
+      </div>
+      <div class="mode" role="group" aria-label="Play order">
+        <button id="m-order" aria-pressed="true">In order</button>
+        <button id="m-shuffle" aria-pressed="false">Shuffle</button>
+      </div>
+    </div>
+    <button class="clipbtn" id="clipbtn" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h11a2 2 0 0 1 2 2v2.5l4-2.5v10l-4-2.5V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg>Make a clip to share</button>
+    <p class="status" id="status" role="status"></p>
+  </section>
+
+  <section aria-label="Episodes">
+    <div class="list-head"><span>Episodes</span><span id="total"></span></div>
+    <ol id="list"></ol>
+  </section>
+
+
+  <footer>
+    <p>Retold from the Berean Standard Bible (public domain): 1–2 Samuel, 1 Kings and 1 Chronicles. Words in the characters' mouths are the BSB word for word; where a detail comes from Josephus, the narrator says so.</p>
+    <p>Voices: the Narrator, David, Amasai. Choir, strings, harp, horns, trombones and percussion: Sonatina Symphonic Orchestra (CC Sampling Plus 1.0), modified.</p>
+  </footer>
+</div>
+
+<script>
+const TRACKS = [
+  { n: "1", he: "ep. 1", title: "The Men Who Came to David", line: "Before there were mighty men, there was one man running", mood: "1 Samuel 22, 1 Chronicles 12 · the cave of Adullam, the Gadites, Amasai, Ziklag", file: "audio/mighty-men-1.mp3", voice: "the Narrator", dur: 256 },
+  { n: "2", he: "ep. 2", title: "The Three", line: "But El’azar stood his ground", mood: "2 Samuel 23:8–12 · Josheb-basshebeth’s spear, El’azar at Pas-dammim, Shammah in the lentil field", file: "audio/mighty-men-2.mp3", voice: "the Narrator", dur: 260 },
+  { n: "3", he: "ep. 3", title: "Water from Bethlehem", line: "Is this not the blood of the men who risked their lives?", mood: "2 Samuel 23:13–17, 5:17–25 · the well at the gate, Baal-perazim, marching in the tops of the balsam trees", file: "audio/mighty-men-3.mp3", voice: "the Narrator", dur: 313 },
+  { n: "4", he: "ep. 4", title: "Abishai son of Zeruiah", line: "I will go with you", mood: "1 Samuel 26, 2 Samuel 10, 16, 19 · into Saul’s camp by night, the Ammonites, Shimei’s curses", file: "audio/mighty-men-4.mp3", voice: "the Narrator", dur: 696 },
+  { n: "5", he: "ep. 5", title: "Asahel, and the Blood Feud", line: "Must the sword devour forever?", mood: "2 Samuel 2–3 · the pool of Gibeon, Asahel and Abner, Joab at the gate of Hebron", file: "audio/mighty-men-5.mp3", voice: "the Narrator", dur: 652 },
+  { n: "6", he: "ep. 6", title: "Benaiah son of Jehoiada", line: "On a snowy day he went down into a pit and killed a lion", mood: "2 Samuel 23:20–23, 1 Chronicles 11, 27 · the champions of Moab, the lion in the pit, the Egyptian’s spear", file: "audio/mighty-men-6.mp3", voice: "the Narrator", dur: 210 },
+  { n: "7", he: "ep. 7", title: "The Giant-Slayers", line: "So that the lamp of Israel may not be extinguished", mood: "2 Samuel 21:15–22, 1 Chronicles 20 · Ishbi-benob, Saph, Goliath’s brother, the man of Gath", file: "audio/mighty-men-7.mp3", voice: "the Narrator", dur: 199 },
+  { n: "8", he: "ep. 8", title: "Uriah the Hittite", line: "You are that man!", mood: "2 Samuel 23:24–39, 11–12 · the roll of the Thirty, the letter, the wall of Rabbah, Nathan", file: "audio/mighty-men-8.mp3", voice: "the Narrator", dur: 665 },
+  { n: "9", he: "ep. 9", title: "Benaiah, and the Throne", line: "Long live King Solomon!", mood: "1 Kings 1–2 · Adonijah's feast, Gihon and the ram's horn, the tent of the LORD, the end of the mighty men", file: "audio/mighty-men-9.mp3", voice: "the Narrator", dur: 1091 },
+];
+
+/* Playback: each psalm is fetched (allowed for files published with the page) and played through the
+   Web Audio API, so nothing depends on the browser streaming media from the page's host. */
+const $ = id => document.getElementById(id);
+let ctx = null, out = null;
+const bytes = new Map();      // compressed mp3 bytes, kept for every psalm fetched
+const decoded = new Map();    // decoded audio, only the current and next psalm
+let shuffle = false, order = TRACKS.map((_, i) => i), pos = 0;
+let buf = null, bufIdx = -1, src = null, playing = false, loading = false, offset = 0, startedAt = 0, token = 0, seeking = false;
+try { shuffle = localStorage.getItem("mighty-shuffle") === "1"; } catch (e) {}
+
+const fmt = s => { s = Math.max(0, Math.round(s || 0)); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+const cur = () => order[pos];
+const durOf = i => (engine === "media" && elIdx === i && isFinite(el.duration) && el.duration > 0) ? el.duration
+  : (bufIdx === i && buf) ? buf.duration : TRACKS[i].dur;
+/* Two engines. "media" is a plain <audio> element: it keeps playing when the phone locks and shows lock-screen
+   controls. "webaudio" is the fallback for viewers that block page audio (the Claude app); phones pause it on lock. */
+let engine = "media";
+const el = new Audio(); el.preload = "auto"; let elIdx = -1;
+// probe once: if this view refuses media files, use Web Audio from the start. The probe lets go of the file
+// as soon as it knows, or the moment Play is pressed, so it never holds up the real player.
+let probe = new Audio();
+function endProbe() { if (probe) { const p = probe; probe = null; p.removeAttribute("src"); p.load(); } }
+probe.preload = "metadata"; probe.muted = true;
+probe.addEventListener("error", () => { if (probe && elIdx === -1) engine = "webaudio"; endProbe(); }, { once: true });
+probe.addEventListener("loadedmetadata", endProbe, { once: true });
+probe.src = TRACKS[0].file;
+const position = () => engine === "media"
+  ? (elIdx === cur() && (playing || loading) ? el.currentTime : offset)
+  : (playing ? Math.min(ctx.currentTime - startedAt, durOf(cur())) : offset);
+
+function ensureCtx() {        // must run inside the click, so the browser lets sound start
+  if (engine !== "webaudio") return;   // an idle AudioContext would put iPhones on the silent-switch audio path
+  if (!ctx) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    ctx = new AC(); out = ctx.createGain(); out.connect(ctx.destination);
+  }
+  if (ctx.state !== "running") ctx.resume().catch(() => {});
+}
+
+async function fetchBytes(i, onProgress) {
+  if (bytes.has(i)) return bytes.get(i);
+  const res = await fetch(TRACKS[i].file);
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const total = +res.headers.get("content-length") || 0;
+  let data;
+  if (res.body && total && onProgress) {
+    const reader = res.body.getReader(), parts = []; let got = 0;
+    for (;;) { const { done, value } = await reader.read(); if (done) break; parts.push(value); got += value.length; onProgress(got / total); }
+    data = new Uint8Array(got); let o = 0; for (const p of parts) { data.set(p, o); o += p.length; }
+    data = data.buffer;
+  } else data = await res.arrayBuffer();
+  bytes.set(i, data); return data;
+}
+async function decode(i, onProgress) {
+  if (decoded.has(i)) return decoded.get(i);
+  const raw = await fetchBytes(i, onProgress);
+  const ab = await new Promise((ok, bad) => ctx.decodeAudioData(raw.slice(0), ok, bad));
+  decoded.set(i, ab);
+  const keep = new Set([cur(), order[(pos + 1) % order.length]]);
+  for (const k of [...decoded.keys()]) if (!keep.has(k)) decoded.delete(k);
+  return ab;
+}
+function prefetchNext() {
+  const n = order[(pos + 1) % order.length];
+  if (!bytes.has(n)) fetchBytes(n).catch(() => {});
+}
+
+function stopSource() { if (src) { src.onended = null; try { src.stop(); } catch (e) {} src.disconnect(); src = null; } }
+function startSource() {
+  stopSource();
+  src = ctx.createBufferSource(); src.buffer = buf; src.connect(out);
+  const me = src;
+  src.onended = () => { if (me === src && playing) { playing = false; src = null; next(true); } };
+  if (offset >= buf.duration) offset = 0;
+  src.start(0, offset); startedAt = ctx.currentTime - offset; playing = true;
+}
+
+async function startMedia() {
+  endProbe();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (elIdx !== i) { el.src = TRACKS[i].file; elIdx = i; }
+  if (Math.abs(el.currentTime - offset) > 0.25) { try { el.currentTime = offset; } catch (e) {} }
+  loading = true; paint();
+  try { await el.play(); }
+  catch (e) {
+    if (my !== token) return;
+    loading = false;
+    if (e && e.name === "NotAllowedError") { $("status").textContent = "Press play to start."; paint(); return; }
+    if (e && e.name === "AbortError") { paint(); return; }
+    engine = "webaudio"; elIdx = -1; el.removeAttribute("src"); el.load();   // this view blocks media files
+    return start();
+  }
+  if (my !== token) { el.pause(); return; }
+  loading = false; playing = true; paint(); prefetchNextMedia();
+}
+const warmed = new Set();
+function prefetchNextMedia() {   // warm the browser cache so the next psalm starts quickly
+  const n = order[(pos + 1) % order.length];
+  if (!warmed.has(n)) { warmed.add(n); fetch(TRACKS[n].file).then(r => r.arrayBuffer()).catch(() => warmed.delete(n)); }
+}
+el.addEventListener("ended", () => { if (engine === "media" && playing) { playing = false; offset = 0; next(true); } });
+el.addEventListener("waiting", () => { if (engine === "media" && playing) $("now-label").textContent = "Loading"; });
+el.addEventListener("playing", () => { if (engine === "media" && playing) paint(); });
+el.addEventListener("loadedmetadata", () => { if (engine === "media") tick(); });
+
+async function start() {
+  if (engine === "media") return startMedia();
+  ensureCtx();
+  const i = cur(), my = ++token;
+  $("status").textContent = "";
+  if (bufIdx !== i || !buf) {
+    loading = true; paint();
+    try {
+      const ab = await decode(i, p => { if (my === token) $("status").textContent = "Loading " + TRACKS[i].title + "… " + Math.round(p * 100) + "%"; });
+      if (my !== token) return;
+      buf = ab; bufIdx = i;
+    } catch (e) {
+      if (my !== token) return;
+      loading = false; $("status").textContent = "Couldn't load " + TRACKS[i].title + ". Check your connection and press play again."; paint(); return;
+    }
+    loading = false; $("status").textContent = "";
+  }
+  if (ctx.state !== "running") { try { await ctx.resume(); } catch (e) {} }
+  if (my !== token) return;
+  startSource(); paint(); prefetchNext();
+}
+function pause() {
+  token++;
+  if (engine === "media") { if (elIdx === cur() && (playing || loading)) offset = el.currentTime; el.pause(); loading = false; playing = false; paint(); return; }
+  loading = false; if (playing) { offset = position(); playing = false; stopSource(); } paint();
+}
+function goTo(newPos) { pause(); pos = newPos; offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+
+function buildOrder(keepFirst) {
+  const idx = TRACKS.map((_, i) => i);
+  if (!shuffle) { order = idx; pos = keepFirst == null ? 0 : keepFirst; return; }
+  const rest = idx.filter(i => i !== keepFirst);
+  for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+  order = keepFirst == null ? rest : [keepFirst, ...rest]; pos = 0;
+}
+
+function renderList() {
+  const list = $("list"); list.innerHTML = "";
+  TRACKS.forEach((t, i) => {
+    if (t.group && (i === 0 || TRACKS[i - 1].group !== t.group)) {
+      const run = TRACKS.filter(u => u.group === t.group);
+      const gh = document.createElement("li"); gh.className = "group-head";
+      gh.innerHTML = `<div class="g-title">${t.group}</div><div class="g-sub">Chapters ${run[0].n}–${run[run.length - 1].n} · ${run.length} parts${t.gsub ? ', ' + t.gsub : ''}</div>`;
+      list.appendChild(gh);
+    }
+    const li = document.createElement("li");
+    if (t.group) li.className = "in-group";
+    const b = document.createElement("button");
+    b.className = "track"; b.id = "track-" + i;
+    b.setAttribute("aria-label", "Play " + t.title);
+    b.innerHTML = `<span class="num"><b>${t.n}</b><span lang="he">${t.he}</span></span>
+      <span class="mid"><span class="t-line">${t.line}</span><span class="t-mood">${t.mood}</span></span>
+      <span class="dur"><span class="hum" aria-hidden="true"><i></i><i></i><i></i></span>${fmt(t.dur)}</span>`;
+    b.addEventListener("click", () => playTrack(i));
+    li.appendChild(b); list.appendChild(li);
+  });
+  const total = TRACKS.reduce((a, t) => a + t.dur, 0);
+  $("total").textContent = TRACKS.length + (TRACKS.length === 1 ? " episode · " : " episodes · ") + Math.round(total / 60) + " min";
+}
+
+function paint() {
+  const t = TRACKS[cur()];
+  $("now-title").textContent = t.title;
+  $("now-line").textContent = t.line;
+  $("now-label").textContent = loading ? "Loading" : playing ? "Playing" : (offset > 0 ? "Paused" : (shuffle ? "Ready · shuffled" : "Ready"));
+  $("t-dur").textContent = fmt(durOf(cur()));
+  const showPause = playing || loading;
+  $("play").setAttribute("aria-label", showPause ? "Pause" : "Play");
+  $("play-icon").innerHTML = showPause ? '<path d="M6 4.5h4.5v15H6zM13.5 4.5H18v15h-4.5z"/>' : '<path d="M7 4.5v15l13-7.5z"/>';
+  TRACKS.forEach((_, i) => {
+    const el = $("track-" + i);
+    el.classList.toggle("current", i === cur());
+    el.classList.toggle("playing", i === cur() && playing);
+    if (i === cur()) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+  });
+  $("m-order").setAttribute("aria-pressed", String(!shuffle));
+  $("m-shuffle").setAttribute("aria-pressed", String(shuffle));
+  try {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: t.title, artist: t.voice || "the Narrator", album: "The Mighty Men of David" });
+      navigator.mediaSession.playbackState = playing ? "playing" : "paused";
+    }
+  } catch (e) {}
+  tick();
+}
+function tick() {
+  if (seeking) return;
+  const d = durOf(cur()), p = position();
+  $("seek").value = d ? (p / d) * 100 : 0;
+  $("t-cur").textContent = fmt(p);
+}
+setInterval(() => { if (playing) tick(); }, 250);
+
+function playTrack(i) {
+  ensureCtx();
+  if (shuffle) { pause(); buildOrder(i); offset = 0; if (bufIdx !== cur()) { buf = null; bufIdx = -1; } start(); }
+  else goTo(i);
+}
+function next(auto) {
+  if (auto) ensureCtx();
+  if (pos + 1 >= order.length) {
+    if (auto) { pos = 0; if (shuffle) buildOrder(); offset = 0; buf = null; bufIdx = -1; paint(); $("now-label").textContent = "Finished"; return; }
+    if (shuffle) { buildOrder(); goTo(0); } else goTo(0);
+  } else goTo(pos + 1);
+}
+function prev() {
+  ensureCtx();
+  if (position() > 4) { const was = playing; pause(); offset = 0; if (was) start(); else paint(); return; }
+  goTo(Math.max(0, pos - 1));
+}
+
+$("play").addEventListener("click", () => { if (playing || loading) pause(); else start(); });
+$("next").addEventListener("click", () => { ensureCtx(); next(false); });
+$("prev").addEventListener("click", prev);
+$("m-order").addEventListener("click", () => setShuffle(false));
+$("m-shuffle").addEventListener("click", () => setShuffle(true));
+function setShuffle(on) {
+  if (shuffle === on) return;
+  shuffle = on; const keep = cur();
+  try { localStorage.setItem("mighty-shuffle", on ? "1" : "0"); } catch (e) {}
+  buildOrder(keep); paint(); if (playing) prefetchNext();
+}
+
+const seek = $("seek");
+seek.addEventListener("input", () => { seeking = true; $("t-cur").textContent = fmt(seek.value / 100 * durOf(cur())); });
+seek.addEventListener("change", () => {
+  seeking = false;
+  offset = seek.value / 100 * durOf(cur());
+  if (engine === "media") { if (elIdx === cur()) { try { el.currentTime = offset; } catch (e) {} } paint(); }
+  else if (playing) { ensureCtx(); startSource(); } else paint();
+});
+
+document.addEventListener("keydown", e => {
+  if (e.code === "Space" && !(e.target instanceof HTMLInputElement) && !(e.target instanceof HTMLButtonElement)) {
+    e.preventDefault(); if (playing || loading) pause(); else start();
+  }
+});
+document.addEventListener("visibilitychange", () => { if (!document.hidden && ctx && playing && ctx.state !== "running") ctx.resume().catch(() => {}); });
+
+try {
+  if ("mediaSession" in navigator) {
+    navigator.mediaSession.setActionHandler("play", () => start());
+    navigator.mediaSession.setActionHandler("pause", pause);
+    navigator.mediaSession.setActionHandler("nexttrack", () => next(false));
+    navigator.mediaSession.setActionHandler("previoustrack", prev);
+    navigator.mediaSession.setActionHandler("seekto", d => { offset = d.seekTime || 0; if (engine === "media" && elIdx === cur()) el.currentTime = offset; else if (playing) startSource(); tick(); });
+  }
+} catch (e) {}
+
+$("clipbtn").addEventListener("click", () => {
+  const f = "mighty/" + TRACKS[cur()].file;
+  try { parent.ClipMaker.open(f); return; } catch (e) {}
+  try { if (parent !== window) { parent.postMessage({ type: "psalter-clip", file: f }, "*"); return; } } catch (e) {}
+  $("status").textContent = "Open this from the Psalter page to make a clip.";
+});
+renderList();
+buildOrder(shuffle ? undefined : 0);
+paint();
+
+</script>
+
+<script src="../miniplayer.js"></script>
+<script>
+/* The seek bar's gilt fill: the page moves the bar itself, so follow its value. */
+(() => {
+  const sk = document.getElementById("seek"); if (!sk) return;
+  const upd = () => sk.style.setProperty("--p", (+sk.value || 0) + "%");
+  sk.addEventListener("input", upd); setInterval(upd, 250); upd();
+})();
+
+
+/* The Psalter's painting, set as a framed plate on its title page: it follows the page's own painting (and its scenes). */
+(() => {
+  const bg = document.querySelector(".art-bg"), plate = document.getElementById("plate");
+  if (!bg || !plate) return;
+  const src = [...bg.querySelectorAll("img")], dst = [...plate.querySelectorAll("img")];
+  const sync = () => src.forEach((im, i) => {
+    const u = im.getAttribute("src"); if (u && dst[i].getAttribute("src") !== u) dst[i].setAttribute("src", u);
+    dst[i].className = im.className;
+  });
+  new MutationObserver(sync).observe(bg, { subtree: true, attributes: true, attributeFilter: ["src", "class"] });
+  sync();
+})();
+</script>
+
+<script>
+/* The full-screen view as a page of the book. The reading is laid out as pages: each scene's painting is printed at
+   the head of the page where that scene begins, with the verses set below it as a paragraph; the verse being read is in
+   full ink, the rest a little lighter. When the reading reaches the next page (a new scene, or the text runs on) the
+   page turns; seeking back turns it back. The view's controls and opening/closing are miniplayer.js's own. */
+(() => {
+  const start = () => {
+    const fs = document.querySelector(".fs"); if (!fs || typeof TRACKS === "undefined") return setTimeout(start, 300);
+    const bottom = fs.querySelector(".fs-bottom");
+    const bk = document.createElement("div"); bk.className = "bk"; bk.setAttribute("aria-live", "off");
+    bk.innerHTML = '<div class="bk-stack"></div><div class="bk-leaf bk-measure"><div class="bk-face"><div class="bk-in"></div></div></div><div class="bk-shade"></div>';
+    fs.insertBefore(bk, bottom);
+    const stack = bk.querySelector(".bk-stack"), measure = bk.querySelector(".bk-measure .bk-in"), shade = bk.querySelector(".bk-shade");
+    const BOOKNAME = "The Mighty Men", DIR = "mighty";
+    const vKey = typeof verseKey === "function" ? verseKey : (v => { const m = String(v).match(/^(?:(\d+):)?(\d+)/); return m ? (+(m[1] || 0)) * 1000 + +m[2] : -1; });
+    const SCN = typeof SCENES !== "undefined" ? SCENES : {}, ARTS = typeof ART !== "undefined" ? ART : {};
+    let CL = null; fetch((DIR ? "../" : "") + "clip/clips.json").then(r => r.ok ? r.json() : null).then(d => { CL = d; }).catch(() => {});
+    const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    let book = null, shown = -1, leaf = null, size = "";
+    // ---- laying the reading out as pages ----
+    function verses(t) {
+      const e = CL && CL[(DIR ? DIR + "/" : "") + t.file], segs = e && e.segs;
+      const vs = [], sup = [];
+      if (segs) for (const [a, , lab, text] of segs) {
+        if (lab === "title") { if (!/^psalm\s+[\w-]+\.?$/i.test(text.trim())) sup.push({ text, start: a }); continue; }
+        const last = vs[vs.length - 1];
+        if (last && last.label === lab) last.text += " " + text; else vs.push({ label: lab, key: vKey(lab), text, start: a });
+      }
+      return { vs, sup, ok: !!segs, lines: !!e && e.unit === "line" };
+    }
+    function pageHTML(t, pg, idx) {
+      let h = `<div class="bk-rh"><span>${esc(BOOKNAME)}</span><span>${esc(t.title)}</span></div>`;
+      const kick = DIR ? `<span class="kick">${esc(t.mood || "")}</span>` : `<span class="he" lang="he" dir="rtl">${esc(t.he || "")}</span>`;
+      if (pg.head) h += `<div class="bk-hd">${kick}<span class="ti">${esc(t.title)}</span>` +
+        (pg.sup ? `<span class="sup">${esc(pg.sup)}</span>` : "") + `</div>`;
+      if (pg.pic) h += `<figure class="bk-pl"><span class="im" style="background-image:url('${pg.pic}')"></span>${pg.cap ? `<figcaption class="cap">${esc(pg.cap)}</figcaption>` : ""}</figure>`;
+      h += `<div class="bk-tx">` + (pg.verses.length ? pg.verses.map((v, i) => {
+        let tx = esc(v.text);
+        if (pg.head && i === 0 && /^[A-Za-z]/.test(v.text)) tx = `<span class="bk-dc">${esc(v.text[0])}</span>` + esc(v.text.slice(1));
+        return `<span class="bk-v" data-v="${esc(v.label)}">${(pg.head && i === 0) || book_lines ? "" : `<span class="bk-n">${esc(v.label.replace(/^\d+:/, ""))}</span>`}${tx} </span>`;
+      }).join("") : (pg.line ? `<span class="bk-v now">${esc(pg.line)}</span>` : "")) + `</div><div class="bk-fo">${idx + 1}</div>`;
+      return h;
+    }
+    function fits() { const tx = measure.querySelector(".bk-tx"); return !tx || tx.scrollHeight <= tx.clientHeight + 1; }
+    let book_lines = false;
+    function layout(t) {
+      const { vs, sup, ok, lines } = verses(t); book_lines = lines;
+      const seq = (SCN[t.n] || [["1", ARTS[t.n] || null]]).map(([from, img]) => ({ key: vKey(from), img }));
+      const chunks = seq.map(c => ({ img: c.img, vs: [] }));
+      for (const v of vs) { let ci = 0; seq.forEach((c, i) => { if (c.key <= v.key) ci = i; }); chunks[ci].vs.push(v); }
+      const pages = [];
+      chunks.forEach((c, ci) => {
+        if (ci > 0 && !c.vs.length) return;
+        const a = c.vs[0], b = c.vs[c.vs.length - 1];
+        let pg = { head: ci === 0, sup: ci === 0 ? sup.map(x => x.text).join(" ") : "", pic: c.img,
+                   cap: a && !lines ? (DIR ? `${BOOKNAME} ` + (/:/.test(a.label) ? "" : `${t.n}:`) : `${t.title}:`) + `${a.label}${b && b.label !== a.label ? "–" + b.label.replace(/^\d+:/, "") : ""}` : "", verses: [], line: ok ? "" : t.line };
+        for (const v of c.vs) {
+          pg.verses.push(v); measure.innerHTML = pageHTML(t, pg, pages.length);
+          if (!fits() && pg.verses.length > 1) { pg.verses.pop(); pages.push(pg); pg = { head: false, pic: null, verses: [v] }; }
+        }
+        pages.push(pg);
+      });
+      if (!pages.length) pages.push({ head: true, pic: ARTS[t.n] || null, verses: [], line: t.line });
+      pages.forEach(pg => { if (pg.pic) { const im = new Image(); im.src = pg.pic; } });
+      return { file: t.file, t, pages, sup, ok };
+    }
+    // ---- which page the reading is on, and which verse is being read ----
+    function where() {
+      const now = position();
+      let lab = null;
+      for (const pg of book.pages) for (const v of pg.verses) if (v.start <= now + 0.12) lab = v.label;
+      let pi = 0;
+      if (lab !== null) book.pages.forEach((pg, i) => { if (pg.verses.some(v => v.label === lab)) pi = i; });
+      return { pi, lab, inSup: lab === null && book.sup.some(s => s.start <= now + 0.12) };
+    }
+    // ---- a page leaf: its printed front, and the blank back you see as it turns ----
+    function makeLeaf(i) {
+      const el = document.createElement("div"); el.className = "bk-leaf";
+      el.innerHTML = `<div class="bk-face bk-front"><div class="bk-in">${pageHTML(book.t, book.pages[i], i)}</div></div><div class="bk-face bk-back"></div>`;
+      return el;
+    }
+    let anims = [];
+    function finishTurns() { anims.forEach(a => { try { a.finish(); } catch (e) {} }); anims = []; }
+    function showPage(i, animate) {
+      finishTurns();
+      const dir = i > shown ? 1 : -1, nu = makeLeaf(i), old = leaf;
+      if (!old || !animate || reduce()) { stack.innerHTML = ""; stack.appendChild(nu); leaf = nu; shown = i; return; }
+      const ms = 1000;
+      if (dir > 0) {   // the new page lies underneath; the old one turns over to the left
+        stack.insertBefore(nu, old);
+        const a = old.animate([{ transform: "rotateY(0deg)", easing: "cubic-bezier(.35,.05,.55,1)" }, { transform: "rotateY(-90deg)", offset: .8 }, { transform: "rotateY(-180deg)" }], { duration: ms, fill: "forwards" });
+        const b = shade.animate([{ opacity: 0 }, { opacity: 1, offset: .45 }, { opacity: 0 }], { duration: ms, easing: "ease" });
+        const c = old.querySelector(".bk-front").animate([{ filter: "brightness(1)" }, { filter: "brightness(.72)", offset: .8 }, { filter: "brightness(.6)" }], { duration: ms, fill: "forwards" });
+        anims = [a, b, c]; a.finished.then(() => old.remove(), () => old.remove());
+      } else {         // going back: the earlier page turns back over from the left
+        stack.appendChild(nu);
+        const a = nu.animate([{ transform: "rotateY(-180deg)" }, { transform: "rotateY(-90deg)", offset: .2, easing: "cubic-bezier(.45,0,.65,.95)" }, { transform: "rotateY(0deg)" }], { duration: ms, fill: "forwards" });
+        const c = nu.querySelector(".bk-front").animate([{ filter: "brightness(.6)" }, { filter: "brightness(.72)", offset: .2 }, { filter: "brightness(1)" }], { duration: ms, fill: "forwards" });
+        anims = [a, c]; a.finished.then(() => { if (old.parentNode) old.remove(); }, () => { if (old.parentNode) old.remove(); });
+      }
+      leaf = nu; shown = i;
+    }
+    function mark(w) {
+      if (!leaf) return;
+      leaf.querySelectorAll(".bk-tx .bk-v").forEach(v => v.classList.toggle("now", v.dataset.v === w.lab));
+      const sp = leaf.querySelector(".bk-hd .sup"); if (sp) sp.classList.toggle("now", w.inSup);
+    }
+    function tick() {
+      if (!fs.classList.contains("on") || document.documentElement.matches(".rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets")) return;
+      const t = TRACKS[cur()]; if (!t) return;
+      const sz = bk.clientWidth + "x" + bk.clientHeight;
+      if (!book || book.file !== t.file || sz !== size || (!book.ok && CL)) {
+        if (!bk.clientHeight) return;
+        const fresh = !book || book.file !== t.file;
+        size = sz; book = layout(t); shown = -1; leaf = null; stack.innerHTML = "";
+        showPage(where().pi, false); if (fresh) bk.dataset.file = t.file;
+      }
+      const w = where();
+      if (w.pi !== shown) showPage(w.pi, true);
+      mark(w);
+    }
+    setInterval(tick, 150);
+    new MutationObserver(() => setTimeout(tick, 0)).observe(fs, { attributes: true, attributeFilter: ["class"] });
+  };
+  start();
+})();
+</script>

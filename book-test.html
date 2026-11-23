@@ -435,7 +435,7 @@ body.has-art .s-form { background: color-mix(in srgb, var(--bg) 60%, transparent
 @media (max-width: 380px) { .luxe .row { gap: 3px; } }
 
 /* =================== the Psalter as a book =================== */
-:root { --leather: #1f3729; --leather-d: #0e1a12; --gild: #b8862f; --gild-l: #f0d58c; }
+:root { --leather: #1f3729; --leather-d: #0e1a12; --leather-l: #2c4a37; --gild: #b8862f; --gild-l: #f0d58c; }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) { --bg: #e9dbb6; --surface: #f1e5c5; --fg: #2b1f12; --muted: #6b583e; --line: #cfb88c; --accent: #84520f; --accent-ink: #fbf3df;
   --page: #efe2bf; --page-2: #e3d0a3; --rubric: #9b2b1d; --ribbon: #8d1d23; --edge-a: #f1e5c6; --edge-b: #c2a978; --ink-rule: rgba(155,104,30,.6); color-scheme: light; }
 @media (prefers-color-scheme: dark) { html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets):not([data-theme="light"]) { --bg: #2b2115; --surface: #34291b; --fg: #eee1c4; --muted: #bba57e; --line: #57452b; --accent: #e3b65e; --accent-ink: #20160a; --page: #30251a; --page-2: #251c12; --rubric: #e08466; --ribbon: #a3262d; --edge-a: #3d3020; --edge-b: #1c140b; --ink-rule: rgba(227,182,94,.55); color-scheme: dark; } }
@@ -447,7 +447,7 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) body { back
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .art-bg { display: none; }
 
 /* the top bar: a band of leather with a gilt edge */
-html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(#2c4a37, var(--leather) 55%, var(--leather-d)); border-bottom: 0;
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border-bottom: 0;
   box-shadow: inset 0 -1px 0 #6b4a17, inset 0 -3px 0 var(--gild), inset 0 -4px 0 #4a3210, 0 4px 10px rgba(0,0,0,.45);
   margin-inline: calc(-1 * max(9px, env(safe-area-inset-left, 0px))); padding-bottom: 11px; }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab { color: var(--gild-l); background: rgba(0,0,0,.2); border: 1px solid color-mix(in srgb, var(--gild) 75%, transparent); }
@@ -502,7 +502,7 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .play svg {
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .icon-btn { border: 1.5px solid var(--gild); color: var(--fg); background: radial-gradient(circle, transparent 62%, color-mix(in srgb, var(--gild) 18%, transparent));
   box-shadow: inset 0 0 0 3px transparent, inset 0 0 0 4px color-mix(in srgb, var(--gild) 35%, transparent); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode { border-color: var(--gild); }
-html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button[aria-pressed="true"] { background: linear-gradient(#2c4a37, var(--leather-d)); color: var(--gild-l); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mode button[aria-pressed="true"] { background: linear-gradient(var(--leather-l), var(--leather-d)); color: var(--gild-l); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fsbtn, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .clipbtn { border: 1px solid var(--gild); color: var(--accent); background: color-mix(in srgb, var(--page) 60%, transparent); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .seek input { accent-color: var(--gild); }
 
@@ -528,7 +528,7 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .dur { marg
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current .num b { color: var(--rubric); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current .t-line { color: var(--accent); font-weight: 500; }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .track.current::before { content: ""; position: absolute; left: -27px; top: -10px; width: 13px; height: calc(100% + 18px); z-index: 1;
-  background: linear-gradient(90deg, #5c0f14, var(--ribbon) 35%, #c0444a 52%, var(--ribbon) 68%, #5c0f14);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--ribbon) 55%, #000), var(--ribbon) 35%, color-mix(in srgb, var(--ribbon) 72%, #fff) 52%, var(--ribbon) 68%, color-mix(in srgb, var(--ribbon) 55%, #000));
   clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 84%, 0 100%); filter: drop-shadow(1px 2px 1px rgba(0,0,0,.35)); }
 
 /* suggestions: written on the page */
@@ -538,7 +538,7 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form, ht
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form input, html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form textarea { background: transparent; border: 0; border-bottom: 1.5px solid color-mix(in srgb, var(--muted) 60%, transparent); border-radius: 0; padding: 6px 2px; }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .s-form textarea { line-height: 30px; padding-top: 0;
   background: repeating-linear-gradient(transparent 0 29px, color-mix(in srgb, var(--muted) 38%, transparent) 29px 30px); }
-html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send { background: linear-gradient(#2c4a37, var(--leather-d)); color: var(--gild-l); border: 1px solid var(--gild); }
+html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send { background: linear-gradient(var(--leather-l), var(--leather-d)); color: var(--gild-l); border: 1px solid var(--gild); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .send.alt { background: transparent; color: var(--accent); }
 
 /* colophon */
@@ -547,7 +547,7 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) footer::bef
 
 /* the bar at the bottom while playing: leather and gold */
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini { --fg: #f2e4c0; --muted: #c8b48c; --accent: #e8c064; --accent-ink: #22170a;
-  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(#2c4a37, var(--leather) 55%, var(--leather-d)); border: 1px solid var(--gild);
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border: 1px solid var(--gild);
   box-shadow: inset 0 0 0 3px rgba(0,0,0,.2), inset 0 0 0 4px color-mix(in srgb, var(--gild) 40%, transparent), 0 10px 30px rgba(0,0,0,.45); }
 html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini-play { background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a); color: #2a1a0a; box-shadow: 0 0 0 2px #5a3d12; }
 
@@ -746,10 +746,12 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom 
 .bk-back { transform: rotateY(180deg);
   background: linear-gradient(270deg, rgba(50,28,8,.30), rgba(50,28,8,.08) 4%, transparent 10%), radial-gradient(140% 100% at 50% 45%, transparent 55%, rgba(110,70,25,.28)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.55' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35  0 0 0 0 .22  0 0 0 0 .08  0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23f)' opacity='.16'/%3E%3C/svg%3E"), var(--page-2); }
 .bk-in { position: absolute; inset: 0; display: flex; flex-direction: column; padding: 14px 18px 10px 24px; color: var(--fg); }
-.bk-rh { flex: none; display: flex; justify-content: space-between; font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
+.bk-rh { flex: none; display: flex; justify-content: space-between; gap: 12px; white-space: nowrap; font: 400 11px/1 var(--display); letter-spacing: .2em; text-transform: uppercase; color: var(--muted);
   padding: 2px 2px 7px; border-bottom: 1px solid var(--ink-rule); }
+.bk-rh span:last-child { overflow: hidden; text-overflow: ellipsis; }
 .bk-hd { flex: none; text-align: center; margin: 12px 0 2px; }
 .bk-hd .he { display: block; font: 400 22px/1 Alegreya, Georgia, serif; color: var(--gild); }
+.bk-hd .kick { display: block; font: 700 11px/1.3 var(--ui); letter-spacing: .14em; text-transform: uppercase; color: var(--rubric); padding: 0 10px; }
 .bk-hd .ti { display: block; margin-top: 4px; font: 400 24px/1.1 var(--display); letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
 .bk-hd .sup { display: block; margin-top: 4px; font: italic 15px/1.35 var(--body); color: var(--muted); transition: color .6s; }
 .bk-hd .sup.now { color: var(--fg); }
@@ -767,6 +769,35 @@ html:not(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .fs-bottom 
   background: linear-gradient(90deg, rgba(20,10,2,.0), rgba(20,10,2,.35)); }
 .bk-measure { visibility: hidden; pointer-events: none; }
 @media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
+
+/* =================== the top bar and the playing bar in every book's own leather =================== */
+html.rev { --leather: #5e2016; --leather-d: #1d0907; --leather-l: #753f37; }
+html.judges { --leather: #5a3212; --leather-d: #2a1608; --leather-l: #714f33; }
+html.mighty { --leather: #36302a; --leather-d: #121212; --leather-l: #524d48; }
+html.prayers { --leather: #2e3a68; --leather-d: #10152a; --leather-l: #4b567d; }
+html.matthew { --leather: #43542c; --leather-d: #141b0e; --leather-l: #5d6c4a; }
+html.proverbs { --leather: #21524b; --leather-d: #0c1c1a; --leather-l: #406a64; }
+html.prophets { --leather: #5a2333; --leather-d: #220d14; --leather-l: #714250; }
+
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs { background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border-bottom: 0;
+  box-shadow: inset 0 -1px 0 #6b4a17, inset 0 -3px 0 var(--gild), inset 0 -4px 0 #4a3210, 0 4px 10px rgba(0,0,0,.45); padding-bottom: 11px; }
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open, html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab { color: var(--gild-l); background: rgba(0,0,0,.2); border: 1px solid var(--gild); border-radius: 5px; min-height: 42px;
+  outline: 1px solid color-mix(in srgb, var(--gild) 38%, transparent); outline-offset: -4px; }
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-open svg, html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .tabs .tab.of-tab svg { fill: var(--gild-l); }
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .lib-now { background: linear-gradient(180deg, #fff1bf, #e8c05e 30%, #9b6b1e 60%, #f0d27a 85%, #b38330); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(0,0,0,.6)); letter-spacing: .06em; }
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini.rbar { --fg: #f2e4c0; --muted: #c8b48c; --accent: #e8c064; --accent-ink: #22170a;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.33'/%3E%3C/svg%3E"), linear-gradient(var(--leather-l), var(--leather) 55%, var(--leather-d)); border: 1px solid var(--gild);
+  box-shadow: inset 0 0 0 3px rgba(0,0,0,.2), inset 0 0 0 4px color-mix(in srgb, var(--gild) 40%, transparent), 0 10px 30px rgba(0,0,0,.45); }
+html:is(.rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets) .mini.rbar .mini-play { background: radial-gradient(circle at 35% 28%, #fff6cf, #ecc76a 28%, #b88830 60%, #77511a); color: #2a1a0a; box-shadow: 0 0 0 2px #5a3d12; }
+.mini.rbar[data-from="rev"] { --leather: #5e2016; --leather-d: #1d0907; --leather-l: #753f37; }
+.mini.rbar[data-from="judges"] { --leather: #5a3212; --leather-d: #2a1608; --leather-l: #714f33; }
+.mini.rbar[data-from="mighty"] { --leather: #36302a; --leather-d: #121212; --leather-l: #524d48; }
+.mini.rbar[data-from="prayers"] { --leather: #2e3a68; --leather-d: #10152a; --leather-l: #4b567d; }
+.mini.rbar[data-from="matthew"] { --leather: #43542c; --leather-d: #141b0e; --leather-l: #5d6c4a; }
+.mini.rbar[data-from="proverbs"] { --leather: #21524b; --leather-d: #0c1c1a; --leather-l: #406a64; }
+.mini.rbar[data-from="prophets"] { --leather: #5a2333; --leather-d: #220d14; --leather-l: #714250; }
+.mini.rbar[data-from="psalter"] { --leather: #1f3729; --leather-d: #0e1a12; --leather-l: #2c4a37; }
 </style>
 
 <nav class="tabs" role="tablist" aria-label="Collections">
@@ -1566,13 +1597,13 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const root = document.documentElement, bar = document.querySelector(".tabs");
   const TABS = {
     psalter: { btn: "tab-psalter", hash: "#psalter" },
-    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/index.html" },
-    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/index.html" },
-    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/index.html" },
-    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/index.html" },
-    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/index.html" },
-    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/index.html" },
-    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/index.html" },
+    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/book-test.html" },
+    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/book-test.html" },
+    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/book-test.html" },
+    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/book-test.html" },
+    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/book-test.html" },
+    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/book-test.html" },
+    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/book-test.html" },
   };
   const ORDER = ["psalter", "rev", "judges", "mighty", "prayers", "matthew", "proverbs", "prophets"];
   let cur = null;
@@ -2616,7 +2647,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     }
     if (cur === "psalter" || !(docOf(cur) && docOf(cur).querySelector(".fs.on"))) document.documentElement.classList.remove("fs-child");
     const od = owner && docOf(owner), showR = !!od && owner !== cur && isActive(od) && !document.documentElement.classList.contains("fs-child");
-    rbar.hidden = !showR; rbar.classList.toggle("on", showR);
+    rbar.hidden = !showR; rbar.classList.toggle("on", showR); if (owner && rbar.dataset.from !== owner) rbar.dataset.from = owner;
     const pad = showR ? `body { padding-bottom: ${rbar.offsetHeight + 24}px !important; }` : "";
     for (const k of T.ORDER) {
       const d = docOf(k); if (!d) continue;
@@ -2655,37 +2686,43 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
     bk.innerHTML = '<div class="bk-stack"></div><div class="bk-leaf bk-measure"><div class="bk-face"><div class="bk-in"></div></div></div><div class="bk-shade"></div>';
     fs.insertBefore(bk, bottom);
     const stack = bk.querySelector(".bk-stack"), measure = bk.querySelector(".bk-measure .bk-in"), shade = bk.querySelector(".bk-shade");
+    const BOOKNAME = "The Psalter", DIR = "";
+    const vKey = typeof verseKey === "function" ? verseKey : (v => { const m = String(v).match(/^(?:(\d+):)?(\d+)/); return m ? (+(m[1] || 0)) * 1000 + +m[2] : -1; });
+    const SCN = typeof SCENES !== "undefined" ? SCENES : {}, ARTS = typeof ART !== "undefined" ? ART : {};
+    let CL = null; fetch((DIR ? "../" : "") + "clip/clips.json").then(r => r.ok ? r.json() : null).then(d => { CL = d; }).catch(() => {});
     const esc = x => String(x).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     let book = null, shown = -1, leaf = null, size = "";
     // ---- laying the reading out as pages ----
     function verses(t) {
-      const d = typeof clipVerses === "function" ? clipVerses() : null, segs = d && d[t.file] && d[t.file].segs;
+      const e = CL && CL[(DIR ? DIR + "/" : "") + t.file], segs = e && e.segs;
       const vs = [], sup = [];
       if (segs) for (const [a, , lab, text] of segs) {
         if (lab === "title") { if (!/^psalm\s+[\w-]+\.?$/i.test(text.trim())) sup.push({ text, start: a }); continue; }
         const last = vs[vs.length - 1];
-        if (last && last.label === lab) last.text += " " + text; else vs.push({ label: lab, key: verseKey(lab), text, start: a });
+        if (last && last.label === lab) last.text += " " + text; else vs.push({ label: lab, key: vKey(lab), text, start: a });
       }
-      return { vs, sup, ok: !!segs };
+      return { vs, sup, ok: !!segs, lines: !!e && e.unit === "line" };
     }
     function pageHTML(t, pg, idx) {
-      let h = `<div class="bk-rh"><span>The Psalter</span><span>${esc(t.title)}</span></div>`;
-      if (pg.head) h += `<div class="bk-hd"><span class="he" lang="he" dir="rtl">${esc(t.he || "")}</span><span class="ti">${esc(t.title)}</span>` +
+      let h = `<div class="bk-rh"><span>${esc(BOOKNAME)}</span><span>${esc(t.title)}</span></div>`;
+      const kick = DIR ? `<span class="kick">${esc(t.mood || "")}</span>` : `<span class="he" lang="he" dir="rtl">${esc(t.he || "")}</span>`;
+      if (pg.head) h += `<div class="bk-hd">${kick}<span class="ti">${esc(t.title)}</span>` +
         (pg.sup ? `<span class="sup">${esc(pg.sup)}</span>` : "") + `</div>`;
       if (pg.pic) h += `<figure class="bk-pl"><span class="im" style="background-image:url('${pg.pic}')"></span>${pg.cap ? `<figcaption class="cap">${esc(pg.cap)}</figcaption>` : ""}</figure>`;
       h += `<div class="bk-tx">` + (pg.verses.length ? pg.verses.map((v, i) => {
         let tx = esc(v.text);
         if (pg.head && i === 0 && /^[A-Za-z]/.test(v.text)) tx = `<span class="bk-dc">${esc(v.text[0])}</span>` + esc(v.text.slice(1));
-        return `<span class="bk-v" data-v="${esc(v.label)}">${pg.head && i === 0 ? "" : `<span class="bk-n">${esc(v.label)}</span>`}${tx} </span>`;
+        return `<span class="bk-v" data-v="${esc(v.label)}">${(pg.head && i === 0) || book_lines ? "" : `<span class="bk-n">${esc(v.label.replace(/^\d+:/, ""))}</span>`}${tx} </span>`;
       }).join("") : (pg.line ? `<span class="bk-v now">${esc(pg.line)}</span>` : "")) + `</div><div class="bk-fo">${idx + 1}</div>`;
       return h;
     }
     function fits() { const tx = measure.querySelector(".bk-tx"); return !tx || tx.scrollHeight <= tx.clientHeight + 1; }
+    let book_lines = false;
     function layout(t) {
-      const { vs, sup, ok } = verses(t);
-      const seq = (SCENES[t.n] || [["1", ART[t.n] || null]]).map(([from, img]) => ({ key: verseKey(from), img }));
+      const { vs, sup, ok, lines } = verses(t); book_lines = lines;
+      const seq = (SCN[t.n] || [["1", ARTS[t.n] || null]]).map(([from, img]) => ({ key: vKey(from), img }));
       const chunks = seq.map(c => ({ img: c.img, vs: [] }));
       for (const v of vs) { let ci = 0; seq.forEach((c, i) => { if (c.key <= v.key) ci = i; }); chunks[ci].vs.push(v); }
       const pages = [];
@@ -2693,14 +2730,14 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
         if (ci > 0 && !c.vs.length) return;
         const a = c.vs[0], b = c.vs[c.vs.length - 1];
         let pg = { head: ci === 0, sup: ci === 0 ? sup.map(x => x.text).join(" ") : "", pic: c.img,
-                   cap: a ? `${t.title}:${a.label}${b && b.label !== a.label ? "–" + b.label : ""}` : "", verses: [], line: ok ? "" : t.line };
+                   cap: a && !lines ? (DIR ? `${BOOKNAME} ` + (/:/.test(a.label) ? "" : `${t.n}:`) : `${t.title}:`) + `${a.label}${b && b.label !== a.label ? "–" + b.label.replace(/^\d+:/, "") : ""}` : "", verses: [], line: ok ? "" : t.line };
         for (const v of c.vs) {
           pg.verses.push(v); measure.innerHTML = pageHTML(t, pg, pages.length);
           if (!fits() && pg.verses.length > 1) { pg.verses.pop(); pages.push(pg); pg = { head: false, pic: null, verses: [v] }; }
         }
         pages.push(pg);
       });
-      if (!pages.length) pages.push({ head: true, pic: ART[t.n] || null, verses: [], line: t.line });
+      if (!pages.length) pages.push({ head: true, pic: ARTS[t.n] || null, verses: [], line: t.line });
       pages.forEach(pg => { if (pg.pic) { const im = new Image(); im.src = pg.pic; } });
       return { file: t.file, t, pages, sup, ok };
     }
@@ -2749,7 +2786,7 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
       if (!fs.classList.contains("on") || document.documentElement.matches(".rev,.judges,.mighty,.prayers,.matthew,.proverbs,.prophets")) return;
       const t = TRACKS[cur()]; if (!t) return;
       const sz = bk.clientWidth + "x" + bk.clientHeight;
-      if (!book || book.file !== t.file || sz !== size || (!book.ok && clipVerses())) {
+      if (!book || book.file !== t.file || sz !== size || (!book.ok && CL)) {
         if (!bk.clientHeight) return;
         const fresh = !book || book.file !== t.file;
         size = sz; book = layout(t); shown = -1; leaf = null; stack.innerHTML = "";
