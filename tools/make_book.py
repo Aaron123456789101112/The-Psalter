@@ -713,8 +713,8 @@ html[data-theme="dark"] .bk { __LAMPPAPER__ }
 .bk-measure { visibility: hidden; pointer-events: none; }
 @media (max-height: 700px) { .bk-pl { margin-top: 8px; } .bk-pl .im { aspect-ratio: 16 / 9; } .bk-hd { margin-top: 6px; } .bk-hd .ti { font-size: 20px; } }
 """
-LAMPPAPER = ("--page: #dccaa0; --page-2: #cdb98d; --fg: #2a1d10; --muted: #5f4c32; --rubric: #8f2a1b; --gild: #9a6d22;"
-             " --ink-rule: rgba(120,80,25,.55); --edge-a: #e3d3ae; --edge-b: #a58d5c; color-scheme: light;")
+LAMPPAPER = ("--page: #c7b287; --page-2: #b9a377; --fg: #221609; --muted: #54422a; --rubric: #852516; --gild: #8a611c;"
+             " --ink-rule: rgba(105,68,20,.6); --edge-a: #cfbb91; --edge-b: #93794a; color-scheme: light;")
 for k, v in {"__P__": P, "__NOISE__": NOISE, "__FIBRE__": FIBRE, "__LAMPPAPER__": LAMPPAPER, "__PAPER__": PAPER, "__PAPERBLEND__": PAPER_BLEND}.items():
     BOOKPAGE_CSS = BOOKPAGE_CSS.replace(k, v)
 
