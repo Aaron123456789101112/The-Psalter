@@ -1049,6 +1049,9 @@ for k, v in {"__NOISE__": NOISE, "__LAMPPAPER__": LAMPPAPER, "__PAPER__": PAPER,
     CLIP_CSS = CLIP_CSS.replace(k, v)
 CLIP_CSS += "".join(f'html.{k} .cm {{ --cm-rh: "{v[1]}"; }}\n' for k, v in OTHERS.items())
 
+# the new icon, on the test page only (the live page keeps the old one until it's approved)
+once('<link rel="apple-touch-icon" href="apple-touch-icon.png">', '<link rel="apple-touch-icon" href="icon-test/apple-touch-icon.png">')
+once('<link rel="icon" href="icon-512.png">', '<link rel="icon" type="image/png" sizes="48x48" href="icon-test/favicon-48.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-test/icon-192.png">')
 once("</style>", BOOK_CSS + FLIGHT_CSS + KEEP_CSS + BOOKPAGE_CSS + TOP_ALL_CSS + CLIP_CSS + "</style>")
 # switching books no longer pauses what is playing (the keep-playing script decides what pauses, and when)
 once("    for (const k of ORDER) if (k !== which) pauseTab(k);", "    if (!window.keepPlaying) for (const k of ORDER) if (k !== which) pauseTab(k);")

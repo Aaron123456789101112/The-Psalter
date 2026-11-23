@@ -3,14 +3,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-title" content="Psalter">
-<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" href="icon-test/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#e6e8e2" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#121714" media="(prefers-color-scheme: dark)">
-<link rel="icon" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-test/favicon-48.png"><link rel="icon" type="image/png" sizes="192x192" href="icon-test/icon-192.png">
 <title>The Psalter</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1710,13 +1710,13 @@ for (const [id, where] of [["s-sms", "messages"], ["s-mail", "email"]]) {
   const root = document.documentElement, bar = document.querySelector(".tabs");
   const TABS = {
     psalter: { btn: "tab-psalter", hash: "#psalter" },
-    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/book-test.html?v=20261123093656" },
-    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/book-test.html?v=20261123093656" },
-    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/book-test.html?v=20261123093656" },
-    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/book-test.html?v=20261123093656" },
-    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/book-test.html?v=20261123093656" },
-    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/book-test.html?v=20261123093656" },
-    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/book-test.html?v=20261123093656" },
+    rev: { btn: "tab-rev", hash: "#revelation", frame: "revframe", src: "revelation/book-test.html?v=20261123103314" },
+    judges: { btn: "tab-judges", hash: "#judges", frame: "judgesframe", src: "judges/book-test.html?v=20261123103314" },
+    mighty: { btn: "tab-mighty", hash: "#mighty", frame: "mightyframe", src: "mighty/book-test.html?v=20261123103314" },
+    prayers: { btn: "tab-prayers", hash: "#prayers", frame: "prayersframe", src: "prayers/book-test.html?v=20261123103314" },
+    matthew: { btn: "tab-matthew", hash: "#matthew", frame: "matthewframe", src: "matthew/book-test.html?v=20261123103314" },
+    proverbs: { btn: "tab-proverbs", hash: "#proverbs", frame: "proverbsframe", src: "proverbs/book-test.html?v=20261123103314" },
+    prophets: { btn: "tab-prophets", hash: "#prophets", frame: "prophetsframe", src: "prophets/book-test.html?v=20261123103314" },
   };
   const ORDER = ["psalter", "rev", "judges", "mighty", "prayers", "matthew", "proverbs", "prophets"];
   let cur = null;

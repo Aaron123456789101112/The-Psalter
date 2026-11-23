@@ -1,0 +1,146 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bellefair&display=swap">
+<style>html,body{margin:0;background:#000} svg{display:block}</style></head><body>
+<svg id="ic" width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <linearGradient id="leatherG" x1="0" y1="0" x2="0.35" y2="1">
+    <stop offset="0" stop-color="#335a43"/><stop offset=".55" stop-color="#1f3a2a"/><stop offset="1" stop-color="#0c1810"/>
+  </linearGradient>
+  <radialGradient id="sheen" cx=".3" cy=".22" r=".75"><stop offset="0" stop-color="#cfe8d0" stop-opacity=".22"/><stop offset=".6" stop-color="#cfe8d0" stop-opacity="0"/></radialGradient>
+  <radialGradient id="vig" cx=".5" cy=".5" r=".72"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".045" numOctaves="3" seed="4" result="n"/>
+    <feDiffuseLighting in="n" surfaceScale="2.2" lighting-color="#fff" result="l"><feDistantLight azimuth="235" elevation="55"/></feDiffuseLighting>
+    <feColorMatrix in="l" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -1.1 0 0 0 1.05"/>
+  </filter>
+  <filter id="fine" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency=".75" numOctaves="2" seed="9"/>
+    <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .09 0"/>
+  </filter>
+  <linearGradient id="goldG" gradientUnits="userSpaceOnUse" x1="250" y1="200" x2="780" y2="840">
+    <stop offset="0" stop-color="#f6dd92"/><stop offset=".2" stop-color="#d4a443"/><stop offset=".4" stop-color="#8a5a17"/>
+    <stop offset=".55" stop-color="#e2b75a"/><stop offset=".72" stop-color="#a87822"/><stop offset=".88" stop-color="#e5c06a"/><stop offset="1" stop-color="#9a6b1f"/>
+  </linearGradient>
+  <filter id="gilt" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="b"/>
+    <feSpecularLighting in="b" surfaceScale="5" specularConstant=".9" specularExponent="28" lighting-color="#fff6d6" result="s"><feDistantLight azimuth="225" elevation="48"/></feSpecularLighting>
+    <feComposite in="s" in2="SourceAlpha" operator="in" result="si"/>
+    <feDiffuseLighting in="b" surfaceScale="5" diffuseConstant="1" lighting-color="#fff" result="d"><feDistantLight azimuth="225" elevation="60"/></feDiffuseLighting>
+    <feComposite in="SourceGraphic" in2="d" operator="arithmetic" k1="1.05" k2="0" k3="0" k4="0" result="lit"/>
+    <feComposite in="lit" in2="si" operator="arithmetic" k1="0" k2="1" k3=".42" k4="0" result="g"/>
+    <feComposite in="g" in2="SourceAlpha" operator="in" result="gi"/>
+    <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="sb"/><feOffset in="sb" dx="2" dy="5" result="so"/>
+    <feColorMatrix in="so" values="0 0 0 0 .02  0 0 0 0 .03  0 0 0 0 .01  0 0 0 .75 0" result="sh"/>
+    <feMerge><feMergeNode in="sh"/><feMergeNode in="gi"/></feMerge>
+  </filter>
+  <filter id="blind" x="-5%" y="-5%" width="110%" height="110%">   <!-- blind tooling: pressed into the leather -->
+    <feOffset in="SourceAlpha" dx="0" dy="2" result="o"/><feComposite in="SourceAlpha" in2="o" operator="out" result="edge"/>
+    <feColorMatrix in="edge" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .7 0" result="dk"/>
+    <feOffset in="SourceAlpha" dx="0" dy="-1.5" result="o2"/><feComposite in="SourceAlpha" in2="o2" operator="out" result="e2"/>
+    <feColorMatrix in="e2" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .12 0" result="lt"/>
+    <feColorMatrix in="SourceAlpha" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .28 0" result="fill"/>
+    <feMerge><feMergeNode in="fill"/><feMergeNode in="dk"/><feMergeNode in="lt"/></feMerge>
+  </filter>
+  <symbol id="corner" viewBox="0 0 100 100" overflow="visible">
+    <path d="M0 0h46v8H8v38H0z"/>
+    <path d="M14 14c18 0 30 6 34 20-12-4-22-2-30 6C14 30 12 22 14 14z"/>
+    <circle cx="56" cy="4" r="4"/><circle cx="4" cy="56" r="4"/>
+  </symbol>
+</defs>
+<!-- leather -->
+<rect width="1024" height="1024" fill="url(#leatherG)"/>
+<rect width="1024" height="1024" filter="url(#grain)" opacity=".7"/>
+<rect width="1024" height="1024" filter="url(#fine)"/>
+<rect width="1024" height="1024" fill="url(#sheen)"/>
+<rect width="1024" height="1024" fill="url(#vig)"/>
+<g id="art"></g>
+</svg>
+<script>
+const NS = "http://www.w3.org/2000/svg", art = document.getElementById("art");
+const el = (t, a, p = art) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); p.appendChild(e); return e; };
+const opt = new URLSearchParams(location.search).get("o") || "A";
+const blind = el("g", { filter: "url(#blind)", fill: "#000" });
+const gilt = el("g", { filter: "url(#gilt)", fill: "url(#goldG)", stroke: "url(#goldG)" });
+const cut = el("g", { fill: "none", stroke: "#3a2406", "stroke-opacity": ".55", "stroke-linecap": "round" });
+function frame(inset, w) {   // gilt double rule with corner pieces, a blind-tooled rule outside it
+  el("rect", { x: inset - 26, y: inset - 26, width: 1024 - 2 * (inset - 26), height: 1024 - 2 * (inset - 26), rx: 10, fill: "none", stroke: "#000", "stroke-width": 7 }, blind);
+  el("rect", { x: inset, y: inset, width: 1024 - 2 * inset, height: 1024 - 2 * inset, fill: "none", "stroke-width": w }, gilt);
+  el("rect", { x: inset + 16, y: inset + 16, width: 1024 - 2 * inset - 32, height: 1024 - 2 * inset - 32, fill: "none", "stroke-width": w * .45 }, gilt);
+  for (let k = inset + 30; k <= 1024 - inset - 30; k += 26) for (const [x, y] of [[k, inset + 8], [k, 1024 - inset - 8], [inset + 8, k], [1024 - inset - 8, k]])
+    el("circle", { cx: x, cy: y, r: 2.6, stroke: "none" }, gilt);
+  const c = inset + 28;
+  [[c, c, 1, 1], [1024 - c, c, -1, 1], [c, 1024 - c, 1, -1], [1024 - c, 1024 - c, -1, -1]].forEach(([x, y, sx, sy]) => {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${sx * .9} ${sy * .9})`, stroke: "none" }, gilt);
+    el("path", { d: "M0 0h46v8H8v38H0z" }, g);
+    el("path", { d: "M16 16c20 0 32 7 36 22-13-5-24-2-32 7C15 34 13 25 16 16z" }, g);
+    el("circle", { cx: 60, cy: 4, r: 5 }, g); el("circle", { cx: 4, cy: 60, r: 5 }, g);
+  });
+}
+function lyre(cx, cy, s) {
+  const T = `translate(${cx} ${cy}) scale(${s})`;
+  const g = el("g", { transform: T, "stroke-linecap": "round", "stroke-linejoin": "round" }, gilt);
+  const c = el("g", { transform: T }, cut);
+  const arm = k => { // a horn: wide at the box, narrowing to a curled tip
+    el("path", { d: `M${k*96} 100 C${k*150} 70 ${k*226} -10 ${k*222} -100 C${k*218} -170 ${k*168} -200 ${k*160} -232 C${k*154} -262 ${k*176} -282 ${k*206} -276
+      C${k*186} -262 ${k*184} -244 ${k*194} -226 C${k*214} -190 ${k*252} -150 ${k*250} -96 C${k*248} 0 ${k*196} 88 ${k*136} 116 Z`, stroke: "none" }, g);
+    el("path", { d: `M${k*128} 92 C${k*196} 40 ${k*236} -40 ${k*232} -104 C${k*228} -160 ${k*190} -196 ${k*178} -232`, "stroke-width": 3.2 }, c);
+  };
+  arm(-1); arm(1);
+  el("path", { d: "M-216 -150 Q0 -186 216 -150", fill: "none", "stroke-width": 24 }, g);
+  el("path", { d: "M-200 -150 Q0 -183 200 -150", "stroke-width": 3 }, c);
+  for (const k of [-1, 1]) { el("circle", { cx: k * 232, cy: -150, r: 20, stroke: "none" }, g); el("circle", { cx: k * 232, cy: -150, r: 9, "stroke-width": 3 }, c); }
+  el("path", { d: "M-160 92 H160 C160 196 96 262 0 262 C-96 262 -160 196 -160 92 Z", stroke: "none" }, g);
+  el("path", { d: "M-138 108 H138 C134 192 80 240 0 240 C-80 240 -134 192 -138 108 Z", "stroke-width": 3.5 }, c);
+  el("circle", { cx: 0, cy: 186, r: 30, "stroke-width": 4 }, c); el("circle", { cx: 0, cy: 186, r: 19, "stroke-width": 2.5 }, c);
+  for (let a = 0; a < 12; a++) { const r = a * Math.PI / 6; el("circle", { cx: Math.cos(r) * 42, cy: 186 + Math.sin(r) * 42, r: 3.6, fill: "#3a2406", stroke: "none", "fill-opacity": .5 }, c); }
+  for (const x of [-80, -40, 0, 40, 80]) el("path", { d: `M${x} ${-168 + Math.abs(x) * .03} V130`, fill: "none", "stroke-width": 6.5 }, g);
+  el("path", { d: "M-108 130 H108", fill: "none", "stroke-width": 18 }, g);
+  for (const x of [-80, -40, 0, 40, 80]) el("circle", { cx: x, cy: -167 + Math.abs(x) * .03, r: 9.5, stroke: "none" }, g);
+}
+function text(t, x, y, size, ls = 0) {
+  const e = el("text", { x, y, "font-family": "Bellefair", "font-size": size, "text-anchor": "middle", stroke: "none", direction: "rtl", "letter-spacing": ls }, gilt);
+  e.textContent = t; return e;
+}
+function rule(y, w) {   // gilt rule with a lozenge
+  el("path", { d: `M${512 - w} ${y}H${512 - 30}M${512 + 30} ${y}H${512 + w}`, fill: "none", "stroke-width": 7 }, gilt);
+  el("path", { d: `M512 ${y - 17}l17 17-17 17-17-17z`, stroke: "none" }, gilt);
+}
+function fleuron(y, k) {
+  const g = el("g", { transform: `translate(512 ${y}) scale(${k})`, stroke: "none" }, gilt);
+  el("path", { d: "M0 -26c9 13 9 26 0 50-9-24-9-37 0-50z" }, g);
+  el("path", { d: "M-8 0c-18-18-48-18-66 0 18 7 42 9 66 0zM8 0c18-18 48-18 66 0-18 7-42 9-66 0z" }, g);
+  el("circle", { cx: -84, cy: 0, r: 5 }, g); el("circle", { cx: 84, cy: 0, r: 5 }, g);
+}
+function ovalFrame(rx, ry) {
+  const C = 512;
+  el("ellipse", { cx: C, cy: C, rx: rx + 30, ry: ry + 30, fill: "none", stroke: "#000", "stroke-width": 7 }, blind);
+  el("ellipse", { cx: C, cy: C, rx, ry, fill: "none", "stroke-width": 10 }, gilt);
+  el("ellipse", { cx: C, cy: C, rx: rx - 22, ry: ry - 22, fill: "none", "stroke-width": 4.5 }, gilt);
+  const N = 96;   // a ring of gilt dots between the two rules
+  for (let i = 0; i < N; i++) { const a = i / N * 2 * Math.PI; el("circle", { cx: C + Math.cos(a) * (rx - 11), cy: C + Math.sin(a) * (ry - 11), r: 2.6, stroke: "none" }, gilt); }
+  // a lozenge with two dots at the top, bottom and sides of the oval
+  for (const [x, y, r] of [[C, C - ry, 0], [C, C + ry, 0], [C - rx, C, 90], [C + rx, C, 90]]) {
+    const g = el("g", { transform: `translate(${x} ${y}) rotate(${r})`, stroke: "none" }, gilt);
+    el("path", { d: "M0 -20l15 20-15 20-15-20z" }, g);
+    el("circle", { cx: -28, cy: 0, r: 5 }, g); el("circle", { cx: 28, cy: 0, r: 5 }, g);
+  }
+  // small gilt sprays in the corners of the cover
+  [[120, 120, 1, 1], [904, 120, -1, 1], [120, 904, 1, -1], [904, 904, -1, -1]].forEach(([x, y, sx, sy]) => {
+    const g = el("g", { transform: `translate(${x} ${y}) scale(${sx} ${sy}) rotate(45)`, stroke: "none" }, gilt);
+    el("path", { d: "M0 -16c8 11 8 22 0 42-8-20-8-31 0-42z" }, g);
+    el("path", { d: "M-6 8c-14-14-36-14-50 0 14 5 32 7 50 0zM6 8c14-14 36-14 50 0-14 5-32 7-50 0z" }, g);
+    el("circle", { cx: 0, cy: -26, r: 4.5 }, g);
+  });
+}
+if (opt === "A") { frame(112, 9); lyre(512, 508, 1.13); }
+if (opt === "L") {}
+if (opt === "D") { ovalFrame(372, 432); lyre(512, 520, 1.0); }
+if (opt === "B") {
+  frame(112, 9);
+  el("ellipse", { cx: 512, cy: 512, rx: 262, ry: 300, fill: "none", "stroke-width": 10 }, gilt);
+  el("ellipse", { cx: 512, cy: 512, rx: 242, ry: 280, fill: "none", "stroke-width": 4 }, gilt);
+  text("ת", 512, 660, 520);
+}
+if (opt === "C") { frame(112, 9); fleuron(330, 1.6); text("תהלים", 512, 610, 280); rule(700, 220); }
+document.fonts.ready.then(() => { document.title = "ready"; });
+</script></body></html>
