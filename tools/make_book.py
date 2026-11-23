@@ -835,7 +835,9 @@ once("    for (const k of ORDER) if (k !== which) pauseTab(k);", "    if (!windo
 once("  show(start, false);\n})();", "  show(start, false);\n  window.__tabs = { show, fr, TABS, ORDER, get cur() { return cur; } };\n})();")
 s = s.rstrip("\n") + "\n" + FLIGHT_JS + KEEP_JS + BOOKPAGE_JS.replace("__BOOKNAME__", "The Psalter").replace("__DIR__", "")
 # this test page opens each book test copy
-for k, v in OTHERS.items(): once(f'src: "{v[0]}/index.html"', f'src: "{v[0]}/book-test.html"')
+import time
+STAMP = time.strftime("%Y%m%d%H%M%S")   # a new address each build, so phones fetch the books' pages fresh, not an older saved copy
+for k, v in OTHERS.items(): once(f'src: "{v[0]}/index.html"', f'src: "{v[0]}/book-test.html?v={STAMP}"')
 s = s.replace("<title>The Psalter</title>", "<title>The Psalter</title>", 1)
 open(out, "w", encoding="utf-8").write(s)
 print("wrote", out)
