@@ -5,12 +5,12 @@
      "psalter-audio" cache). A saved recording is always played from the phone, including the byte ranges an
      <audio> element asks for. Anything not saved goes to the network as normal.
    - The Google fonts are kept the first time they load, so offline pages still look right. */
-const SHELL = 'psalter-shell-v5';
+const SHELL = 'psalter-shell-v6';
 const AUDIO = 'psalter-audio';
 const FONTS = 'psalter-fonts';
 const PAGES = ['./', 'index.html', 'revelation/index.html', 'judges/index.html', 'mighty/index.html', 'prayers/index.html',
   'matthew/index.html', 'proverbs/index.html', 'prophets/index.html', 'clip/clips.json', 'manifest.webmanifest',
-  'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'miniplayer.js'];
+  'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'miniplayer.js', 'listen.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil((async () => {
